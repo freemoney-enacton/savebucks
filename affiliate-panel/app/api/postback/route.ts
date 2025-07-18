@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
     }
 
     return commonResponse({
-      data: result.data?.id,
+      data: result.data,
       status: "success",
       message: t("postback.postbackCreated"),
     });
@@ -90,7 +90,7 @@ export async function DELETE(request: NextRequest) {
       });
     }
     return commonResponse({
-      data: result.data?.id,
+      data: result.data,
       status: "success",
       message: t("postback.postbackDeleted"),
     });

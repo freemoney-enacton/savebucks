@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
     }
 
     return commonResponse({
-      data: result.data?.id,
+      data: result.data,
       status: "success",
       message: t("payments.bankDetailsUpdated"),
     });
