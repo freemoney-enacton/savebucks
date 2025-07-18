@@ -1,0 +1,376 @@
+{
+"success":"Success",
+"error":"Error",
+"cancel": "Cancel",
+"delete": "Delete",
+"deleting": "Deleting...",
+"somethingWentWrong": "Something went wrong. Please try again.",
+"passwordChanged": "Password updated successfully",
+ "errorSendingEmail": "Error sending email",
+    "emailSent": "Email sent successfully",
+    "linkNotActive":"This link is not active",
+"auth": {
+    "signIn": {
+      "title": "Sign In",
+      "description": "Enter your email and password to sign in!",
+      "email": "Email",
+      "password": "Password",
+      "keepLoggedIn": "Keep me logged in",
+      "forgotPassword": "Forgot password?",
+      "submit": "Sign In",
+      "noAccount": "Don't have an account?",
+      "signUp": "Sign Up",
+      "rememberMe": "Keep me logged in"
+    },
+    "signUp": {
+      "title": "Sign Up",
+      "description": "Enter your email and password to sign up!",
+      "name": "Name",
+      "email": "Email",
+      "password": "Password",
+      "submit": "Sign Up",
+      "haveAccount": "Already have an account?",
+      "signIn": "Sign In",
+      "emailAlreadyExists": "Email already exists. Please use a different email address or sign in with your existing account.",
+  "errorCreatingUser": "Error signing up. Please try again.",
+  "userCreatedSuccessfully": "Sign up successful!",
+  "invalidData": "Invalid request data",
+  "errorSendingVerificationEmail": "Error sending verification email",
+      "errorSendingPayoutEmail": "Error sending payout email",
+      "errorSendingWelcomeEmail": "Error sending welcome email",
+      "verificationEmailSent": "Verification email sent successfully",
+      "welcomeEmailSent": "Welcome email sent successfully"
+    },
+    "forgotPassword": {
+      "title": "Forgot Password",
+      "description": "Enter your email to reset your password!",
+      "email": "Email",
+      "submit": "Submit",
+      "backToSignIn": "Back to Sign In"
+    },
+    "pending": {
+      "title": "Request Pending",
+      "description": "Your request has been sent to the admin. Once approved, we will notify you via email.",
+      "message": "Thank you for signing up on Savebucks Affiliate Portal. Your account is in pending status. You will be able to access your account once the admin approves your account",
+      "email_title":"Please verify your email",
+      "email_description":"To complete your registration, please verify your email address by clicking the link we sent to your email."
+    },
+    "verify_email":{
+      "title":"Your email has been verified",
+      "description":"Thank you for verifying your email address. You can now log in to your account.",
+      "backToSignIn": "Back to Sign In"
+    },
+    "placeholder":{
+      "name": "Enter your name",
+      "email": "Enter your email",
+      "password": "Enter your password"
+    },
+    "logout":{
+      "title": "Log Out",
+      "success": "You have been logged out successfully."
+    }
+  },
+"dashboard": {
+  "title": "Dashboard"
+},
+"links": {
+  "title": "Create Links",
+  "table_title": "Links",
+  "date": "Date",
+  "url": "Links",
+  "name": "Name",
+  "clicks": "Clicks",
+  "actions": "Actions",
+  "noLinks": "No links found.",
+  "copySuccess": "Link copied to clipboard",
+  "updateSuccess": "Link Status Updated",
+  "updateError": "Failed to update link status"
+},
+"payouts": {
+  "title": "Payouts",
+  "subtitle": "Affiliate Earnings",
+  "paypalTitle": "PayPal Information",
+  "paypalId": "PayPal ID",
+  "paypalPlaceholder": "Enter your PayPal email address",
+  "paypalSave": "Save PayPal",
+  "bankTitle": "Bank Account Details",
+  "bankName": "Bank Name",
+  "bankNamePlaceholder": "Enter bank name",
+  "accountHolderName": "Account Holder Name",
+  "accountHolderNamePlaceholder": "Enter account holder name",
+  "accountNumber": "Account Number",
+  "accountNumberPlaceholder": "Enter account number",
+  "ifsc": "IFSC/BIC Code",
+  "ifscPlaceholder": "Enter IFSC/BIC code",
+  "accountType": "Account Type",
+  "accountTypePlaceholder": "Select account type",
+  "swift": "SWIFT Code (Optional)",
+  "swiftPlaceholder": "Enter SWIFT code",
+  "bankSave": "Save Bank Details",
+  "paypalUpdated": "PayPal ID updated successfully",
+  "bankDetailsUpdated": "Bank details updated successfully",
+  "payout_title": "Payout Request",
+  "confirmation": "Are you sure you want to withdraw?",
+  "amountText": "Your withdrawal amount is {currency}{amount}.",
+  "cancel": "Cancel",
+  "confirm": "Confirm",
+  "successTitle": "Success",
+  "successMessage": "Payout request sent successfully",
+  "errorTitle": "Error",
+  "errorMessage": "Something went wrong",
+  "emailSent": "Payout email sent successfully",
+  "minAmountError": "Minimum withdrawal amount is {currency}{amount}",
+  "table": {
+    "title":"Payouts History",
+    "date": "Date",
+    "earnings": "Earnings",
+    "status": "Status",
+    "empty": "No payouts found."
+  }
+},
+"settings":{
+"title":"Settings"
+},
+"transactions":{
+"title":"All Transactions",
+ "recent_title": "Recent Transactions",
+  "date": "Date",
+  "link": "Link",
+  "campaign": "Campaign",
+  "goal": "Goal",
+  "sub1": "SubId1",
+  "sub2": "SubId2",
+  "sub3": "SubId3",
+  "earning": "Earning",
+  "status": "Status",
+  "noData": "No recent transactions found.",
+  "viewAll": "View all transactions"
+},
+"payments": {
+  "paypalUpdated": "PayPal ID updated successfully",
+  "errorUpdatingPaypal": "An error occurred while updating your PayPal ID",
+  "invalidData": "Invalid request data",
+  "bankDetailsUpdated": "Bank details updated successfully",
+  "errorUpdatingBankDetails": "An error occurred while updating your bank details"
+},
+"affiliateLink": {
+  "linkCreated": "Affiliate link created successfully",
+  "linkAlreadyExists": "Link already taken. Please use a different one.",
+  "errorCreatingLink": "An error occurred while creating the affiliate link",
+  "linkStatusUpdated": "Affiliate link status updated successfully",
+  "errorUpdatingLink": "An error occurred while updating the affiliate link",
+  "invalidData": "Invalid request data",
+  "create": "Create New Affiliate Link",
+  "dialogTitle": "Create Your Affiliate Link",
+  "dialogDescription": "Once Created, URLs Cannot be Changed.",
+  "urlLabel": "URL",
+  "urlPlaceholder": "your-affiliate-link",
+  "nameLabel": "Name",
+  "namePlaceholder": "Enter link name",
+  "sub1Label": "SubId1",
+  "sub1Placeholder": "Enter SubId1",
+  "sub2Label": "SubId2",
+  "sub2Placeholder": "Enter SubId2",
+  "sub3Label": "SubId3",
+  "sub3Placeholder": "Enter SubId3",
+  "cancel": "Cancel",
+  "save": "Save",
+  "creating": "Creating..."
+},
+"postback": {
+  "postbackCreated": "Postback URL added successfully",
+  "postbackAlreadyExists": "A postback for this campaign and goal already exists",
+  "errorCreatingPostback": "An error occurred while creating the postback",
+  "invalidData": "Invalid request data",
+  "title": "Configure Postback",
+  "selectType": "Select Postback Type",
+  "type": {
+    "global": "Global",
+    "goal": "Goal"
+  },
+  "globalUrl": {
+    "label": "Global URL",
+    "placeholder": "Enter Global URL"
+  },
+  "goal": {
+    "label": "Select Goal",
+    "placeholder": "Select Goal",
+    "urlLabel": "Goal URL",
+    "urlPlaceholder": "Enter Goal URL"
+  },
+  "methodType":{
+    "label": "Method Type",
+    "placeholder": "Select Method Type",
+    "get": "GET",
+    "post": "POST"
+  },
+  "placeholderOption": "Select Option",
+  "button": {
+    "save": "Save",
+    "saving": "Saving..."
+  },
+  "toast": {
+    "successTitle": "Success",
+    "successMessage": "Postback configuration saved successfully",
+    "postbackDeleted": "Postback deleted successfully",
+    "errorTitle": "Error",
+    "errorMessage": "Failed to save postback configuration"
+  },
+  "goals": {
+    "1": "Download the app",
+    "2": "Create account",
+    "3": "Complete onboarding",
+    "4": "First purchase",
+    "5": "Subscribe to premium"
+  },
+  "table": {
+      "title": "Postbacks",
+      "date": "Date",
+      "campaignGoal": "Campaign Goal",
+      "goalName": "Goal Name",
+      "postbackUrl": "Postback URL",
+      "methodType": "Method Type",
+      "actions": "Actions",
+      "empty": "No postbacks found",
+      "noGoal": "No Goal"
+    },
+    "delete": {
+      "title": "Delete Postback",
+      "description": "Are you sure you want to delete this postback? This action cannot be undone."
+    },
+  "noCampaignGoals": "No campaign goals found. Please add one first."
+},
+"profile": {
+  "updated": "Profile updated successfully",
+  "errorUpdating": "An error occurred while updating your profile",
+  "invalidData": "Invalid request data",
+  "title": "Personal Information",
+  "fields": {
+    "name": "Name",
+    "email": "Email",
+    "addressLine1": "Address Line 1",
+    "addressLine2": "Address Line 2 (Optional)",
+    "country": "Country",
+     "state": "State/Province",
+     "city": "City",
+     "pincode": "PIN/ZIP",
+    "placeholder": {
+      "name": "Enter your name",
+      "addressLine1": "Enter your address line 1",
+      "addressLine2": "Enter your address line 2 (optional)",
+       "country": "Select country",
+       "state": "Select state",
+       "city": "Select city",
+       "pincode": "Enter your pincode/zip code"
+    }
+  },
+  "button": "Save",
+  "toast": {
+    "successTitle": "Success",
+    "successMessage": "Profile updated successfully.",
+    "errorTitle": "Error",
+    "errorMessage": "Something went wrong."
+}
+},
+"campaign": {
+  "activeCampaign": "Active Campaign",
+  "details": "Campaign Details",
+  "goals": "Campaign Goals",
+  "fallbackTitle": "Campaign Title",
+  "fallbackDescription": "Campaign Description.",
+  "earn": "{amount}",
+  "termsAndConditions": "Terms & Conditions"
+},
+"earnings": {
+  "chartTitle": "Total Earnings ($)",
+   "total": "Total Earnings",
+  "paid": "Paid",
+  "pending": "Pending Earnings",
+  "available": "Available",
+  "withdraw": "Withdraw"
+},
+"metrics": {
+  "totalClicks": "Total Clicks",
+  "totalLinks": "Total Links",
+  "totalEarnings": "Total Earnings"
+},
+"password": {
+  "title": "Change Password",
+  "fields": {
+    "current": "Current Password",
+    "new": "New Password",
+    "confirm": "Confirm Password",
+    "placeholder": {
+      "current": "Enter your current password",
+      "new": "Enter your new password",
+      "confirm": "Re-enter your new password"
+    }
+  },
+  "reset_password": "Reset Your Password",
+  "reset_password_description": "Enter your new password below.",
+  "button": "Save",
+  "change_success_description":"Your password has been reset successfully. You can now sign in with your new password.",
+  "toast": {
+    "successTitle": "Success",
+    "successMessage": "Password changed successfully.",
+    "errorTitle": "Error",
+    "errorMismatch": "New password and confirm password do not match.",
+    "errorGeneric": "Failed to change password."
+  }
+},
+"filters": {
+  "title": "Filter Transactions",
+  "status": {
+    "label": "Status",
+    "all": "All statuses",
+    "confirmed": "Confirmed",
+    "paid": "Paid",
+    "approved": "Approved",
+    "pending": "Pending",
+    "declined": "Declined"
+  },
+  "dateRange": "Date Range",
+  "placeholder": "Pick a date",
+  "clear": "Clear filters"
+},
+"conversion": {
+    "invalidStatus": "The provided status is invalid.",
+    "transactionIdRequired": "Transaction ID is required.",
+    "invalidClickCode": "The provided click code is invalid.",
+    "logInsertFailed": "Failed to insert postback log.",
+    "invalidData": "The provided data is invalid.",
+    "failedToFetchPendingLogs": "Failed to fetch pending postback logs.",
+    "invalidCampaignOrGoal": "Invalid campaign or goal.",
+    "updateFailed": "Failed to update the conversion status.",
+    "conversionAlreadyExists": "Conversion already exists and is not in pending status.",
+    "conversionNotPending": "Conversion is already completed, not pending.",
+    "createFailed": "Failed to create new conversion.",
+    "cronJobFailed": "The cron job failed to process postback logs.",
+    "invalidTransactionId": "Transaction ID is invalid or missing.",
+    "postbackError": "An error occurred while sending postback.",
+    "postbackSuccess": "Postback sent successfully.",
+    "conversionCreated": "Conversion created successfully.",
+    "conversionUpdated": "Conversion status updated successfully.",
+    "conversionFailed": "Conversion processing failed."
+  },
+"validation": {
+    "required": "This field is required",
+    "email": "Please enter a valid email address",
+    "password": "Password must be at least 8 characters",
+    "errorCreatingUser":"Error signing up. Please try again.",
+    "errorSigningIn": "Error signing in. Please check your credentials and try again.",
+    "userCreatedSuccessfully":"Sign up successfull",
+    "checkEmailForVerification": "Please check your email for verification instructions.",
+    "signInSuccess":"Sign in successfull",
+    "emailAlreadyExists":"Email already exists. Please use a different email address or sign in with your existing account.",
+    "invalidData": "Invalid request data",
+  "invalidPassword": "Current password is incorrect",
+  "passwordNotMatch": "New password and Confirm password do not match",
+  "errorCreatingLink": "An error occurred while creating the link",
+  "errorChangingPassword": "An error occurred while changing the password",
+  "linkCreated": "Link created successfully!",
+  "linkCreatedDescription": "Your link has been created.",
+  "unknownError": "Something went wrong. Please try again.",
+  "emailRequired":"Email is required"
+  }
+}
