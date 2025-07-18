@@ -27,59 +27,43 @@ class PostbacksRelationManager extends RelationManager
     public function table(Table $table): Table
     {
         return $table
-            ->recordTitleAttribute('transaction_id')         
+            ->recordTitleAttribute('transaction_id')
             ->columns([
-
-               Tables\Columns\TextColumn::make('affiliate.name')
-                    ->label('Affiliate')
-                    ->searchable(),           
 
                 Tables\Columns\TextColumn::make('campaign.name')
                     ->label('Campaign')
-                    ->searchable()
-                    ->numeric(),
+                    ->searchable(),
 
                 Tables\Columns\TextColumn::make('campaignGoal.name')
                     ->label('Campaign Goal')
-                    ->numeric()
                     ->searchable(),
 
-                 Tables\Columns\IconColumn::make('postback_url')
-                    ->label('Destination Url')
-                    ->url(fn($record): string => $record->postback_url)
-                    ->icon('heroicon-o-link')
-                    ->tooltip(fn($record): string => $record->postback_url)
+                Tables\Columns\TextColumn::make('postback_url')
+                    ->label('Postback URL')
+                    ->limit(25)
+                    ->copyable()
+                     ->copyMessage('Postback URL copied')
+                    ->tooltip(fn($state)=> $state)
                     ->searchable(),
 
                 Tables\Columns\TextColumn::make('created_at')
+                    ->label('Received At')
                     ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->sortable(),
 
-                Tables\Columns\TextColumn::make('updated_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                // Tables\Columns\TextColumn::make('processed_at')
+                //     ->label('Processed At')
+                //     ->dateTime()
+                //     ->sortable(),
             ])
             ->filters([
 
-                Tables\Filters\SelectFilter::make('affiliate_id')
-                    ->relationship('affiliate', 'name')
-                    ->preload()
-                    ->searchable()
-                    ->label('Affiliate'),
-
-                Tables\Filters\SelectFilter::make('campaign_id')
-                    ->relationship('campaign', 'name')                 
-                    ->preload()
-                    ->searchable()
-                    ->label('Campaign'),
-
-                Tables\Filters\SelectFilter::make('campaign_goal_id')
-                    ->relationship('campaignGoal', 'name')                 
-                    ->preload()
-                    ->searchable()
-                    ->label('Campaign Goal'),
+                Tables\Filters\SelectFilter::make('status')
+                    ->label('Status')
+                    ->options([
+                        'success' => 'Success',
+                        'failure' => 'Failure',
+                    ]),
             ])
             ->headerActions([
                 // Tables\Actions\CreateAction::make(),
@@ -90,7 +74,7 @@ class PostbacksRelationManager extends RelationManager
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    // Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ]);
     }

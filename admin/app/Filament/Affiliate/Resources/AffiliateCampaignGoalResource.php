@@ -5,6 +5,7 @@ namespace App\Filament\Affiliate\Resources;
 use App\Filament\Affiliate\Resources\AffiliateCampaignGoalResource\Pages;
 use App\Filament\Affiliate\Resources\AffiliateCampaignGoalResource\RelationManagers;
 use App\Models\Affiliate\AffiliateCampaignGoal;
+use App\Models\Affiliate\Campaign;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -32,27 +33,75 @@ class AffiliateCampaignGoalResource extends Resource
 
                     Forms\Components\Select::make('affiliate_id')
                         ->label('affiliate')
-                        ->relationship('affiliate', 'name')
+                        ->relationship('affiliate', 'email')
                         ->preload()
+                        ->reactive()
                         ->searchable()
-                        ->required()                            
+                        ->afterStateUpdated(function (callable $set) {
+                            $set('campaign_goal_id', null);
+                        })
+                        ->validationMessages([
+                            'required' => 'Please select affiliate to proceed.',                            
+                        ])
+                        ->required()                 
+                        ->disabledon("edit")           
                         ->label("Affiliate"),
            
-                    Forms\Components\Select::make('campaign_id')
-                        ->label('Campaign')
-                        ->relationship('campaign', 'name')
-                        ->preload()
-                        ->searchable()
-                        ->required(),
+                    // Forms\Components\Select::make('campaign_id')
+                    //     ->label('Campaign')
+                    //     ->options(Campaign::where('status', 'active')->pluck("name", 'id'))
+                    //     ->default(1)
+                    //     ->preload()
+                    //     ->searchable()
+                    //     ->visibleon([''])
+                    //     ->required(),
+                        
+                    Forms\Components\Hidden::make('campaign_id')
+                        ->default(1),
 
                     Forms\Components\Select::make('campaign_goal_id')
-                        ->relationship('campaignGoal', 'name')
                         ->label('Campaign Goal')
+                        ->options(function (callable $get) {
+                            $affiliateId = $get('affiliate_id');
+                            
+                            if (!$affiliateId) {
+                                return [];
+                            }
+
+                            // Get all campaign goals
+                            $allGoals = \App\Models\Affiliate\CampaignGoal::where('status', 'active')->pluck('name', 'id');
+                            
+                            // Get already assigned goals for this affiliate
+                            $assignedGoals = \App\Models\Affiliate\AffiliateCampaignGoal::where('affiliate_id', $affiliateId)
+                                ->where('campaign_id', 1)
+                                ->pluck('campaign_goal_id')
+                                ->toArray();
+                            
+                            // Return only unassigned goals
+                            return $allGoals->except($assignedGoals);
+                        })
                         ->preload()
-                        ->searchable(),        
+                        ->visibleon("create")
+                        ->reactive() 
+                        ->searchable()                      
+                        ->required()
+                        ->validationMessages([
+                            'required' => 'Please select campaign goal to proceed.',                            
+                        ])
+                        ->disabled(fn (callable $get, string $operation) => !$get('affiliate_id') || $operation === 'edit')
+                        ->infotip('Select an affiliate first to see available campaign goals'),     
+
+                    Forms\Components\TextInput::make('campaign_goal_id')
+                        ->formatStateUsing(fn ($state) => $state ? optional(\App\Models\Affiliate\CampaignGoal::find($state))->name : '')
+                        ->visibleOn('edit')
+                        ->disabledOn('edit') // Corrected from disabledon to disabledOn
+                        ->label('Campaign Goal'),
 
                     Forms\Components\TextInput::make('custom_commission_rate')
-                        ->label('Custom Commission Rate')                        
+                        ->required()
+                        ->prefix(config('freemoney.default.default_currency'))
+                        ->label('Custom Commission Rate')        
+                        ->minValue(0)        
                         ->numeric(),
 
                 ]),
@@ -66,6 +115,7 @@ class AffiliateCampaignGoalResource extends Resource
 
                 Tables\Columns\TextColumn::make('affiliate.name')
                     ->label('Affiliate')
+                    ->description(fn($record) => $record->affiliate->email)
                     ->searchable(),           
 
                 Tables\Columns\TextColumn::make('campaign.name')
@@ -80,8 +130,9 @@ class AffiliateCampaignGoalResource extends Resource
 
                 Tables\Columns\TextColumn::make('custom_commission_rate')
                     ->label('Custom Commission Rate')
-                    ->numeric()
+                    ->money(config('freemoney.default.default_currency'))
                     ->searchable()
+                    // ->align('right')
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('created_at')
@@ -121,7 +172,7 @@ class AffiliateCampaignGoalResource extends Resource
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                    // Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ]);
     }
@@ -137,9 +188,9 @@ class AffiliateCampaignGoalResource extends Resource
     {
         return [
             'index' => Pages\ListAffiliateCampaignGoals::route('/'),
-            'create' => Pages\CreateAffiliateCampaignGoal::route('/create'),
-            'view' => Pages\ViewAffiliateCampaignGoal::route('/{record}'),
-            'edit' => Pages\EditAffiliateCampaignGoal::route('/{record}/edit'),
+            // 'create' => Pages\CreateAffiliateCampaignGoal::route('/create'),
+            // 'view' => Pages\ViewAffiliateCampaignGoal::route('/{record}'),
+            // 'edit' => Pages\EditAffiliateCampaignGoal::route('/{record}/edit'),
         ];
     }
 }

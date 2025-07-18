@@ -38,7 +38,8 @@ class AffiliateCampaignGoalsRelationManager extends RelationManager
                     ->searchable(),        
 
                 Forms\Components\TextInput::make('custom_commission_rate')
-                    ->label('Custom Commission Rate')                        
+                    ->label('Custom Commission Rate')       
+                    ->prefix(config('freemoney.default.default_currency'))                 
                     ->numeric(),
 
             ]);
@@ -64,7 +65,7 @@ class AffiliateCampaignGoalsRelationManager extends RelationManager
 
                 Tables\Columns\TextColumn::make('custom_commission_rate')
                     ->label('Custom Commission Rate')
-                    ->numeric()
+                    ->money(config('freemoney.default.default_currency'))                    
                     ->sortable(),
             ])
             ->filters([

@@ -23,8 +23,10 @@ class ListPostbackLogs extends ListRecords
         return [
             null => Tab::make('All'),
             'success' => Tab::make()->query(fn ($query) => $query->where('status', 'success')),
-            'failure' => Tab::make()->query(fn ($query) => $query->where('status', 'failure')),
-            
+            'failure' => Tab::make()->query(fn ($query) => $query->where('status', 'failure')),         
+            'pending' => Tab::make()->query(fn ($query) => $query->where('status', 'pending')),         
         ];
     }
+
+
 }

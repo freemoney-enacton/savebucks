@@ -22,10 +22,10 @@ class ListAffiliates extends ListRecords
     {
         return [
             null => Tab::make('All'),
-            'pending' => Tab::make()->query(fn ($query) => $query->where('status', 'pending')),
-            'approved' => Tab::make()->query(fn ($query) => $query->where('status', 'approved')),
-            'rejected' => Tab::make()->query(fn ($query) => $query->where('status', 'rejected')),
-            'suspended' => Tab::make()->query(fn ($query) => $query->where('status', 'suspended')),
+            'pending' => Tab::make()->query(fn ($query) => $query->where('approval_status', 'pending')),
+            'approved' => Tab::make()->query(fn ($query) => $query->where('approval_status', 'approved')),
+            'rejected' => Tab::make()->query(fn ($query) => $query->where('approval_status', 'rejected')),
+            'suspended' => Tab::make()->query(fn ($query) => $query->where('approval_status', 'suspended')),
         ];
     }
 }

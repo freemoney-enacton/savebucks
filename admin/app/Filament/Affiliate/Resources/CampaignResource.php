@@ -14,6 +14,9 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Str;
 use App\Filament\Affiliate\Resources\CampaignResource\RelationManagers\GoalsRelationManager;
+use Tapp\FilamentAuditing\RelationManagers\AuditsRelationManager;
+use Filament\Forms\Components\RichEditor;
+
 
 class CampaignResource extends Resource
 {
@@ -21,6 +24,7 @@ class CampaignResource extends Resource
     protected static ?string $navigationIcon   = 'heroicon-o-trophy';
     protected static ?string $navigationGroup  = "Campaigns";
     protected static ?int $navigationSort = 1;
+
 
     public static function form(Form $form): Form
     {
@@ -36,14 +40,29 @@ class CampaignResource extends Resource
                         ->required()
                         ->infotip("Enter Name of the campaign")
                         ->maxLength(255),
-                    
+
                     Forms\Components\TextInput::make('campaign_type')
-                        // ->label()
+                        ->label("Campaign Type")
                         ->required()
                         ->maxLength(255),
 
-                    Forms\Components\Textarea::make('description')                        
-                        ->required(),
+                    // Forms\Components\TextInput::make('min_payout_request')
+                    //     ->label('Minimum Payout Request Amount')
+                    //     ->infotip("The minimum amount of payout an affiliate can request for this campaign")
+                    //     ->numeric()
+                    //     ->prefix(config('freemoney.currencies.default')),
+
+                    Forms\Components\Radio::make('status')
+                        ->options([
+                            'active' => 'Active',
+                            'paused' => 'Pending',
+                            'ended'  => 'Ended',
+                        ])
+                        ->inline()
+                        ->inlineLabel(false)
+                        ->label("Campaign Status")
+                        ->required()
+                        ->default('active'),
 
                     Forms\Components\FileUpload::make('logo_url')
                         ->image()
@@ -56,25 +75,37 @@ class CampaignResource extends Resource
                         ->maxSize(1024 * 2)
                         ->disk('frontend'),
 
-                    Forms\Components\Textarea::make('terms_and_conditions')
+
+
+                ])->columnspan(2),
+
+                Forms\Components\Section::make('Other Details')
+                    ->description("")
+                    ->columns(2)
+                    ->schema([
+
+                    Forms\Components\TextInput::make('terms_and_condition_url')
+                        ->label("Terms & Conditions URL")
+                        ->columnspanFull()
+                        ->prefixIcon('heroicon-m-link')
+                        ->placeholder("Enter terms & conditions URL")
+                        ->infotip("If you have a link to the terms & conditions page, enter it here.")
+                        ->url()
+                        ->nullable()
+                        ->maxLength(255),
+
+                    Forms\Components\RichEditor::make('description')
+                        // ->columnSpanFull()
+                        ->required(),
+
+                    Forms\Components\RichEditor::make('terms_and_conditions')
+                        // ->columnSpanFull()
                         ->infotip("Enter Terms and Conditions for the campaign")
                         ->label("Terms & Conditions"),
 
-                    Forms\Components\Radio::make('status')
-                        ->options([
-                            'active' => 'Active',
-                            'paused' => 'Pending',
-                            'ended'  => 'Ended',
-                        ])
-                        ->inline()
-                        ->inlineLabel(false)
-                        ->label("Campaign Status")
-                        ->required()                                    
-                        ->default('active'),
+                ])->columnspan(2),
 
-                ]),
-
-            ]);
+            ])->columns(2);
     }
 
     public static function table(Table $table): Table
@@ -84,7 +115,7 @@ class CampaignResource extends Resource
 
                 Tables\Columns\TextColumn::make('name')
                     ->searchable(),
-                    
+
                 Tables\Columns\ImageColumn::make('logo_url')
                     ->label('Logo')
                     ->searchable(),
@@ -98,12 +129,12 @@ class CampaignResource extends Resource
                     ->formatStateUsing(fn($state) => Str::ucfirst($state))
                     ->color(fn($state) => match ($state) {
                         'active'    => "success",
-                        'paused'    => "warning", 
+                        'paused'    => "warning",
                         'ended'     => "danger",
                         default     => "gray",
                     })
                     ->searchable(),
-                    
+
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->label("Created At")
@@ -121,12 +152,12 @@ class CampaignResource extends Resource
                     ->options([
                         'active' => 'Active',
                         'paused' => 'Paused',
-                        'ended'  => 'Ended',                        
-                    ])  
+                        'ended'  => 'Ended',
+                    ])
                     ->preload()
                     ->searchable()
                     ->label('Status'),
-                
+
             ])
             ->actions([
                 Tables\Actions\ViewAction::make()->label("")->tooltip("View")->size("lg"),
@@ -143,6 +174,7 @@ class CampaignResource extends Resource
     {
         return [
             GoalsRelationManager::class,
+            // AuditsRelationManager::class,
         ];
     }
 
@@ -154,5 +186,10 @@ class CampaignResource extends Resource
             'view' => Pages\ViewCampaign::route('/{record}'),
             'edit' => Pages\EditCampaign::route('/{record}/edit'),
         ];
+    }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return true;
     }
 }

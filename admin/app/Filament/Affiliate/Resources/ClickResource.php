@@ -17,7 +17,7 @@ class ClickResource extends Resource
 {
     protected static ?string $model = Click::class;
     protected static ?int $navigationSort       = 2;
-    protected static ?string $navigationGroup   = "Logs & Reports";
+    protected static ?string $navigationGroup   = "Clicks & Conversions";
     protected static ?string $navigationLabel   = 'Users Clicks';
     protected static ?string $navigationIcon    = 'heroicon-o-cursor-arrow-rays';
     protected static ?string $modelLabel        = 'User Clicks';
@@ -27,9 +27,15 @@ class ClickResource extends Resource
         return $form
             ->schema([
 
-                  Forms\Components\Section::make('User click information')
+                Forms\Components\Section::make('Affiliate & Campaign Information')
                     ->columns(2)
                     ->schema([
+                        Forms\Components\Select::make('affiliate_id')
+                            ->label('Affiliate')
+                            ->relationship('affiliate', 'email')
+                            ->preload()
+                            ->searchable()
+                            ->required(),
 
                         Forms\Components\Select::make('campaign_id')
                             ->label('Campaign')
@@ -37,85 +43,91 @@ class ClickResource extends Resource
                             ->preload()
                             ->searchable()
                             ->required(),
-           
+
                         Forms\Components\Select::make('affiliate_link_id')
                             ->relationship('affiliateLink', 'destination_url')
                             ->preload()
                             ->searchable()
-                            ->required()                
-                            ->label("Affiliate Link"),
-
-                        Forms\Components\Select::make('affiliate_id')
-                            ->label('affiliate')
-                            ->relationship('affiliate', 'name')
-                            ->preload()
-                            ->searchable()
-                            ->required()                            
-                            ->label("Affiliate"),
-
-                        Forms\Components\TextInput::make('click_code')
                             ->required()
-                            ->maxLength(255)
-                            ->label("Click Code"),
-
-                        Forms\Components\TextInput::make('ip_address')
-                            ->required()
-                            ->maxLength(255)
-                            ->label("IP Address"),
-
-                        Forms\Components\TextInput::make('user_agent')
-                            ->required()
-                            ->maxLength(1000)
-                            ->label("User Agent"),
-
-                        Forms\Components\TextInput::make('referrer')
-                            ->maxLength(255)
-                            ->label("Referrer"),
-
-                        Forms\Components\TextInput::make('country')
-                            ->maxLength(255)
-                            ->label("Country"),
-
-                        Forms\Components\TextInput::make('city')
-                            ->maxLength(255)
-                            ->label("City"),
-
-                        Forms\Components\TextInput::make('device_type')
-                            ->maxLength(255)
-                            ->label("Device Type"),
-
-                        Forms\Components\TextInput::make('sub1')
-                            ->maxLength(255)
-                            ->label("Sub 1"),
-
-                        Forms\Components\TextInput::make('sub2')
-                            ->maxLength(255)
-                            ->label("Sub 2"),
-
-                        Forms\Components\TextInput::make('sub3')
-                            ->maxLength(255)
-                            ->label("Sub 3"),
-
-                        Forms\Components\Toggle::make('is_converted')
-                            ->required()
-                            ->default(false)
-                            ->label("Is Converted"),
+                            ->label('Affiliate Link')
+                            ->columnSpanFull(),
 
                         Forms\Components\DateTimePicker::make('clicked_at')
                             ->required()
                             ->native(false)
                             ->prefixIcon('heroicon-m-calendar')
-                            ->label("Clicked At"),
+                            ->label('Clicked At'),
 
+                        Forms\Components\TextInput::make('click_code')
+                            ->required()
+                            ->maxLength(255)
+                            ->label('Click Code'),
 
-                ]),
-            ]);
+                        Forms\Components\Toggle::make('is_converted')
+                            ->required()
+                            ->default(false)
+                            ->label('Is Converted'),
+                    ])->columnSpan(2),
+
+                
+                Forms\Components\Section::make('Basic Information')
+                    ->columns(2)
+                    ->schema([
+                        Forms\Components\TextInput::make('ip_address')
+                            ->required()
+                            ->maxLength(255)
+                            ->label('IP Address'),
+
+                        // Forms\Components\TextInput::make('country')
+                        //     ->maxLength(255)
+                        //     ->label('Country'),
+
+                        // Forms\Components\TextInput::make('city')
+                        //     ->maxLength(255)
+                        //     ->label('City'),
+
+                        Forms\Components\TextInput::make('device_type')
+                            ->maxLength(255)
+                            ->label('Device Type'),
+
+                        // Forms\Components\TextInput::make('referrer')
+                        //     ->maxLength(255)
+                        //     ->label('Referrer'),
+
+                        Forms\Components\TextInput::make('sub1')
+                            ->maxLength(255)
+                            ->label('Sub 1'),
+
+                        Forms\Components\TextInput::make('sub2')
+                            ->maxLength(255)
+                            ->label('Sub 2'),
+
+                        Forms\Components\TextInput::make('sub3')
+                            ->maxLength(255)
+                            ->label('Sub 3'),
+
+                        Forms\Components\TextInput::make('user_agent')
+                            ->required()
+                            ->maxLength(1000)
+                            ->label('User Agent')
+                            ->columnSpanFull(),
+                    ])->columnSpan(2),
+
+            ])->columns(2);
     }
 
     public static function table(Table $table): Table
     {
         return $table
             ->columns([
+
+                Tables\Columns\TextColumn::make('affiliate.name')
+                    ->label('Affiliate')
+                    ->description(fn($record) => $record->affiliate->email)
+                    ->numeric()
+                    ->searchable()
+                    ->sortable(),
+
                 Tables\Columns\TextColumn::make('campaign.name')
                     ->numeric()
                     ->searchable()
@@ -131,12 +143,7 @@ class ClickResource extends Resource
                     ->tooltip(fn($record): string => $record->affiliateLink->destination_url)       
                     ->openUrlInNewTab()
                     ->icon('heroicon-o-arrow-top-right-on-square')
-                    ->searchable(),
-                    
-                Tables\Columns\TextColumn::make('affiliate.name')
-                    ->numeric()
-                    ->searchable()
-                    ->sortable(),
+                    ->searchable(),                               
 
                 Tables\Columns\TextColumn::make('click_code')
                     ->searchable(),
@@ -145,9 +152,11 @@ class ClickResource extends Resource
                 //     ->searchable(),
                 
                 Tables\Columns\IconColumn::make('is_converted')
+                    ->label('Is Converted')
                     ->boolean(),
 
                 Tables\Columns\TextColumn::make('clicked_at')
+                    ->label('Clicked At')
                     ->dateTime()
                     ->sortable(),
             ])
@@ -161,7 +170,7 @@ class ClickResource extends Resource
 
                 Tables\Filters\SelectFilter::make('affiliate_id')
                     ->label("Filter By Affiliate")
-                    ->relationship('affiliate', 'name')
+                    ->relationship('affiliate', 'email')
                     ->searchable()
                     ->preload(),
                 

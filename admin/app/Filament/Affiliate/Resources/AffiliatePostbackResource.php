@@ -16,7 +16,7 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 class AffiliatePostbackResource extends Resource
 {
     protected static ?string $model             = AffiliatePostback::class;
-    protected static ?string $navigationGroup   = "Logs & Reports";
+    protected static ?string $navigationGroup   = "Affiliate";
     protected static ?string $navigationLabel   = 'Affiliate Postbacks';
     protected static ?string $navigationIcon    = 'heroicon-o-link';
     protected static ?string $modelLabel        = 'Affiliate Postback';
@@ -34,7 +34,7 @@ class AffiliatePostbackResource extends Resource
 
                     Forms\Components\Select::make('affiliate_id')
                         ->label('affiliate')
-                        ->relationship('affiliate', 'name')
+                        ->relationship('affiliate', 'email')                        
                         ->preload()
                         ->searchable()
                         ->required()                            
@@ -53,11 +53,12 @@ class AffiliatePostbackResource extends Resource
                         ->preload()
                         ->searchable(),                
 
-                    Forms\Components\TextInput::make('postback_url')
+                    Forms\Components\Textarea::make('postback_url')
                         ->required()
                         ->label('Postback URL')
-                        ->url()
-                        ->prefixIcon('heroicon-o-link')
+                        ->rows(5)
+                        // ->url()
+                        // ->prefixIcon('heroicon-o-link')
                         ->maxLength(1500),
 
                 ]),
@@ -71,32 +72,33 @@ class AffiliatePostbackResource extends Resource
 
                 Tables\Columns\TextColumn::make('affiliate.name')
                     ->numeric()
-                    ->searchable()
+                    ->description(fn($record) => $record->affiliate->email)
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('campaign.name')
+                    ->label("Campaign")
                     ->numeric()
-                    ->searchable()
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('campaignGoal.name')
+                    ->label("Campaign Goal")
                     ->numeric()
-                    ->searchable()
                     ->sortable(),
-
-                Tables\Columns\IconColumn::make('postback_url')
-                    ->label('Destination Url')
-                    ->url(fn($record): string => $record->postback_url)
-                    ->icon('heroicon-o-link')
-                    ->tooltip(fn($record): string => $record->postback_url)
-                    ->searchable(),
+                    
+                // Tables\Columns\TextColumn::make('postback_url')
+                //     ->label("Postback URL")
+                //     ->limit(35)
+                //     ->tooltip(fn($state)=> $state)
+                //     ->searchable(),
 
                 Tables\Columns\TextColumn::make('created_at')
+                    ->label("Created At")
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
 
                 Tables\Columns\TextColumn::make('updated_at')
+                    ->label("Updated At")
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
@@ -104,22 +106,22 @@ class AffiliatePostbackResource extends Resource
             ->filters([
 
                 Tables\Filters\SelectFilter::make('affiliate_id')
-                    ->relationship('affiliate', 'name')
+                    ->relationship('affiliate', 'email')
                     ->preload()
                     ->searchable()
-                    ->label('Affiliate'),
+                    ->label('Filter By Affiliate'),
 
                 Tables\Filters\SelectFilter::make('campaign_id')
                     ->relationship('campaign', 'name')                 
                     ->preload()
                     ->searchable()
-                    ->label('Campaign'),
+                    ->label('Filter By Campaign'),
 
                 Tables\Filters\SelectFilter::make('campaign_goal_id')
                     ->relationship('campaignGoal', 'name')                 
                     ->preload()
                     ->searchable()
-                    ->label('Campaign Goal'),
+                    ->label('Filter By Campaign Goal'),
             ])
             ->actions([
                 Tables\Actions\ViewAction::make()->label("")->tooltip("View")->size("lg"),
@@ -143,9 +145,9 @@ class AffiliatePostbackResource extends Resource
     {
         return [
             'index' => Pages\ListAffiliatePostbacks::route('/'),
-            'create' => Pages\CreateAffiliatePostback::route('/create'),
-            'view' => Pages\ViewAffiliatePostback::route('/{record}'),
-            'edit' => Pages\EditAffiliatePostback::route('/{record}/edit'),
+            // 'create' => Pages\CreateAffiliatePostback::route('/create'),
+            // 'view' => Pages\ViewAffiliatePostback::route('/{record}'),
+            // 'edit' => Pages\EditAffiliatePostback::route('/{record}/edit'),
         ];
     }
 }

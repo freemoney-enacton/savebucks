@@ -44,6 +44,7 @@ class PostbackLogResource extends Resource
                         ->options([
                             'success' => 'Success',
                             'failure' => 'Failure',
+                            'pending' => 'Pending',
                         ])
                         ->required(),
 
@@ -54,7 +55,7 @@ class PostbackLogResource extends Resource
                         ->extraFieldWrapperAttributes([
                             'class' => 'category-block',
                         ])
-                        ->editorOnly(),
+                        ->viewerOnly(),
 
                     JsonColumn::make('status_messages')
                         ->label('Status Messages')
@@ -63,7 +64,7 @@ class PostbackLogResource extends Resource
                         ->extraFieldWrapperAttributes([
                             'class' => 'category-block',
                         ])
-                        ->editorOnly(),
+                        ->viewerOnly(),
 
                     // Forms\Components\TextInput::make('status_messages'),
 
@@ -90,7 +91,19 @@ class PostbackLogResource extends Resource
                 Tables\Columns\TextColumn::make('transaction_id')
                     ->label('Transaction ID')
                     ->searchable(),
-              
+
+                Tables\Columns\TextColumn::make('status')
+                    ->label('Status')
+                    ->badge()
+                    ->formatStateUsing(fn (string $state): string => ucfirst($state))
+                    ->color(fn (string $state): string => match ($state) {
+                        'success' => 'success',
+                        'failure' => 'danger',
+                        'pending' => 'pending', 
+                        default => 'gray',
+                    })
+                    ->searchable(),
+
                 Tables\Columns\TextColumn::make('received_at')
                     ->label('Received At')
                     ->dateTime()
@@ -100,18 +113,6 @@ class PostbackLogResource extends Resource
                     ->label('Processed At')
                     ->dateTime()
                     ->sortable(),
-
-                Tables\Columns\TextColumn::make('status')
-                    ->label('Status')
-                    ->badge()
-                    ->formatStateUsing(fn (string $state): string => ucfirst($state))
-                    ->color(fn (string $state): string => match ($state) {
-                        'success' => 'success',
-                        'failure' => 'danger',
-                         default => 'gray',
-                    })
-                    ->searchable(),
-
             ])
             ->filters([
                 
@@ -146,7 +147,7 @@ class PostbackLogResource extends Resource
         return [
             'index' => Pages\ListPostbackLogs::route('/'),
             'create' => Pages\CreatePostbackLog::route('/create'),
-            'view' => Pages\ViewPostbackLog::route('/{record}'),
+            // 'view' => Pages\ViewPostbackLog::route('/{record}'),
             'edit' => Pages\EditPostbackLog::route('/{record}/edit'),
         ];
     }

@@ -9,6 +9,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Str;
 
 class ConversionsRelationManager extends RelationManager
 {
@@ -30,7 +31,7 @@ class ConversionsRelationManager extends RelationManager
             ->recordTitleAttribute('campaign_id')
             ->columns([
 
-                Tables\Columns\TextColumn::make('campaign.id')
+                Tables\Columns\TextColumn::make('campaign.name')
                     ->numeric()
                     ->sortable(),
 
@@ -38,16 +39,16 @@ class ConversionsRelationManager extends RelationManager
                     ->label('Click Code')
                     ->searchable(),
 
-                Tables\Columns\TextColumn::make('affiliate.name')
-                    ->label('Affiliate')
-                    ->searchable()
-                    ->sortable(),
+                // Tables\Columns\TextColumn::make('affiliate.name')
+                //     ->label('Affiliate')
+                //     ->searchable()
+                //     ->sortable(),
 
                 Tables\Columns\TextColumn::make('transaction_id')
                     ->searchable(),
 
                 Tables\Columns\TextColumn::make('commission')
-                    ->numeric()
+                    ->money(config('freemoney.default.default_currency'))
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('status')
@@ -62,9 +63,9 @@ class ConversionsRelationManager extends RelationManager
                     })
                     ->searchable(),
 
-                Tables\Columns\TextColumn::make('payout_id')
-                    ->numeric()
-                    ->sortable(),
+                // Tables\Columns\TextColumn::make('payout_id')
+                //     ->numeric()
+                //     ->sortable(),
 
                 Tables\Columns\TextColumn::make('converted_at')
                     ->label("Converted At")
@@ -89,12 +90,6 @@ class ConversionsRelationManager extends RelationManager
                     ->preload()
                     ->searchable()
                     ->label('Filter By Campaign'),
-
-                Tables\Filters\SelectFilter::make('affiliate_id')
-                    ->relationship('affiliate', 'name')
-                    ->preload()
-                    ->searchable()
-                    ->label('Filter by Affiliate'),
 
             ])
             ->headerActions([

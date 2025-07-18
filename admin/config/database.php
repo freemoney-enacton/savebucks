@@ -93,6 +93,26 @@ return [
             // 'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE', 'false'),
         ],
 
+        'affiliate' => [
+            'driver' => 'mysql',
+            'url' => env('AFFILIATE_DATABASE_URL'),
+            'host' => env('AFFILIATE_DB_HOST', '127.0.0.1'),
+            'port' => env('AFFILIATE_DB_PORT', '3306'),
+            'database' => env('AFFILIATE_DB_DATABASE', 'forge'),
+            'username' => env('AFFILIATE_DB_USERNAME', 'forge'),
+            'password' => env('AFFILIATE_DB_PASSWORD', ''),
+            'unix_socket' => env('AFFILIATE_DB_SOCKET', ''),
+            'charset' => 'utf8mb4',
+            'collation' => 'utf8mb4_unicode_ci',
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'strict' => true,
+            'engine' => null,
+            'options' => extension_loaded('pdo_mysql') ? array_filter([
+                PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
+            ]) : [],
+        ],
+
     ],
 
     /*
@@ -144,7 +164,7 @@ return [
             'password' => env('REDIS_PASSWORD'),
             'port' => env('REDIS_PORT', '6379'),
             'database' => env('REDIS_CACHE_DB', '1'),
-        ],
+        ],      
 
     ],
 

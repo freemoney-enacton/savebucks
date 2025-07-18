@@ -35,8 +35,8 @@ class PayoutsRelationManager extends RelationManager
 
                 Tables\Columns\TextColumn::make('requested_amount')
                     ->searchable()
+                    ->money(config('freemoney.default.default_currency'))
                     ->label('Amount')
-                    ->numeric()
                     ->sortable(),               
 
                 Tables\Columns\TextColumn::make('payment_method')

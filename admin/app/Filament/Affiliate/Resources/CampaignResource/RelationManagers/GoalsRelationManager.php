@@ -12,6 +12,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Str;
 
 class GoalsRelationManager extends RelationManager
 {
@@ -20,7 +21,7 @@ class GoalsRelationManager extends RelationManager
     public function form(Form $form): Form
     {
         return $form
-            ->schema([             
+            ->schema([
 
                 Forms\Components\TextInput::make('name')
                     ->required()
@@ -30,27 +31,40 @@ class GoalsRelationManager extends RelationManager
                     ->required()
                     ->maxLength(255),
 
-                Forms\Components\Select::make('commission_type')
-                    ->required()
-                    ->label('Commission Type')
-                    ->options([
-                        'fixed'   => 'Fixed Amount',
-                        'percent' => 'Percentage',
-                    ])
+                // Forms\Components\Select::make('commission_type')
+                //     ->required()
+                //     ->label('Commission Type')
+                //     ->disabledOn('edit')
+                //     ->visibleOn('create')
+                //     ->options([
+                //         'fixed'   => 'Fixed Amount',
+                //         'percent' => 'Percentage',
+                //     ])
+                //     ->default('fixed'),
+
+                Forms\Components\Hidden::make('commission_type')
                     ->default('fixed'),
 
                 Forms\Components\TextInput::make('commission_amount')
                     ->required()
+                    ->prefix(config('freemoney.default.default_currency'))
                     ->label('Commission Amount')
                     ->numeric()
                     ->minValue(0),
 
                 Forms\Components\TextInput::make('tracking_code')
                     ->label('Tracking Code')
+                    ->disabledOn("edit")
                     ->required()
-                    ->maxLength(10)
-                    ->unique(ignoreRecord: true)                
-                    ->helperText('Unique tracking code (up to 10 characters)'),
+                    ->validationMessages([
+                        'unique' => 'The tracking code must be unique.',
+                        'max' => 'The tracking code must not exceed 50 characters.',
+                        'min' => 'The tracking code must be at least 2 characters.',
+                    ])
+                    ->maxLength(50)
+                    ->minLength(2)
+                    ->unique(ignoreRecord: true)
+                    ->infotip('Unique tracking code for goal (up to 50 characters)'),
 
                 Forms\Components\Radio::make('status')
                     ->required()
@@ -75,17 +89,18 @@ class GoalsRelationManager extends RelationManager
                 Tables\Columns\TextColumn::make('name')
                     ->searchable(),
 
-                Tables\Columns\TextColumn::make('commission_type')
-                    ->searchable()
-                    ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        'fixed'     => 'success',
-                        'percent'   => 'info',
-                    })
-                    ->formatStateUsing(fn (string $state): string => ucfirst($state)),
-                
+                // Tables\Columns\TextColumn::make('commission_type')
+                //     ->searchable()
+                //     ->badge()
+                //     ->color(fn (string $state): string => match ($state) {
+                //         'fixed'     => 'success',
+                //         'percent'   => 'info',
+                //     })
+                //     ->formatStateUsing(fn (string $state): string => ucfirst($state)),
+
                 Tables\Columns\TextColumn::make('commission_amount')
                     ->searchable()
+                    ->money(config('freemoney.default.default_currency'))
                     ->label('Commission Amount'),
 
                 Tables\Columns\TextColumn::make('tracking_code')
@@ -108,7 +123,7 @@ class GoalsRelationManager extends RelationManager
 
             ])
             ->filters([
-               
+
                 Tables\Filters\SelectFilter::make('status')
                     ->label('Status')
                     ->options([
@@ -116,12 +131,12 @@ class GoalsRelationManager extends RelationManager
                         'inactive'  => 'Inactive',
                     ]),
 
-                Tables\Filters\SelectFilter::make('commission_type')
-                    ->label('Commission Type')
-                    ->options([
-                        'fixed'     => 'Fixed',
-                        'percent'   => 'Percent',
-                    ]),
+                // Tables\Filters\SelectFilter::make('commission_type')
+                //     ->label('Commission Type')
+                //     ->options([
+                //         'fixed'     => 'Fixed',
+                //         'percent'   => 'Percent',
+                //     ]),
 
             ])
             ->headerActions([

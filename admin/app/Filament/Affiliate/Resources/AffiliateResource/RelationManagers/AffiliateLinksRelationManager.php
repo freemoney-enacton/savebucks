@@ -140,7 +140,7 @@ class AffiliateLinksRelationManager extends RelationManager
                 Tables\Columns\TextColumn::make('total_earnings')
                     ->label('Earnings')
                     ->searchable()
-                    ->money('USD')
+                    ->money(config('freemoney.default.default_currency'))
                     ->sortable(),
 
                 Tables\Columns\BadgeColumn::make('status')
