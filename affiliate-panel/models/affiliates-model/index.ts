@@ -57,16 +57,16 @@ import { and, eq, sql } from "drizzle-orm";
 
 export const insertAffiliate = async (affiliateData: any) => {
   try {
-    const result = await db.transaction(async (tx) => {
+    const insertedId = await db.transaction(async (tx) => {
       const inserted = await tx
         .insert(affiliates)
         .values(affiliateData)
         .execute();
-      return inserted[0];
+      return (inserted as any).insertId ?? (inserted as any)[0]?.insertId;
     });
 
     return {
-      data: result,
+      data: { id: insertedId },
       message: "Affiliate created successfully",
       status: "success",
     };
@@ -81,16 +81,15 @@ export const insertAffiliate = async (affiliateData: any) => {
 
 export const updateAffiliate = async (id: number, updateData: any) => {
   try {
-    const result = await db.transaction(async (tx) => {
-      const updated = await tx
+    await db.transaction(async (tx) => {
+      await tx
         .update(affiliates)
         .set({ ...updateData, updatedAt: new Date() })
         .where(eq(affiliates.id, id))
         .execute();
-      return updated[0];
     });
 
-    if (!result) {
+    if (!id) {
       return {
         data: null,
         message: "Affiliate not found",
@@ -99,7 +98,7 @@ export const updateAffiliate = async (id: number, updateData: any) => {
     }
 
     return {
-      data: result,
+      data: { id },
       message: "Affiliate updated successfully",
       status: "success",
     };
@@ -113,8 +112,8 @@ export const updateAffiliate = async (id: number, updateData: any) => {
 };
 export const updateAffiliateProfile = async (id: number, updateData: any) => {
   try {
-    const result = await db.transaction(async (tx) => {
-      const updated = await tx
+    await db.transaction(async (tx) => {
+      await tx
         .update(affiliates)
         .set({
           name: updateData.name,
@@ -123,10 +122,9 @@ export const updateAffiliateProfile = async (id: number, updateData: any) => {
         })
         .where(eq(affiliates.id, id))
         .execute();
-      return updated[0];
     });
 
-    if (!result) {
+    if (!id) {
       return {
         data: null,
         message: "Affiliate not found",
@@ -135,7 +133,7 @@ export const updateAffiliateProfile = async (id: number, updateData: any) => {
     }
 
     return {
-      data: result,
+      data: { id },
       message: "Affiliate updated successfully",
       status: "success",
     };
@@ -247,8 +245,8 @@ export const getAffiliateStatus = async (email: string) => {
 
 export const updateAffiliatePassword = async (id: number, updateData: any) => {
   try {
-    const result = await db.transaction(async (tx) => {
-      const updated = await tx
+    await db.transaction(async (tx) => {
+      await tx
         .update(affiliates)
         .set({
           password: updateData,
@@ -258,10 +256,9 @@ export const updateAffiliatePassword = async (id: number, updateData: any) => {
         })
         .where(eq(affiliates.id, id))
         .execute();
-      return updated[0];
     });
 
-    if (!result) {
+    if (!id) {
       return {
         data: null,
         message: "Affiliate not found",
@@ -270,7 +267,7 @@ export const updateAffiliatePassword = async (id: number, updateData: any) => {
     }
 
     return {
-      data: result,
+      data: { id },
       message: "Affiliate password updated successfully",
       status: "success",
     };
@@ -285,16 +282,15 @@ export const updateAffiliatePassword = async (id: number, updateData: any) => {
 
 export const updateAffiliatePaypalId = async (id: number, updateData: any) => {
   try {
-    const result = await db.transaction(async (tx) => {
-      const updated = await tx
+    await db.transaction(async (tx) => {
+      await tx
         .update(affiliates)
         .set({ paypalAddress: updateData, updatedAt: new Date().toISOString() })
         .where(eq(affiliates.id, id))
         .execute();
-      return updated[0];
     });
 
-    if (!result) {
+    if (!id) {
       return {
         data: null,
         message: "Affiliate not found",
@@ -303,7 +299,7 @@ export const updateAffiliatePaypalId = async (id: number, updateData: any) => {
     }
 
     return {
-      data: result,
+      data: { id },
       message: "Affiliate password updated successfully",
       status: "success",
     };
@@ -321,16 +317,15 @@ export const updateAffiliateBankDetails = async (
   updateData: any
 ) => {
   try {
-    const result = await db.transaction(async (tx) => {
-      const updated = await tx
+    await db.transaction(async (tx) => {
+      await tx
         .update(affiliates)
         .set({ bankDetails: updateData, updatedAt: new Date().toISOString() })
         .where(eq(affiliates.id, id))
         .execute();
-      return updated[0];
     });
 
-    if (!result) {
+    if (!id) {
       return {
         data: null,
         message: "Affiliate not found",
@@ -339,7 +334,7 @@ export const updateAffiliateBankDetails = async (
     }
 
     return {
-      data: result,
+      data: { id },
       message: "Affiliate password updated successfully",
       status: "success",
     };
@@ -354,8 +349,8 @@ export const updateAffiliateBankDetails = async (
 
 export const verifyAffiliateEmail = async (id: number) => {
   try {
-    const result = await db.transaction(async (tx) => {
-      const updated = await tx
+    await db.transaction(async (tx) => {
+      await tx
         .update(affiliates)
         .set({
           isEmailVerified: true,
@@ -366,10 +361,9 @@ export const verifyAffiliateEmail = async (id: number) => {
         })
         .where(eq(affiliates.id, id))
         .execute();
-      return updated[0];
     });
 
-    if (!result) {
+    if (!id) {
       return {
         data: null,
         message: "Affiliate not found",
@@ -378,7 +372,7 @@ export const verifyAffiliateEmail = async (id: number) => {
     }
 
     return {
-      data: result,
+      data: { id },
       message: "Affiliate email verified successfully",
       status: "success",
     };

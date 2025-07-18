@@ -4,16 +4,16 @@ import { and, desc, eq, gte, lte, sql } from "drizzle-orm";
 
 export const insertAffiliatePostback = async (postbackData: any) => {
   try {
-    const result = await db.transaction(async (tx) => {
+    const insertedId = await db.transaction(async (tx) => {
       const inserted = await tx
         .insert(affiliatePostbacks)
         .values(postbackData)
         .execute();
-      return inserted[0];
+      return (inserted as any).insertId ?? (inserted as any)[0]?.insertId;
     });
 
     return {
-      data: result,
+      data: { id: insertedId },
       message: "Affiliate postback created successfully",
       status: "success",
     };
@@ -28,16 +28,15 @@ export const insertAffiliatePostback = async (postbackData: any) => {
 
 export const updateAffiliatePostback = async (id: number, updateData: any) => {
   try {
-    const result = await db.transaction(async (tx) => {
-      const updated = await tx
+    await db.transaction(async (tx) => {
+      await tx
         .update(affiliatePostbacks)
         .set({ ...updateData, updatedAt: new Date() })
         .where(eq(affiliatePostbacks.id, id))
         .execute();
-      return updated[0];
     });
 
-    if (!result) {
+    if (!id) {
       return {
         data: null,
         message: "Affiliate postback not found",
@@ -46,7 +45,7 @@ export const updateAffiliatePostback = async (id: number, updateData: any) => {
     }
 
     return {
-      data: result,
+      data: { id },
       message: "Affiliate postback updated successfully",
       status: "success",
     };
@@ -61,8 +60,8 @@ export const updateAffiliatePostback = async (id: number, updateData: any) => {
 
 export const deleteAffiliatePostback = async (id: number) => {
   try {
-    const result = await db.transaction(async (tx) => {
-      const deleted = await tx
+    await db.transaction(async (tx) => {
+      await tx
         .update(affiliatePostbacks)
         .set({
           isDeleted: true,
@@ -71,10 +70,9 @@ export const deleteAffiliatePostback = async (id: number) => {
         })
         .where(eq(affiliatePostbacks.id, id))
         .execute();
-      return deleted[0];
     });
 
-    if (!result) {
+    if (!id) {
       return {
         data: null,
         message: "Affiliate postback not found",
@@ -83,7 +81,7 @@ export const deleteAffiliatePostback = async (id: number) => {
     }
 
     return {
-      data: result,
+      data: { id },
       message: "Affiliate postback deleted successfully",
       status: "success",
     };

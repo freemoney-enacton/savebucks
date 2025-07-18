@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
     }
 
     return commonResponse({
-      data: result.data,
+      data: result.data?.id,
       status: "success",
       message: t("passwordChanged"),
     });

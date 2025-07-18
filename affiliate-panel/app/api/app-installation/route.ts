@@ -23,13 +23,15 @@ export async function POST(request: NextRequest) {
         metadata: metadata || null,
         createdAt: new Date().toISOString(),
       };
-      const appInstallEvent = await db
+      const result = await db
         .insert(appInstallEvents)
         .values(data)
         .execute();
 
+      const insertId = (result as any).insertId ?? (result as any)[0]?.insertId;
+
       return commonResponse({
-        data: appInstallEvent,
+        data: insertId,
         status: "success",
         message: "App Install Event created successfully",
       });

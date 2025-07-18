@@ -113,16 +113,16 @@ export const getPostbackLogByTransactionId = async (transactionId: string) => {
 
 export const insertPostbackLog = async (postbackLogData: any) => {
   try {
-    const result = await db.transaction(async (tx) => {
+    const insertedId = await db.transaction(async (tx) => {
       const inserted = await tx
         .insert(postbackLogs)
         .values(postbackLogData)
         .execute();
-      return inserted[0];
+      return (inserted as any).insertId ?? (inserted as any)[0]?.insertId;
     });
 
     return {
-      data: result,
+      data: { id: insertedId },
       message: "Postback log created successfully",
       status: "success",
     };
@@ -137,16 +137,15 @@ export const insertPostbackLog = async (postbackLogData: any) => {
 
 export const updatePostbackLog = async (id: number, updateData: any) => {
   try {
-    const result = await db.transaction(async (tx) => {
-      const updated = await tx
+    await db.transaction(async (tx) => {
+      await tx
         .update(postbackLogs)
         .set(updateData)
         .where(eq(postbackLogs.id, id))
         .execute();
-      return updated[0];
     });
 
-    if (!result) {
+    if (!id) {
       return {
         data: null,
         message: "Postback log not found",
@@ -155,7 +154,7 @@ export const updatePostbackLog = async (id: number, updateData: any) => {
     }
 
     return {
-      data: result,
+      data: { id },
       message: "Postback log updated successfully",
       status: "success",
     };
@@ -173,16 +172,15 @@ export const markPostbackLogAsProcessed = async (
   processedAt: string
 ) => {
   try {
-    const result = await db.transaction(async (tx) => {
-      const updated = await tx
+    await db.transaction(async (tx) => {
+      await tx
         .update(postbackLogs)
         .set({ processedAt })
         .where(eq(postbackLogs.id, id))
         .execute();
-      return updated[0];
     });
 
-    if (!result) {
+    if (!id) {
       return {
         data: null,
         message: "Postback log not found",
@@ -191,7 +189,7 @@ export const markPostbackLogAsProcessed = async (
     }
 
     return {
-      data: result,
+      data: { id },
       message: "Postback log marked as processed successfully",
       status: "success",
     };
@@ -206,15 +204,14 @@ export const markPostbackLogAsProcessed = async (
 
 export const deletePostbackLog = async (id: number) => {
   try {
-    const result = await db.transaction(async (tx) => {
-      const deleted = await tx
+    await db.transaction(async (tx) => {
+      await tx
         .delete(postbackLogs)
         .where(eq(postbackLogs.id, id))
         .execute();
-      return deleted[0];
     });
 
-    if (!result) {
+    if (!id) {
       return {
         data: null,
         message: "Postback log not found",
@@ -223,7 +220,7 @@ export const deletePostbackLog = async (id: number) => {
     }
 
     return {
-      data: result,
+      data: { id },
       message: "Postback log deleted successfully",
       status: "success",
     };
@@ -263,8 +260,8 @@ export const updatePostbackLogStatus = async (
   message?: any
 ) => {
   try {
-    const result = await db.transaction(async (tx) => {
-      const updated = await tx
+    await db.transaction(async (tx) => {
+      await tx
         .update(postbackLogs)
         .set({
           status,
@@ -273,10 +270,9 @@ export const updatePostbackLogStatus = async (
         })
         .where(eq(postbackLogs.id, id))
         .execute();
-      return updated[0];
     });
 
-    if (!result) {
+    if (!id) {
       return {
         data: null,
         message: "Postback log not found",
@@ -285,7 +281,7 @@ export const updatePostbackLogStatus = async (
     }
 
     return {
-      data: result,
+      data: { id },
       message: "Postback log status updated successfully",
       status: "success",
     };

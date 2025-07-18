@@ -216,13 +216,13 @@ export const getPayoutByTransactionId = async (transactionId: string) => {
 
 export const insertPayout = async (payoutData: any) => {
   try {
-    const result = await db.transaction(async (tx) => {
+    const insertedId = await db.transaction(async (tx) => {
       const inserted = await tx.insert(payouts).values(payoutData).execute();
-      return inserted[0];
+      return (inserted as any).insertId ?? (inserted as any)[0]?.insertId;
     });
 
     return {
-      data: result,
+      data: { id: insertedId },
       message: "Payout created successfully",
       status: "success",
     };
@@ -237,16 +237,15 @@ export const insertPayout = async (payoutData: any) => {
 
 export const updatePayout = async (id: number, updateData: any) => {
   try {
-    const result = await db.transaction(async (tx) => {
-      const updated = await tx
+    await db.transaction(async (tx) => {
+      await tx
         .update(payouts)
         .set({ ...updateData, updatedAt: new Date() })
         .where(eq(payouts.id, id))
         .execute();
-      return updated[0];
     });
 
-    if (!result) {
+    if (!id) {
       return {
         data: null,
         message: "Payout not found",
@@ -255,7 +254,7 @@ export const updatePayout = async (id: number, updateData: any) => {
     }
 
     return {
-      data: result,
+      data: { id },
       message: "Payout updated successfully",
       status: "success",
     };
@@ -275,8 +274,8 @@ export const approvePayoutRequest = async (
   paidAt: string
 ) => {
   try {
-    const result = await db.transaction(async (tx) => {
-      const updated = await tx
+    await db.transaction(async (tx) => {
+      await tx
         .update(payouts)
         .set({
           status: "paid",
@@ -287,10 +286,9 @@ export const approvePayoutRequest = async (
         })
         .where(eq(payouts.id, id))
         .execute();
-      return updated[0];
     });
 
-    if (!result) {
+    if (!id) {
       return {
         data: null,
         message: "Payout not found",
@@ -299,7 +297,7 @@ export const approvePayoutRequest = async (
     }
 
     return {
-      data: result,
+      data: { id },
       message: "Payout approved successfully",
       status: "success",
     };
@@ -314,8 +312,8 @@ export const approvePayoutRequest = async (
 
 export const declinePayoutRequest = async (id: number, adminNotes: string) => {
   try {
-    const result = await db.transaction(async (tx) => {
-      const updated = await tx
+    await db.transaction(async (tx) => {
+      await tx
         .update(payouts)
         .set({
           status: "rejected",
@@ -324,10 +322,9 @@ export const declinePayoutRequest = async (id: number, adminNotes: string) => {
         })
         .where(eq(payouts.id, id))
         .execute();
-      return updated[0];
     });
 
-    if (!result) {
+    if (!id) {
       return {
         data: null,
         message: "Payout not found",
@@ -336,7 +333,7 @@ export const declinePayoutRequest = async (id: number, adminNotes: string) => {
     }
 
     return {
-      data: result,
+      data: { id },
       message: "Payout declined successfully",
       status: "success",
     };
@@ -351,15 +348,14 @@ export const declinePayoutRequest = async (id: number, adminNotes: string) => {
 
 export const deletePayout = async (id: number) => {
   try {
-    const result = await db.transaction(async (tx) => {
-      const deleted = await tx
+    await db.transaction(async (tx) => {
+      await tx
         .delete(payouts)
         .where(eq(payouts.id, id))
         .execute();
-      return deleted[0];
     });
 
-    if (!result) {
+    if (!id) {
       return {
         data: null,
         message: "Payout not found",
@@ -368,7 +364,7 @@ export const deletePayout = async (id: number) => {
     }
 
     return {
-      data: result,
+      data: { id },
       message: "Payout deleted successfully",
       status: "success",
     };

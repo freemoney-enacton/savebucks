@@ -120,7 +120,7 @@ export async function POST(request: NextRequest) {
       const email = await sendEmailToAffiliate({
         type: "payout_request",
         user_id: id,
-        payout_id: (result.data as any)?.toString(),
+        payout_id: result.data?.id?.toString(),
       });
     } catch (error) {
       return commonResponse({
@@ -131,7 +131,7 @@ export async function POST(request: NextRequest) {
     }
 
     return commonResponse({
-      data: result.data,
+      data: result.data?.id,
       status: "success",
       message: t("payouts.payoutCreated"),
     });

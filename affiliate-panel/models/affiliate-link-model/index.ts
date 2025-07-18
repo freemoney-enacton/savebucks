@@ -305,16 +305,16 @@ export const getAffiliateLinksByAffiliateId = async (
 
 export const insertAffiliateLink = async (linkData: any) => {
   try {
-    const result = await db.transaction(async (tx) => {
+    const insertedId = await db.transaction(async (tx) => {
       const inserted = await tx
         .insert(affiliateLinks)
         .values(linkData)
         .execute();
-      return inserted[0];
+      return (inserted as any).insertId ?? (inserted as any)[0]?.insertId;
     });
 
     return {
-      data: result,
+      data: { id: insertedId },
       message: "Affiliate link created successfully",
       status: "success",
     };
@@ -530,16 +530,15 @@ export const updateAffiliateLinkStatus = async (
   status: "active" | "inactive"
 ) => {
   try {
-    const result = await db.transaction(async (tx) => {
-      const updated = await tx
+    await db.transaction(async (tx) => {
+      await tx
         .update(affiliateLinks)
         .set({ status, updatedAt: new Date().toISOString() })
         .where(eq(affiliateLinks.id, id))
         .execute();
-      return updated[0];
     });
 
-    if (!result) {
+    if (!id) {
       return {
         data: null,
         message: "Affiliate link not found",
@@ -548,7 +547,7 @@ export const updateAffiliateLinkStatus = async (
     }
 
     return {
-      data: result,
+      data: { id },
       message: "Affiliate link status updated successfully",
       status: "success",
     };
