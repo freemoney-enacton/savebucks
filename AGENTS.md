@@ -2,6 +2,16 @@
 
 This document provides conventions and architectural notes for working with the SaveBucks monorepo. Use it as a reference when contributing to any of the contained applications.
 
+
+## Steering Documentation
+For detailed technical guidance, refer to the comprehensive steering documents in `.kiro/steering/`:
+- `admin-guide.md` - Laravel Filament admin panel development
+- `api-guide.md` - Fastify API server development  
+- `web-guide.md` - Next.js web frontend development
+- `database-guide.md` - Database design and migration patterns
+- `integration-guide.md` - Inter-service communication patterns
+
+
 ## Architectural Overview
 
 The repository consists of three primary applications:
