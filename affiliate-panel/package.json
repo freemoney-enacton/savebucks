@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "migrate": "drizzle-kit generate --schema=db/schema.ts --dialect=postgresql && node -r esbuild-register db/migration.ts",
+    "migrate": "drizzle-kit generate --schema=db/schema.ts --dialect=mysql && node -r esbuild-register db/migration.ts",
     "studio": "npx drizzle-kit studio",
     "crons": "node -r esbuild-register crons/crons.ts"
   },
@@ -69,8 +69,7 @@
     "next-nprogress-bar": "^2.4.7",
     "next-themes": "^0.4.6",
     "node-cron": "^4.1.0",
-    "pg": "^8.16.0",
-    "postgres": "^3.4.7",
+    "mysql2": "^3.9.1",
     "react": "18.2.0",
     "react-day-picker": "^8.10.1",
     "react-dom": "18.2.0",
@@ -85,7 +84,6 @@
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",
     "@types/node": "20.6.2",
-    "@types/pg": "^8.15.2",
     "@types/react": "18.2.22",
     "@types/react-dom": "18.2.7",
     "autoprefixer": "10.4.15",
