@@ -1,28 +1,29 @@
-import postgres from "postgres";
-import { drizzle } from "drizzle-orm/postgres-js";
+import mysql from "mysql2/promise";
+import { drizzle } from "drizzle-orm/mysql2";
 import * as schema from "./schema";
 
-const sql = postgres(process.env.DATABASE_URL!, {
-  max: 20,
-  idle_timeout: 20,
-  connect_timeout: 10,
+const pool = mysql.createPool({
+  uri: process.env.DATABASE_URL!,
+  connectionLimit: 20,
 });
-
-export const db = drizzle(sql, { schema });
+export const db = drizzle(pool, { schema });
 
 export async function withTransaction<T>(
   callback: (tx: typeof db) => Promise<T>
 ): Promise<T> {
-  return (await sql.begin(async (sqlTransaction) => {
-    // console.log("Starting transaction...");
-    const txDb = drizzle(sqlTransaction, { schema });
-    try {
-      // console.log("Executing callback...");
-      return await callback(txDb);
-    } catch (error) {
-      // Ensure the transaction is rolled back
-      console.error("Transaction failed:", error);
-      throw error;
-    }
-  })) as Promise<T>;
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
+    const txDb = drizzle(connection, { schema });
+    const result = await callback(txDb);
+    await connection.commit();
+    return result;
+  } catch (error) {
+    await connection.rollback();
+    console.error("Transaction failed:", error);
+    throw error;
+  } finally {
+    connection.release();
+  }
 }
+
