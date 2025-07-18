@@ -2,7 +2,12 @@
 
 ## Database Architecture Overview
 
-The SaveBucks platform uses MySQL as the primary database with a well-structured schema supporting users, offers, transactions, gamification, and content management. The database is shared between the Laravel admin panel and Fastify API server.
+The SaveBucks platform uses a dual-database architecture:
+
+- **MySQL Database**: Primary database for the core platform (admin panel, API server, web frontend) supporting users, offers, transactions, gamification, and content management
+- **PostgreSQL Database**: Dedicated database for the affiliate panel supporting affiliate management, campaigns, conversions, and payouts
+
+Both databases are designed with proper referential integrity, performance optimization, and scalability in mind.
 
 ### Core Design Principles
 - **Referential Integrity**: All foreign keys with proper constraints
@@ -299,6 +304,346 @@ CREATE TABLE user_daily_bonuses (
     UNIQUE KEY unique_user_date (user_id, bonus_date),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
+```
+
+## PostgreSQL Schema (Affiliate Panel)
+
+### Affiliate Management Schema
+
+```sql
+-- Enums for PostgreSQL
+CREATE TYPE approval_status AS ENUM ('approved', 'rejected', 'suspended', 'pending');
+CREATE TYPE campaign_status AS ENUM ('active', 'paused', 'ended');
+CREATE TYPE conversion_status AS ENUM ('pending', 'approved', 'declined', 'paid');
+CREATE TYPE payout_status AS ENUM ('pending', 'processing', 'rejected', 'paid');
+CREATE TYPE postback_status AS ENUM ('success', 'failure', 'pending');
+CREATE TYPE status AS ENUM ('active', 'inactive');
+
+-- Affiliates table
+CREATE TABLE affiliates (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    approval_status approval_status DEFAULT 'pending',
+    paypal_address VARCHAR(255),
+    bank_details JSONB,
+    address JSONB,
+    tax_id VARCHAR(255),
+    token VARCHAR(255),
+    token_expiry TIMESTAMP,
+    is_email_verified BOOLEAN NOT NULL DEFAULT FALSE,
+    email_verified_at TIMESTAMP,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+-- Campaigns table
+CREATE TABLE campaigns (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    description TEXT NOT NULL,
+    logo_url VARCHAR(255),
+    campaign_type VARCHAR(255) NOT NULL,
+    status campaign_status NOT NULL DEFAULT 'active',
+    terms_and_conditions TEXT,
+    terms_and_condition_url TEXT,
+    min_payout_request NUMERIC(12,2) NOT NULL DEFAULT 0.00,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+-- Campaign goals table
+CREATE TABLE campaign_goals (
+    id SERIAL PRIMARY KEY,
+    campaign_id BIGINT NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    description VARCHAR(255) NOT NULL,
+    commission_type VARCHAR(255) NOT NULL,
+    commission_amount NUMERIC(10,2) NOT NULL,
+    tracking_code CHAR(10) NOT NULL UNIQUE,
+    status status NOT NULL DEFAULT 'active',
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    
+    FOREIGN KEY (campaign_id) REFERENCES campaigns(id) ON DELETE CASCADE
+);
+
+-- Affiliate campaign goals (many-to-many relationship)
+CREATE TABLE affiliate_campaign_goals (
+    id SERIAL PRIMARY KEY,
+    affiliate_id BIGINT NOT NULL,
+    campaign_id BIGINT NOT NULL,
+    campaign_goal_id BIGINT NOT NULL,
+    custom_commission_rate NUMERIC(5,2),
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    
+    FOREIGN KEY (affiliate_id) REFERENCES affiliates(id) ON DELETE CASCADE,
+    FOREIGN KEY (campaign_id) REFERENCES campaigns(id) ON DELETE CASCADE,
+    FOREIGN KEY (campaign_goal_id) REFERENCES campaign_goals(id) ON DELETE CASCADE,
+    UNIQUE(affiliate_id, campaign_id, campaign_goal_id)
+);
+
+-- Affiliate links table
+CREATE TABLE affiliate_links (
+    id SERIAL PRIMARY KEY,
+    campaign_id BIGINT NOT NULL,
+    affiliate_id BIGINT NOT NULL,
+    slug VARCHAR(255) NOT NULL UNIQUE,
+    name VARCHAR(255) NOT NULL,
+    destination_url VARCHAR(1000) NOT NULL,
+    sub1 VARCHAR(255),
+    sub2 VARCHAR(255),
+    sub3 VARCHAR(255),
+    total_clicks BIGINT NOT NULL DEFAULT 0,
+    total_earnings NUMERIC(12,2) NOT NULL DEFAULT 0,
+    status status NOT NULL DEFAULT 'active',
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    
+    FOREIGN KEY (campaign_id) REFERENCES campaigns(id) ON DELETE CASCADE,
+    FOREIGN KEY (affiliate_id) REFERENCES affiliates(id) ON DELETE CASCADE
+);
+
+-- Clicks tracking table
+CREATE TABLE clicks (
+    id SERIAL PRIMARY KEY,
+    campaign_id BIGINT NOT NULL,
+    affiliate_link_id BIGINT NOT NULL,
+    affiliate_id BIGINT NOT NULL,
+    click_code VARCHAR(255) NOT NULL UNIQUE,
+    ip_address VARCHAR(255) NOT NULL,
+    user_agent VARCHAR(1000) NOT NULL,
+    referrer VARCHAR(255),
+    country VARCHAR(255),
+    city VARCHAR(255),
+    device_type VARCHAR(255),
+    sub1 VARCHAR(255),
+    sub2 VARCHAR(255),
+    sub3 VARCHAR(255),
+    is_converted BOOLEAN NOT NULL DEFAULT FALSE,
+    clicked_at TIMESTAMP NOT NULL,
+    
+    FOREIGN KEY (campaign_id) REFERENCES campaigns(id) ON DELETE CASCADE,
+    FOREIGN KEY (affiliate_link_id) REFERENCES affiliate_links(id) ON DELETE CASCADE,
+    FOREIGN KEY (affiliate_id) REFERENCES affiliates(id) ON DELETE CASCADE
+);
+
+-- Postback logs table
+CREATE TABLE postback_logs (
+    id SERIAL PRIMARY KEY,
+    raw_postback_data JSONB NOT NULL,
+    transaction_id VARCHAR(255) NOT NULL,
+    status postback_status NOT NULL,
+    status_messages JSONB,
+    received_at TIMESTAMP NOT NULL,
+    processed_at TIMESTAMP
+);
+
+-- Conversions table
+CREATE TABLE conversions (
+    id SERIAL PRIMARY KEY,
+    campaign_id BIGINT NOT NULL,
+    postback_log_id BIGINT NOT NULL,
+    click_code VARCHAR(255) NOT NULL,
+    campaign_goal_id BIGINT NOT NULL,
+    affiliate_id BIGINT NOT NULL,
+    transaction_id VARCHAR(255) NOT NULL UNIQUE,
+    conversion_value NUMERIC(12,2) NOT NULL,
+    commission NUMERIC(12,2) NOT NULL,
+    sub1 VARCHAR(255),
+    sub2 VARCHAR(255),
+    sub3 VARCHAR(255),
+    status conversion_status NOT NULL DEFAULT 'pending',
+    payout_id BIGINT,
+    admin_notes VARCHAR(500),
+    converted_at TIMESTAMP NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    
+    FOREIGN KEY (campaign_id) REFERENCES campaigns(id) ON DELETE CASCADE,
+    FOREIGN KEY (postback_log_id) REFERENCES postback_logs(id) ON DELETE CASCADE,
+    FOREIGN KEY (campaign_goal_id) REFERENCES campaign_goals(id) ON DELETE CASCADE,
+    FOREIGN KEY (affiliate_id) REFERENCES affiliates(id) ON DELETE CASCADE
+);
+
+-- Payouts table
+CREATE TABLE payouts (
+    id SERIAL PRIMARY KEY,
+    affiliate_id BIGINT NOT NULL,
+    requested_amount NUMERIC(12,2) NOT NULL,
+    status payout_status NOT NULL DEFAULT 'pending',
+    payment_method VARCHAR(50) NOT NULL,
+    payment_account VARCHAR(255) NOT NULL,
+    payment_details JSONB,
+    admin_notes VARCHAR(500),
+    transaction_id VARCHAR(255),
+    api_response JSONB,
+    paid_at TIMESTAMP,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    
+    FOREIGN KEY (affiliate_id) REFERENCES affiliates(id) ON DELETE CASCADE
+);
+
+-- Affiliate postbacks table
+CREATE TABLE affiliate_postbacks (
+    id SERIAL PRIMARY KEY,
+    affiliate_id BIGINT NOT NULL,
+    campaign_id BIGINT NOT NULL,
+    campaign_goal_id BIGINT,
+    postback_url VARCHAR(1500) NOT NULL,
+    method_type VARCHAR(50) NOT NULL DEFAULT 'GET',
+    is_deleted BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    deleted_at TIMESTAMP,
+    
+    FOREIGN KEY (affiliate_id) REFERENCES affiliates(id) ON DELETE CASCADE,
+    FOREIGN KEY (campaign_id) REFERENCES campaigns(id) ON DELETE CASCADE,
+    FOREIGN KEY (campaign_goal_id) REFERENCES campaign_goals(id) ON DELETE SET NULL
+);
+
+-- Indexes for PostgreSQL
+CREATE INDEX idx_affiliates_email ON affiliates(email);
+CREATE INDEX idx_affiliates_approval_status ON affiliates(approval_status);
+CREATE INDEX idx_campaigns_status ON campaigns(status);
+CREATE INDEX idx_campaign_goals_campaign_id ON campaign_goals(campaign_id);
+CREATE INDEX idx_campaign_goals_tracking_code ON campaign_goals(tracking_code);
+CREATE INDEX idx_affiliate_links_affiliate_id ON affiliate_links(affiliate_id);
+CREATE INDEX idx_affiliate_links_campaign_id ON affiliate_links(campaign_id);
+CREATE INDEX idx_affiliate_links_slug ON affiliate_links(slug);
+CREATE INDEX idx_clicks_affiliate_id ON clicks(affiliate_id);
+CREATE INDEX idx_clicks_click_code ON clicks(click_code);
+CREATE INDEX idx_clicks_clicked_at ON clicks(clicked_at);
+CREATE INDEX idx_conversions_affiliate_id ON conversions(affiliate_id);
+CREATE INDEX idx_conversions_status ON conversions(status);
+CREATE INDEX idx_conversions_converted_at ON conversions(converted_at);
+CREATE INDEX idx_payouts_affiliate_id ON payouts(affiliate_id);
+CREATE INDEX idx_payouts_status ON payouts(status);
+```
+
+### Drizzle Migration Example (PostgreSQL)
+
+```typescript
+import { sql } from 'drizzle-orm';
+import { pgTable, serial, varchar, text, numeric, timestamp, bigint, boolean, jsonb, pgEnum } from 'drizzle-orm/pg-core';
+
+// Create enums
+export const approvalStatusEnum = pgEnum("approval_status", [
+  "approved", "rejected", "suspended", "pending"
+]);
+
+export const campaignStatusEnum = pgEnum("campaign_status", [
+  "active", "paused", "ended"
+]);
+
+// Migration function
+export async function up(db: any): Promise<void> {
+  // Create affiliates table
+  await db.execute(sql`
+    CREATE TABLE IF NOT EXISTS affiliates (
+      id SERIAL PRIMARY KEY,
+      name VARCHAR(255) NOT NULL,
+      email VARCHAR(255) NOT NULL UNIQUE,
+      password_hash VARCHAR(255) NOT NULL,
+      approval_status approval_status DEFAULT 'pending',
+      paypal_address VARCHAR(255),
+      bank_details JSONB,
+      address JSONB,
+      tax_id VARCHAR(255),
+      is_email_verified BOOLEAN NOT NULL DEFAULT FALSE,
+      email_verified_at TIMESTAMP,
+      created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+    )
+  `);
+
+  // Create campaigns table
+  await db.execute(sql`
+    CREATE TABLE IF NOT EXISTS campaigns (
+      id SERIAL PRIMARY KEY,
+      name VARCHAR(255) NOT NULL,
+      description TEXT NOT NULL,
+      logo_url VARCHAR(255),
+      campaign_type VARCHAR(255) NOT NULL,
+      status campaign_status NOT NULL DEFAULT 'active',
+      terms_and_conditions TEXT,
+      min_payout_request NUMERIC(12,2) NOT NULL DEFAULT 0.00,
+      created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+    )
+  `);
+
+  // Create indexes
+  await db.execute(sql`CREATE INDEX IF NOT EXISTS idx_affiliates_email ON affiliates(email)`);
+  await db.execute(sql`CREATE INDEX IF NOT EXISTS idx_affiliates_approval_status ON affiliates(approval_status)`);
+  await db.execute(sql`CREATE INDEX IF NOT EXISTS idx_campaigns_status ON campaigns(status)`);
+}
+
+export async function down(db: any): Promise<void> {
+  await db.execute(sql`DROP TABLE IF EXISTS campaigns CASCADE`);
+  await db.execute(sql`DROP TABLE IF EXISTS affiliates CASCADE`);
+  await db.execute(sql`DROP TYPE IF EXISTS campaign_status CASCADE`);
+  await db.execute(sql`DROP TYPE IF EXISTS approval_status CASCADE`);
+}
+```
+
+### PostgreSQL Query Examples
+
+**Get Affiliate Dashboard Stats**
+```sql
+-- Get affiliate performance metrics
+SELECT 
+    a.id,
+    a.name,
+    a.email,
+    COUNT(DISTINCT al.id) as total_links,
+    COUNT(DISTINCT c.id) as total_clicks,
+    COUNT(DISTINCT conv.id) as total_conversions,
+    COALESCE(SUM(conv.commission), 0) as total_earnings,
+    COALESCE(SUM(CASE WHEN conv.status = 'pending' THEN conv.commission ELSE 0 END), 0) as pending_earnings,
+    COALESCE(SUM(CASE WHEN conv.status = 'paid' THEN conv.commission ELSE 0 END), 0) as paid_earnings,
+    CASE 
+        WHEN COUNT(DISTINCT c.id) > 0 
+        THEN (COUNT(DISTINCT conv.id)::DECIMAL / COUNT(DISTINCT c.id) * 100)
+        ELSE 0 
+    END as conversion_rate
+FROM affiliates a
+LEFT JOIN affiliate_links al ON a.id = al.affiliate_id AND al.status = 'active'
+LEFT JOIN clicks c ON a.id = c.affiliate_id AND c.clicked_at >= NOW() - INTERVAL '30 days'
+LEFT JOIN conversions conv ON a.id = conv.affiliate_id AND conv.converted_at >= NOW() - INTERVAL '30 days'
+WHERE a.id = $1
+GROUP BY a.id, a.name, a.email;
+```
+
+**Get Top Performing Campaigns**
+```sql
+-- Get campaign performance for affiliate
+SELECT 
+    camp.id,
+    camp.name,
+    camp.campaign_type,
+    COUNT(DISTINCT c.id) as total_clicks,
+    COUNT(DISTINCT conv.id) as total_conversions,
+    COALESCE(SUM(conv.commission), 0) as total_earnings,
+    COALESCE(AVG(conv.conversion_value), 0) as avg_conversion_value,
+    CASE 
+        WHEN COUNT(DISTINCT c.id) > 0 
+        THEN (COUNT(DISTINCT conv.id)::DECIMAL / COUNT(DISTINCT c.id) * 100)
+        ELSE 0 
+    END as conversion_rate
+FROM campaigns camp
+LEFT JOIN affiliate_links al ON camp.id = al.campaign_id AND al.affiliate_id = $1
+LEFT JOIN clicks c ON al.id = c.affiliate_link_id AND c.clicked_at >= NOW() - INTERVAL '30 days'
+LEFT JOIN conversions conv ON camp.id = conv.campaign_id AND conv.affiliate_id = $1 
+    AND conv.converted_at >= NOW() - INTERVAL '30 days'
+WHERE camp.status = 'active'
+GROUP BY camp.id, camp.name, camp.campaign_type
+HAVING COUNT(DISTINCT c.id) > 0
+ORDER BY total_earnings DESC, conversion_rate DESC
+LIMIT 10;
 ```
 
 ## Migration Patterns

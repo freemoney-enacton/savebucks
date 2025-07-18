@@ -6,6 +6,7 @@
 ├── admin/           # Laravel Filament admin panel
 ├── api/             # Fastify API server
 ├── web/             # Next.js web frontend
+├── affiliate-panel/ # Next.js affiliate portal
 ├── chat-client/     # Static HTML chat prototype
 └── packages/        # Shared packages (referenced in composer.json)
 ```
@@ -71,6 +72,31 @@ web/
 │   └── Type/               # TypeScript type definitions
 ├── public/                 # Static assets
 └── tailwind.config.ts      # Tailwind configuration
+```
+
+## Affiliate Panel Structure (Next.js)
+```
+affiliate-panel/
+├── app/                    # Next.js App Router
+│   ├── (auth)/            # Authentication pages
+│   ├── (protected)/       # Protected affiliate pages
+│   ├── (public)/          # Public pages
+│   └── api/               # API routes
+├── components/            # UI components
+│   ├── dashboard/         # Dashboard components
+│   ├── layouts/           # Layout components
+│   ├── links/             # Link management components
+│   ├── payouts/           # Payout components
+│   ├── settings/          # Settings components
+│   ├── transactions/      # Transaction components
+│   └── ui/                # Reusable UI components
+├── db/                    # Database layer (Drizzle ORM)
+├── hooks/                 # Custom React hooks
+├── i18n/                  # Internationalization
+├── models/                # Data models and API functions
+├── services/              # Business logic services
+├── utils/                 # Utility functions
+└── crons/                 # Scheduled tasks
 ```
 
 ## Key Architectural Patterns

@@ -16,8 +16,15 @@ The SaveBucks platform consists of three main applications that communicate thro
        │         WebSocket/Socket.io    │                               │
        └────────────────────────────────┘                               │
                                         │                               │
-                                        │         Shared Database       │
-                                        └───────────────────────────────┘
+┌─────────────┐    PostgreSQL           │         MySQL Database        │
+│             │ ◄──────────────────────┐│◄──────────────────────────────┘
+│Affiliate    │                        ││
+│Panel        │    API Integration     ││
+│(Next.js)    │ ◄──────────────────────┘│
+│             │                         │
+└─────────────┘                         │
+                                        │
+                              Shared Services & APIs
 ```
 
 ## API Communication Patterns

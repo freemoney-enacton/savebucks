@@ -2,7 +2,7 @@
 
 ## Architecture Overview
 
-The admin panel is built with Laravel 10.x and Filament 3.2, following Laravel's MVC pattern with additional service layers for complex business logic.
+The admin panel is built with Laravel 10.x and Filament 3.2, following Laravel's MVC pattern with additional service layers for complex business logic. It now includes comprehensive affiliate management capabilities alongside the existing user and offer management features.
 
 ### Core Principles
 - **Single Responsibility**: Each class should have one reason to change

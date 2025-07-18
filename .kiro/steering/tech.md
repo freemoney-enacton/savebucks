@@ -32,6 +32,17 @@
 - **Monitoring**: Sentry integration
 - **Additional**: Framer Motion, Chart.js, Socket.io client
 
+### Affiliate Panel (Next.js/React)
+- **Framework**: Next.js 14.2 with React 18
+- **Language**: TypeScript 5
+- **Database**: PostgreSQL with Drizzle ORM
+- **Styling**: Tailwind CSS 3.3 with Radix UI components
+- **Forms**: Formik with Yup validation
+- **Internationalization**: next-intl with i18next
+- **Authentication**: NextAuth 5.0 beta
+- **Charts**: Recharts for analytics visualization
+- **Additional**: Lucide React icons, date-fns, bcrypt, crypto-js
+
 ## Common Build Commands
 
 ### Admin Panel
@@ -66,6 +77,19 @@ npm run dev                        # Start development server
 npm run build                      # Build for production
 npm start                          # Start production server (port 3002)
 npm run lint                       # Run ESLint
+```
+
+### Affiliate Panel
+```bash
+cd affiliate-panel
+npm install                        # Install dependencies
+npm run dev                        # Start development server
+npm run build                      # Build for production
+npm start                          # Start production server
+npm run lint                       # Run ESLint
+npm run migrate                    # Run database migrations
+npm run studio                     # Open Drizzle Studio
+npm run crons                      # Start cron jobs
 ```
 
 ## Database & Infrastructure
