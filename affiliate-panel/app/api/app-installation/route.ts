@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
       const appInstallEvent = await db
         .insert(appInstallEvents)
         .values(data)
-        .returning();
+        .execute();
 
       return commonResponse({
         data: appInstallEvent,

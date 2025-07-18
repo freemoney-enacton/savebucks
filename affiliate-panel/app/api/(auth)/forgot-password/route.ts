@@ -35,11 +35,10 @@ export async function POST(request: NextRequest) {
     const token = generateVerificationToken();
     const tokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
-    const updatedAffiliate = await db
+    await db
       .update(affiliates)
       .set({ token, tokenExpiry })
-      .where(eq(affiliates.email, email))
-      .returning();
+      .where(eq(affiliates.email, email));
 
     const verificationLink = `${Config.env.app.app_url}/reset-password/${token}?userId=${affiliate.data.id}`;
 

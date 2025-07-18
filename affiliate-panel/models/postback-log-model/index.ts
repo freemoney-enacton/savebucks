@@ -117,7 +117,7 @@ export const insertPostbackLog = async (postbackLogData: any) => {
       const inserted = await tx
         .insert(postbackLogs)
         .values(postbackLogData)
-        .returning();
+        .execute();
       return inserted[0];
     });
 
@@ -142,7 +142,7 @@ export const updatePostbackLog = async (id: number, updateData: any) => {
         .update(postbackLogs)
         .set(updateData)
         .where(eq(postbackLogs.id, id))
-        .returning();
+        .execute();
       return updated[0];
     });
 
@@ -178,7 +178,7 @@ export const markPostbackLogAsProcessed = async (
         .update(postbackLogs)
         .set({ processedAt })
         .where(eq(postbackLogs.id, id))
-        .returning();
+        .execute();
       return updated[0];
     });
 
@@ -210,7 +210,7 @@ export const deletePostbackLog = async (id: number) => {
       const deleted = await tx
         .delete(postbackLogs)
         .where(eq(postbackLogs.id, id))
-        .returning();
+        .execute();
       return deleted[0];
     });
 
@@ -272,7 +272,7 @@ export const updatePostbackLogStatus = async (
           processedAt: new Date().toISOString(),
         })
         .where(eq(postbackLogs.id, id))
-        .returning();
+        .execute();
       return updated[0];
     });
 

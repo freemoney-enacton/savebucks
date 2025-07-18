@@ -309,7 +309,7 @@ export const insertAffiliateLink = async (linkData: any) => {
       const inserted = await tx
         .insert(affiliateLinks)
         .values(linkData)
-        .returning();
+        .execute();
       return inserted[0];
     });
 
@@ -355,7 +355,7 @@ export const updateAffiliateLink = async (id: number, updateData: any) => {
         .update(affiliateLinks)
         .set({ ...updateData, updatedAt: new Date() })
         .where(eq(affiliateLinks.id, id))
-        .returning();
+        .execute();
       return updated[0];
     });
 
@@ -387,7 +387,7 @@ export const deleteAffiliateLink = async (id: number) => {
       const deleted = await tx
         .delete(affiliateLinks)
         .where(eq(affiliateLinks.id, id))
-        .returning();
+        .execute();
       return deleted[0];
     });
 
@@ -434,7 +434,7 @@ export const updateAffiliateLinkStats = async (
         .update(affiliateLinks)
         .set(updateData)
         .where(eq(affiliateLinks.id, id))
-        .returning();
+        .execute();
       return updated[0];
     });
 
@@ -535,7 +535,7 @@ export const updateAffiliateLinkStatus = async (
         .update(affiliateLinks)
         .set({ status, updatedAt: new Date().toISOString() })
         .where(eq(affiliateLinks.id, id))
-        .returning();
+        .execute();
       return updated[0];
     });
 

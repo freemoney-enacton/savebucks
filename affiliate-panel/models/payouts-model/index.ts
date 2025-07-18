@@ -217,7 +217,7 @@ export const getPayoutByTransactionId = async (transactionId: string) => {
 export const insertPayout = async (payoutData: any) => {
   try {
     const result = await db.transaction(async (tx) => {
-      const inserted = await tx.insert(payouts).values(payoutData).returning();
+      const inserted = await tx.insert(payouts).values(payoutData).execute();
       return inserted[0];
     });
 
@@ -242,7 +242,7 @@ export const updatePayout = async (id: number, updateData: any) => {
         .update(payouts)
         .set({ ...updateData, updatedAt: new Date() })
         .where(eq(payouts.id, id))
-        .returning();
+        .execute();
       return updated[0];
     });
 
@@ -286,7 +286,7 @@ export const approvePayoutRequest = async (
           updatedAt: new Date().toISOString(),
         })
         .where(eq(payouts.id, id))
-        .returning();
+        .execute();
       return updated[0];
     });
 
@@ -323,7 +323,7 @@ export const declinePayoutRequest = async (id: number, adminNotes: string) => {
           updatedAt: new Date().toISOString(),
         })
         .where(eq(payouts.id, id))
-        .returning();
+        .execute();
       return updated[0];
     });
 
@@ -355,7 +355,7 @@ export const deletePayout = async (id: number) => {
       const deleted = await tx
         .delete(payouts)
         .where(eq(payouts.id, id))
-        .returning();
+        .execute();
       return deleted[0];
     });
 

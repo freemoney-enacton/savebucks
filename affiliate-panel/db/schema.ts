@@ -1,64 +1,64 @@
 import { metadata } from "@/app/layout";
 import {
-  pgTable,
+  mysqlTable,
   serial,
   varchar,
   text,
-  numeric,
+  decimal,
   timestamp,
   bigint,
   boolean,
   char,
-  jsonb,
-  pgEnum,
-  integer,
-} from "drizzle-orm/pg-core";
+  json,
+  mysqlEnum,
+  int,
+} from "drizzle-orm/mysql-core";
 
-export const approvalStatusEnum = pgEnum("approval_status", [
+export const approvalStatusEnum = mysqlEnum("approval_status", [
   "approved",
   "rejected",
   "suspended",
   "pending",
 ]);
 
-export const statusEnum = pgEnum("status", ["active", "inactive"]);
+export const statusEnum = mysqlEnum("status", ["active", "inactive"]);
 
-export const campaignStatusEnum = pgEnum("campaign_status", [
+export const campaignStatusEnum = mysqlEnum("campaign_status", [
   "active",
   "paused",
   "ended",
 ]);
 
-export const conversionStatusEnum = pgEnum("conversion_status", [
+export const conversionStatusEnum = mysqlEnum("conversion_status", [
   "pending",
   "approved",
   "declined",
   "paid",
 ]);
 
-export const payoutStatusEnum = pgEnum("payout_status", [
+export const payoutStatusEnum = mysqlEnum("payout_status", [
   "pending",
   "processing",
   "rejected",
   "paid",
 ]);
 
-export const postbackStatusEnum = pgEnum("postback_status", [
+export const postbackStatusEnum = mysqlEnum("postback_status", [
   "success",
   "failure",
   "pending",
 ]);
 
 // Affiliates table
-export const affiliates = pgTable("affiliates", {
+export const affiliates = mysqlTable("affiliates", {
   id: serial("id").primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
   email: varchar("email", { length: 255 }).notNull().unique(),
   password: varchar("password_hash", { length: 255 }).notNull(),
   approvalStatus: approvalStatusEnum("approval_status").default("pending"),
   paypalAddress: varchar("paypal_address", { length: 255 }),
-  bankDetails: jsonb("bank_details"),
-  address: jsonb("address"),
+  bankDetails: json("bank_details"),
+  address: json("address"),
   taxId: varchar("tax_id", { length: 255 }),
   token: varchar("token", { length: 255 }),
   tokenExpiry: timestamp("token_expiry"),
@@ -69,7 +69,7 @@ export const affiliates = pgTable("affiliates", {
 });
 
 // Campaigns table
-export const campaigns = pgTable("campaigns", {
+export const campaigns = mysqlTable("campaigns", {
   id: serial("id").primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
   description: text("description").notNull(),
@@ -78,19 +78,19 @@ export const campaigns = pgTable("campaigns", {
   status: campaignStatusEnum("status").notNull().default("active"),
   termsAndConditions: text("terms_and_conditions"),
   termsAndConditionsUrl: text("terms_and_condition_url"),
-  minPayoutAmount: numeric("min_payout_request").notNull().default("0.00"),
+  minPayoutAmount: decimal("min_payout_request").notNull().default("0.00"),
   createdAt: timestamp("created_at", { mode: "string" }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { mode: "string" }).notNull().defaultNow(),
 });
 
 // Campaign goals table
-export const campaignGoals = pgTable("campaign_goals", {
+export const campaignGoals = mysqlTable("campaign_goals", {
   id: serial("id").primaryKey(),
   campaignId: bigint("campaign_id", { mode: "number" }).notNull(),
   name: varchar("name", { length: 255 }).notNull(),
   description: varchar("description", { length: 255 }).notNull(),
   commissionType: varchar("commission_type", { length: 255 }).notNull(),
-  commissionAmount: numeric("commission_amount", {
+  commissionAmount: decimal("commission_amount", {
     precision: 10,
     scale: 2,
   }).notNull(),
@@ -101,12 +101,12 @@ export const campaignGoals = pgTable("campaign_goals", {
 });
 
 // Affiliate campaign goals table
-export const affiliateCampaignGoals = pgTable("affiliate_campaign_goals", {
+export const affiliateCampaignGoals = mysqlTable("affiliate_campaign_goals", {
   id: serial("id").primaryKey(),
   affiliateId: bigint("affiliate_id", { mode: "number" }).notNull(),
   campaignId: bigint("campaign_id", { mode: "number" }).notNull(),
   campaignGoalId: bigint("campaign_goal_id", { mode: "number" }).notNull(),
-  customCommissionRate: numeric("custom_commission_rate", {
+  customCommissionRate: decimal("custom_commission_rate", {
     precision: 5,
     scale: 2,
   }),
@@ -115,7 +115,7 @@ export const affiliateCampaignGoals = pgTable("affiliate_campaign_goals", {
 });
 
 // Affiliate links table
-export const affiliateLinks = pgTable("affiliate_links", {
+export const affiliateLinks = mysqlTable("affiliate_links", {
   id: serial("id").primaryKey(),
   campaignId: bigint("campaign_id", { mode: "number" }).notNull(),
   affiliateId: bigint("affiliate_id", { mode: "number" }).notNull(),
@@ -126,7 +126,7 @@ export const affiliateLinks = pgTable("affiliate_links", {
   sub2: varchar("sub2", { length: 255 }),
   sub3: varchar("sub3", { length: 255 }),
   totalClicks: bigint("total_clicks", { mode: "number" }).notNull().default(0),
-  totalEarnings: numeric("total_earnings", { precision: 12, scale: 2 })
+  totalEarnings: decimal("total_earnings", { precision: 12, scale: 2 })
     .notNull()
     .default("0"),
   status: statusEnum("status").notNull().default("active"),
@@ -135,7 +135,7 @@ export const affiliateLinks = pgTable("affiliate_links", {
 });
 
 // Clicks table
-export const clicks = pgTable("clicks", {
+export const clicks = mysqlTable("clicks", {
   id: serial("id").primaryKey(),
   campaignId: bigint("campaign_id", { mode: "number" }).notNull(),
   affiliateLinkId: bigint("affiliate_link_id", { mode: "number" }).notNull(),
@@ -155,38 +155,38 @@ export const clicks = pgTable("clicks", {
 });
 
 // Postback logs table
-export const postbackLogs = pgTable("postback_logs", {
+export const postbackLogs = mysqlTable("postback_logs", {
   id: serial("id").primaryKey(),
-  rawPostbackData: jsonb("raw_postback_data").notNull(),
+  rawPostbackData: json("raw_postback_data").notNull(),
   transactionId: varchar("transaction_id", { length: 255 }).notNull(),
   status: postbackStatusEnum("status").notNull(),
-  statusMessages: jsonb("status_messages"),
+  statusMessages: json("status_messages"),
   receivedAt: timestamp("received_at", { mode: "string" }).notNull(),
   processedAt: timestamp("processed_at", { mode: "string" }),
 });
 
 // Payouts table
-export const payouts = pgTable("payouts", {
+export const payouts = mysqlTable("payouts", {
   id: serial("id").primaryKey(),
   affiliateId: bigint("affiliate_id", { mode: "number" }).notNull(),
-  requestedAmount: numeric("requested_amount", {
+  requestedAmount: decimal("requested_amount", {
     precision: 12,
     scale: 2,
   }).notNull(),
   status: payoutStatusEnum("status").notNull().default("pending"),
   paymentMethod: varchar("payment_method", { length: 50 }).notNull(),
   paymentAccount: varchar("payment_account", { length: 255 }).notNull(),
-  paymentDetails: jsonb("payment_details"),
+  paymentDetails: json("payment_details"),
   adminNotes: varchar("admin_notes", { length: 500 }),
   transactionId: varchar("transaction_id", { length: 255 }),
-  apiResponse: jsonb("api_response"),
+  apiResponse: json("api_response"),
   paidAt: timestamp("paid_at", { mode: "string" }),
   createdAt: timestamp("created_at", { mode: "string" }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { mode: "string" }).notNull().defaultNow(),
 });
 
 // Conversions table
-export const conversions = pgTable("conversions", {
+export const conversions = mysqlTable("conversions", {
   id: serial("id").primaryKey(),
   campaignId: bigint("campaign_id", { mode: "number" }).notNull(),
   postbackLogId: bigint("postback_log_id", { mode: "number" }).notNull(),
@@ -194,11 +194,11 @@ export const conversions = pgTable("conversions", {
   campaignGoalId: bigint("campaign_goal_id", { mode: "number" }).notNull(),
   affiliateId: bigint("affiliate_id", { mode: "number" }).notNull(),
   transactionId: varchar("transaction_id", { length: 255 }).notNull().unique(),
-  conversionValue: numeric("conversion_value", {
+  conversionValue: decimal("conversion_value", {
     precision: 12,
     scale: 2,
   }).notNull(),
-  commission: numeric("commission", { precision: 12, scale: 2 }).notNull(),
+  commission: decimal("commission", { precision: 12, scale: 2 }).notNull(),
   sub1: varchar("sub1", { length: 255 }),
   sub2: varchar("sub2", { length: 255 }),
   sub3: varchar("sub3", { length: 255 }),
@@ -211,7 +211,7 @@ export const conversions = pgTable("conversions", {
 });
 
 // Affiliate postbacks table
-export const affiliatePostbacks = pgTable("affiliate_postbacks", {
+export const affiliatePostbacks = mysqlTable("affiliate_postbacks", {
   id: serial("id").primaryKey(),
   affiliateId: bigint("affiliate_id", { mode: "number" }).notNull(),
   campaignId: bigint("campaign_id", { mode: "number" }).notNull(),
@@ -224,12 +224,12 @@ export const affiliatePostbacks = pgTable("affiliate_postbacks", {
   deletedAt: timestamp("deleted_at"),
 });
 
-export const affiliateConversionsSummary = pgTable("vw_affiliate_conversions", {
-  conversionId: integer("conversion_id").notNull(),
+export const affiliateConversionsSummary = mysqlTable("vw_affiliate_conversions", {
+  conversionId: int("conversion_id").notNull(),
   transactionId: varchar("transaction_id", { length: 255 }),
   clickCode: varchar("click_code", { length: 255 }).notNull(),
-  conversionValue: numeric("conversion_value", { precision: 12, scale: 2 }),
-  commission: numeric("commission", { precision: 12, scale: 2 }),
+  conversionValue: decimal("conversion_value", { precision: 12, scale: 2 }),
+  commission: decimal("commission", { precision: 12, scale: 2 }),
   conversionStatus: varchar("conversion_status", { length: 255 }).notNull(),
   convertedAt: timestamp("converted_at", { mode: "string" }).notNull(),
   conversionCreatedAt: timestamp("conversion_created_at", {
@@ -239,29 +239,29 @@ export const affiliateConversionsSummary = pgTable("vw_affiliate_conversions", {
   conversionSub2: varchar("conversion_sub2", { length: 255 }),
   conversionSub3: varchar("conversion_sub3", { length: 255 }),
   adminNotes: varchar("admin_notes", { length: 500 }),
-  payoutId: integer("payout_id"),
+  payoutId: int("payout_id"),
 
-  campaignId: integer("campaign_id").notNull(),
+  campaignId: int("campaign_id").notNull(),
   campaignName: varchar("campaign_name", { length: 255 }).notNull(),
   campaignType: varchar("campaign_type", { length: 255 }).notNull(),
   campaignStatus: varchar("campaign_status", { length: 255 }).notNull(),
 
-  campaignGoalId: integer("campaign_goal_id").notNull(),
+  campaignGoalId: int("campaign_goal_id").notNull(),
   goalName: varchar("goal_name", { length: 255 }).notNull(),
   commissionType: varchar("commission_type", { length: 255 }).notNull(),
-  goalCommissionAmount: numeric("goal_commission_amount", {
+  goalCommissionAmount: decimal("goal_commission_amount", {
     precision: 12,
     scale: 2,
   }),
   trackingCode: varchar("tracking_code", { length: 10 }).notNull(),
   goalStatus: varchar("goal_status", { length: 255 }).notNull(),
 
-  affiliateId: integer("affiliate_id").notNull(),
+  affiliateId: int("affiliate_id").notNull(),
   affiliateName: varchar("affiliate_name", { length: 255 }).notNull(),
   affiliateEmail: varchar("affiliate_email", { length: 255 }).notNull(),
   affiliateStatus: varchar("affiliate_status", { length: 255 }).notNull(),
 
-  affiliateLinkId: integer("affiliate_link_id").notNull(),
+  affiliateLinkId: int("affiliate_link_id").notNull(),
   linkSlug: varchar("link_slug", { length: 255 }).notNull(),
   destinationUrl: varchar("destination_url", { length: 1000 }).notNull(),
   linkStatus: varchar("link_status", { length: 255 }).notNull(),
@@ -269,7 +269,7 @@ export const affiliateConversionsSummary = pgTable("vw_affiliate_conversions", {
   linkSub2: varchar("link_sub2", { length: 255 }),
   linkSub3: varchar("link_sub3", { length: 255 }),
 
-  clickId: integer("click_id").notNull(),
+  clickId: int("click_id").notNull(),
   ipAddress: varchar("ip_address", { length: 255 }).notNull(),
   country: varchar("country", { length: 255 }),
   city: varchar("city", { length: 255 }),
@@ -280,20 +280,20 @@ export const affiliateConversionsSummary = pgTable("vw_affiliate_conversions", {
   clickSub2: varchar("click_sub2", { length: 255 }),
   clickSub3: varchar("click_sub3", { length: 255 }),
 
-  hoursToConversion: numeric("hours_to_conversion", {
+  hoursToConversion: decimal("hours_to_conversion", {
     precision: 10,
     scale: 2,
   }),
   conversionYear: timestamp("conversion_year", { mode: "string" }).notNull(),
 });
 
-export const appInstallEvents = pgTable("app_install_events", {
+export const appInstallEvents = mysqlTable("app_install_events", {
   id: serial("id").primaryKey(),
   clickCode: varchar("click_code", { length: 255 }).notNull().unique(),
   deviceId: varchar("device_id", { length: 255 }).notNull(),
   deviceType: varchar("device_type", { length: 255 }).notNull(),
   installTimestamp: varchar("install_timestamp", { length: 255 }).notNull(),
-  metadata: jsonb("metadata"),
+  metadata: json("metadata"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

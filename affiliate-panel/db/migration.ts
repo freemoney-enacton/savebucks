@@ -1,10 +1,10 @@
-import { Pool } from "pg";
-import { drizzle } from "drizzle-orm/node-postgres";
-import { migrate } from "drizzle-orm/node-postgres/migrator";
+import { createPool } from "mysql2/promise";
+import { drizzle } from "drizzle-orm/mysql2";
+import { migrate } from "drizzle-orm/mysql2/migrator";
 import "dotenv/config";
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+const pool = createPool({
+  uri: process.env.DATABASE_URL!,
 });
 
 const db = drizzle(pool);
@@ -20,3 +20,4 @@ main().catch((err) => {
   console.log(err);
   process.exit(0);
 });
+

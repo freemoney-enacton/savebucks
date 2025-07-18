@@ -14,7 +14,7 @@ The Affiliate Panel is a Next.js application that provides affiliates with compr
    cp .env.example .env
    ```
 
-3. Set up the PostgreSQL database and run migrations:
+3. Set up the MySQL database and run migrations:
    ```bash
    npm run migrate
    ```
@@ -73,7 +73,7 @@ affiliate-panel/
 
 - **Framework**: Next.js 14.2 with App Router
 - **Language**: TypeScript 5.2
-- **Database**: PostgreSQL with Drizzle ORM
+- **Database**: MySQL with Drizzle ORM
 - **Styling**: Tailwind CSS 3.3 with Radix UI components
 - **Forms**: Formik with Yup validation
 - **Authentication**: NextAuth 5.0 beta
@@ -88,7 +88,7 @@ Create a `.env` file with the following variables:
 
 ```env
 # Database
-DATABASE_URL=postgresql://username:password@localhost:5432/affiliate_panel
+DATABASE_URL=mysql://username:password@localhost:3306/affiliate_panel
 
 # NextAuth
 NEXTAUTH_URL=http://localhost:3000
@@ -161,7 +161,7 @@ npm run type-check             # Check TypeScript types
    npm run build
    ```
 
-2. Ensure PostgreSQL database is configured and accessible
+2. Ensure MySQL database is configured and accessible
 
 3. Run database migrations:
    ```bash

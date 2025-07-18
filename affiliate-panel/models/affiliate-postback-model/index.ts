@@ -8,7 +8,7 @@ export const insertAffiliatePostback = async (postbackData: any) => {
       const inserted = await tx
         .insert(affiliatePostbacks)
         .values(postbackData)
-        .returning();
+        .execute();
       return inserted[0];
     });
 
@@ -33,7 +33,7 @@ export const updateAffiliatePostback = async (id: number, updateData: any) => {
         .update(affiliatePostbacks)
         .set({ ...updateData, updatedAt: new Date() })
         .where(eq(affiliatePostbacks.id, id))
-        .returning();
+        .execute();
       return updated[0];
     });
 
@@ -70,7 +70,7 @@ export const deleteAffiliatePostback = async (id: number) => {
           updatedAt: new Date().toISOString(),
         })
         .where(eq(affiliatePostbacks.id, id))
-        .returning();
+        .execute();
       return deleted[0];
     });
 

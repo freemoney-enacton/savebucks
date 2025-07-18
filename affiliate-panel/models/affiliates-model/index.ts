@@ -61,7 +61,7 @@ export const insertAffiliate = async (affiliateData: any) => {
       const inserted = await tx
         .insert(affiliates)
         .values(affiliateData)
-        .returning();
+        .execute();
       return inserted[0];
     });
 
@@ -86,7 +86,7 @@ export const updateAffiliate = async (id: number, updateData: any) => {
         .update(affiliates)
         .set({ ...updateData, updatedAt: new Date() })
         .where(eq(affiliates.id, id))
-        .returning();
+        .execute();
       return updated[0];
     });
 
@@ -122,7 +122,7 @@ export const updateAffiliateProfile = async (id: number, updateData: any) => {
           updatedAt: new Date().toISOString(),
         })
         .where(eq(affiliates.id, id))
-        .returning();
+        .execute();
       return updated[0];
     });
 
@@ -154,7 +154,7 @@ export const deleteAffiliate = async (id: number) => {
       const deleted = await tx
         .delete(affiliates)
         .where(eq(affiliates.id, id))
-        .returning();
+        .execute();
       return deleted[0];
     });
 
@@ -257,7 +257,7 @@ export const updateAffiliatePassword = async (id: number, updateData: any) => {
           tokenExpiry: null,
         })
         .where(eq(affiliates.id, id))
-        .returning();
+        .execute();
       return updated[0];
     });
 
@@ -290,7 +290,7 @@ export const updateAffiliatePaypalId = async (id: number, updateData: any) => {
         .update(affiliates)
         .set({ paypalAddress: updateData, updatedAt: new Date().toISOString() })
         .where(eq(affiliates.id, id))
-        .returning();
+        .execute();
       return updated[0];
     });
 
@@ -326,7 +326,7 @@ export const updateAffiliateBankDetails = async (
         .update(affiliates)
         .set({ bankDetails: updateData, updatedAt: new Date().toISOString() })
         .where(eq(affiliates.id, id))
-        .returning();
+        .execute();
       return updated[0];
     });
 
@@ -365,7 +365,7 @@ export const verifyAffiliateEmail = async (id: number) => {
           tokenExpiry: null,
         })
         .where(eq(affiliates.id, id))
-        .returning();
+        .execute();
       return updated[0];
     });
 

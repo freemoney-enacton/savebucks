@@ -25,7 +25,7 @@ export const insertConversion = async (conversionData: any) => {
       const inserted = await tx
         .insert(conversions)
         .values(conversionData)
-        .returning();
+        .execute();
       return inserted[0];
     });
 
@@ -50,7 +50,7 @@ export const updateConversion = async (id: number, updateData: any) => {
         .update(conversions)
         .set({ ...updateData, updatedAt: new Date() })
         .where(eq(conversions.id, id))
-        .returning();
+        .execute();
       return updated[0];
     });
 
@@ -82,7 +82,7 @@ export const deleteConversion = async (id: number) => {
       const deleted = await tx
         .delete(conversions)
         .where(eq(conversions.id, id))
-        .returning();
+        .execute();
       return deleted[0];
     });
 
@@ -274,7 +274,7 @@ export const updateConversionStatus = async (
         .update(conversions)
         .set({ status, updatedAt: new Date().toISOString() })
         .where(eq(conversions.id, id))
-        .returning();
+        .execute();
       return updated[0];
     });
 
@@ -541,21 +541,17 @@ export async function getCommissionDataByDateRange(
 }
 
 export const getEarningsDataForAffiliate = async (affiliateId: number) => {
-  const earningsData = await db.execute(
-    sql.raw(`
-      SELECT
-        COALESCE(SUM(CASE WHEN status IN ('approved', 'paid') THEN commission ELSE 0 END), 0) AS total_earnings,
-        COALESCE(SUM(CASE WHEN status = 'pending' THEN commission ELSE 0 END), 0) AS pending_earning
-      FROM
-        conversions
-      WHERE
-        affiliate_id = ${affiliateId}
-    `)
-  );
+  const result = await db
+    .select({
+      totalEarnings: sql<number>`COALESCE(SUM(CASE WHEN ${conversions.status} IN ('approved', 'paid') THEN ${conversions.commission} ELSE 0 END), 0)`,
+      pendingEarning: sql<number>`COALESCE(SUM(CASE WHEN ${conversions.status} = 'pending' THEN ${conversions.commission} ELSE 0 END), 0)`,
+    })
+    .from(conversions)
+    .where(eq(conversions.affiliateId, affiliateId));
 
   return {
-    totalEarnings: (earningsData[0]?.total_earnings as number) || 0,
-    pendingEarning: (earningsData[0]?.pending_earning as number) || 0,
+    totalEarnings: (result[0]?.totalEarnings as number) || 0,
+    pendingEarning: (result[0]?.pendingEarning as number) || 0,
   };
 };
 

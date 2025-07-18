@@ -169,7 +169,7 @@ export const insertAffiliateCampaignGoal = async (
       const inserted = await tx
         .insert(affiliateCampaignGoals)
         .values(affiliateCampaignGoalData)
-        .returning();
+        .execute();
       return inserted[0];
     });
 
@@ -197,7 +197,7 @@ export const updateAffiliateCampaignGoal = async (
         .update(affiliateCampaignGoals)
         .set({ ...updateData, updatedAt: new Date() })
         .where(eq(affiliateCampaignGoals.id, id))
-        .returning();
+        .execute();
       return updated[0];
     });
 
@@ -229,7 +229,7 @@ export const deleteAffiliateCampaignGoal = async (id: number) => {
       const deleted = await tx
         .delete(affiliateCampaignGoals)
         .where(eq(affiliateCampaignGoals.id, id))
-        .returning();
+        .execute();
       return deleted[0];
     });
 
