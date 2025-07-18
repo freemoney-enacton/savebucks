@@ -21,16 +21,16 @@ type AffiliateConversionsSummaryType = InferSelectModel<
 
 export const insertConversion = async (conversionData: any) => {
   try {
-    const result = await db.transaction(async (tx) => {
+    const insertedId = await db.transaction(async (tx) => {
       const inserted = await tx
         .insert(conversions)
         .values(conversionData)
-        .returning();
-      return inserted[0];
+        .execute();
+      return (inserted as any).insertId ?? (inserted as any)[0]?.insertId;
     });
 
     return {
-      data: result,
+      data: { id: insertedId },
       message: "Conversion created successfully",
       status: "success",
     };
@@ -45,16 +45,15 @@ export const insertConversion = async (conversionData: any) => {
 
 export const updateConversion = async (id: number, updateData: any) => {
   try {
-    const result = await db.transaction(async (tx) => {
-      const updated = await tx
+    await db.transaction(async (tx) => {
+      await tx
         .update(conversions)
         .set({ ...updateData, updatedAt: new Date() })
         .where(eq(conversions.id, id))
-        .returning();
-      return updated[0];
+        .execute();
     });
 
-    if (!result) {
+    if (!id) {
       return {
         data: null,
         message: "Conversion not found",
@@ -63,7 +62,7 @@ export const updateConversion = async (id: number, updateData: any) => {
     }
 
     return {
-      data: result,
+      data: { id },
       message: "Conversion updated successfully",
       status: "success",
     };
@@ -78,15 +77,14 @@ export const updateConversion = async (id: number, updateData: any) => {
 
 export const deleteConversion = async (id: number) => {
   try {
-    const result = await db.transaction(async (tx) => {
-      const deleted = await tx
+    await db.transaction(async (tx) => {
+      await tx
         .delete(conversions)
         .where(eq(conversions.id, id))
-        .returning();
-      return deleted[0];
+        .execute();
     });
 
-    if (!result) {
+    if (!id) {
       return {
         data: null,
         message: "Conversion not found",
@@ -95,7 +93,7 @@ export const deleteConversion = async (id: number) => {
     }
 
     return {
-      data: result,
+      data: { id },
       message: "Conversion deleted successfully",
       status: "success",
     };
@@ -274,7 +272,7 @@ export const updateConversionStatus = async (
         .update(conversions)
         .set({ status, updatedAt: new Date().toISOString() })
         .where(eq(conversions.id, id))
-        .returning();
+        .execute();
       return updated[0];
     });
 

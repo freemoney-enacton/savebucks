@@ -189,7 +189,7 @@ export const getClicksByAffiliateLinkId = async (affiliateLinkId: number) => {
 export const insertClick = async (clickData: any) => {
   try {
     const result = await db.transaction(async (tx) => {
-      const inserted = await tx.insert(clicks).values(clickData).returning();
+      const inserted = await tx.insert(clicks).values(clickData).execute();
       return inserted[0];
     });
 
@@ -214,7 +214,7 @@ export const updateClick = async (id: number, updateData: any) => {
         .update(clicks)
         .set(updateData)
         .where(eq(clicks.id, id))
-        .returning();
+        .execute();
       return updated[0];
     });
 
@@ -247,7 +247,7 @@ export const markClickAsConverted = async (clickCode: string) => {
         .update(clicks)
         .set({ isConverted: true })
         .where(eq(clicks.clickCode, clickCode))
-        .returning();
+        .execute();
       return updated[0];
     });
 
@@ -279,7 +279,7 @@ export const deleteClick = async (id: number) => {
       const deleted = await tx
         .delete(clicks)
         .where(eq(clicks.id, id))
-        .returning();
+        .execute();
       return deleted[0];
     });
 

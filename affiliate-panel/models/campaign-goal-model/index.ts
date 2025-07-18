@@ -138,7 +138,7 @@ export const insertCampaignGoal = async (campaignGoalData: any) => {
       const inserted = await tx
         .insert(campaignGoals)
         .values(campaignGoalData)
-        .returning();
+        .execute();
       return inserted[0];
     });
 
@@ -163,7 +163,7 @@ export const updateCampaignGoal = async (id: number, updateData: any) => {
         .update(campaignGoals)
         .set({ ...updateData, updatedAt: new Date() })
         .where(eq(campaignGoals.id, id))
-        .returning();
+        .execute();
       return updated[0];
     });
 
@@ -195,7 +195,7 @@ export const deleteCampaignGoal = async (id: number) => {
       const deleted = await tx
         .delete(campaignGoals)
         .where(eq(campaignGoals.id, id))
-        .returning();
+        .execute();
       return deleted[0];
     });
 

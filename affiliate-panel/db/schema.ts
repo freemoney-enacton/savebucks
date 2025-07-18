@@ -14,40 +14,41 @@ import {
   int,
 } from "drizzle-orm/mysql-core";
 
-export const approvalStatusEnum = mysqlEnum("approval_status", [
+export const approvalStatusEnum = [
   "approved",
   "rejected",
   "suspended",
   "pending",
-]);
+] as const;
 
-export const statusEnum = mysqlEnum("status", ["active", "inactive"]);
+export const statusEnum = ["active", "inactive"] as const;
 
-export const campaignStatusEnum = mysqlEnum("campaign_status", [
+export const campaignStatusEnum = [
   "active",
   "paused",
   "ended",
-]);
+] as const;
 
-export const conversionStatusEnum = mysqlEnum("conversion_status", [
+export const conversionStatusEnum = [
   "pending",
   "approved",
   "declined",
   "paid",
-]);
+] as const;
 
-export const payoutStatusEnum = mysqlEnum("payout_status", [
+export const payoutStatusEnum = [
   "pending",
   "processing",
   "rejected",
   "paid",
-]);
+] as const;
 
-export const postbackStatusEnum = mysqlEnum("postback_status", [
+export const postbackStatusEnum = [
   "success",
   "failure",
   "pending",
-]);
+] as const;
+
 
 // Affiliates table
 export const affiliates = mysqlTable("affiliates", {
@@ -55,7 +56,7 @@ export const affiliates = mysqlTable("affiliates", {
   name: varchar("name", { length: 255 }).notNull(),
   email: varchar("email", { length: 255 }).notNull().unique(),
   password: varchar("password_hash", { length: 255 }).notNull(),
-  approvalStatus: approvalStatusEnum("approval_status").default("pending"),
+  approvalStatus: mysqlEnum("approval_status", approvalStatusEnum).default("pending"),
   paypalAddress: varchar("paypal_address", { length: 255 }),
   bankDetails: json("bank_details"),
   address: json("address"),
@@ -75,7 +76,7 @@ export const campaigns = mysqlTable("campaigns", {
   description: text("description").notNull(),
   logoUrl: varchar("logo_url", { length: 255 }),
   campaignType: varchar("campaign_type", { length: 255 }).notNull(),
-  status: campaignStatusEnum("status").notNull().default("active"),
+  status: mysqlEnum("campaign_status", campaignStatusEnum).notNull().default("active"),
   termsAndConditions: text("terms_and_conditions"),
   termsAndConditionsUrl: text("terms_and_condition_url"),
   minPayoutAmount: decimal("min_payout_request").notNull().default("0.00"),
@@ -95,7 +96,7 @@ export const campaignGoals = mysqlTable("campaign_goals", {
     scale: 2,
   }).notNull(),
   trackingCode: char("tracking_code", { length: 10 }).notNull().unique(),
-  status: statusEnum("status").notNull().default("active"),
+  status: mysqlEnum("status", statusEnum).notNull().default("active"),
   createdAt: timestamp("created_at", { mode: "string" }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { mode: "string" }).notNull().defaultNow(),
 });
@@ -129,7 +130,7 @@ export const affiliateLinks = mysqlTable("affiliate_links", {
   totalEarnings: decimal("total_earnings", { precision: 12, scale: 2 })
     .notNull()
     .default("0"),
-  status: statusEnum("status").notNull().default("active"),
+  status: mysqlEnum("status", statusEnum).notNull().default("active"),
   createdAt: timestamp("created_at", { mode: "string" }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { mode: "string" }).notNull().defaultNow(),
 });
@@ -159,7 +160,7 @@ export const postbackLogs = mysqlTable("postback_logs", {
   id: serial("id").primaryKey(),
   rawPostbackData: json("raw_postback_data").notNull(),
   transactionId: varchar("transaction_id", { length: 255 }).notNull(),
-  status: postbackStatusEnum("status").notNull(),
+  status: mysqlEnum("postback_status", postbackStatusEnum).notNull(),
   statusMessages: json("status_messages"),
   receivedAt: timestamp("received_at", { mode: "string" }).notNull(),
   processedAt: timestamp("processed_at", { mode: "string" }),
@@ -173,7 +174,7 @@ export const payouts = mysqlTable("payouts", {
     precision: 12,
     scale: 2,
   }).notNull(),
-  status: payoutStatusEnum("status").notNull().default("pending"),
+  status: mysqlEnum("payout_status", payoutStatusEnum).notNull().default("pending"),
   paymentMethod: varchar("payment_method", { length: 50 }).notNull(),
   paymentAccount: varchar("payment_account", { length: 255 }).notNull(),
   paymentDetails: json("payment_details"),
@@ -202,7 +203,7 @@ export const conversions = mysqlTable("conversions", {
   sub1: varchar("sub1", { length: 255 }),
   sub2: varchar("sub2", { length: 255 }),
   sub3: varchar("sub3", { length: 255 }),
-  status: conversionStatusEnum("status").notNull().default("pending"),
+  status: mysqlEnum("conversion_status", conversionStatusEnum).notNull().default("pending"),
   payoutId: bigint("payout_id", { mode: "number" }),
   adminNotes: varchar("admin_notes", { length: 500 }),
   convertedAt: timestamp("converted_at", { mode: "string" }).notNull(),

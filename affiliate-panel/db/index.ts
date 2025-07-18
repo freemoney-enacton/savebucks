@@ -6,7 +6,7 @@ const pool = mysql.createPool({
   uri: process.env.DATABASE_URL!,
   connectionLimit: 20,
 });
-export const db = drizzle(pool, { schema });
+export const db = drizzle(pool, { schema, mode: "default" });
 
 export async function withTransaction<T>(
   callback: (tx: typeof db) => Promise<T>
@@ -14,7 +14,10 @@ export async function withTransaction<T>(
   const connection = await pool.getConnection();
   try {
     await connection.beginTransaction();
-    const txDb = drizzle(connection, { schema });
+    const txDb = drizzle(connection, {
+      schema,
+      mode: "default",
+    }) as unknown as typeof db;
     const result = await callback(txDb);
     await connection.commit();
     return result;
@@ -26,4 +29,3 @@ export async function withTransaction<T>(
     connection.release();
   }
 }
-

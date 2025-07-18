@@ -90,7 +90,7 @@ export const insertCampaign = async (campaignData: any) => {
       const inserted = await tx
         .insert(campaigns)
         .values(campaignData)
-        .returning();
+        .execute();
       return inserted[0];
     });
 
@@ -115,7 +115,7 @@ export const updateCampaign = async (id: number, updateData: any) => {
         .update(campaigns)
         .set({ ...updateData, updatedAt: new Date() })
         .where(eq(campaigns.id, id))
-        .returning();
+        .execute();
       return updated[0];
     });
 
@@ -147,7 +147,7 @@ export const deleteCampaign = async (id: number) => {
       const deleted = await tx
         .delete(campaigns)
         .where(eq(campaigns.id, id))
-        .returning();
+        .execute();
       return deleted[0];
     });
 
