@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Screen</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Basic styling for the emoji picker popup */
+        .emoji-picker {
+            display: none;
+            position: absolute;
+            bottom: 60px; /* Position above the input area */
+            left: 0;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 10;
+            padding: 10px;
+        }
+        .emoji-picker button {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 5px;
+        }
+        .emoji-picker button:hover {
+            background: #f0f0f0;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center h-screen bg-gray-100">
+    <div class="w-full max-w-md bg-white shadow-lg rounded-lg overflow-hidden">
+        <!-- User Info and Logout Section -->
+        <div class="p-4 border-b border-gray-300 flex items-center justify-between">
+            <div class="flex items-center">
+                <img id="userAvatar" src="https://ui-avatars.com/api/?name=UN" alt="User Avatar" class="w-10 h-10 rounded-full mr-3">
+                <span id="userName" class="font-semibold text-gray-800">User Name</span>
+            </div>
+            <div id="room_count" style="display: none;"></div>
+            <button id="logoutButton" class="text-red-500 font-semibold">Logout</button>
+        </div>
+
+        <!-- Chat Room Dropdown -->
+        <div class="p-4 border-b border-gray-300">
+            <select id="roomDropdown" class="w-full p-2 border border-gray-300 rounded-lg bg-gray-50">
+                <option value="general">General</option>
+                <option value="vip">Vip</option>
+                <option value="in_room">India</option>
+                <option value="us_room">US</option>
+                <option value="holidays">Holidays</option>
+            </select>
+        </div>
+
+        <!-- Messages Display Area -->
+        <div id="room_messages" class="p-4 h-[500px] overflow-y-auto"></div>
+
+        <!-- Message Input Area -->
+        <div class="p-4 border-t border-gray-300 bg-gray-50">
+            <div class="flex items-center">
+                <!-- <input type="textarea" id="messageInput" placeholder="Type your message here..." class="flex-grow p-3 border border-gray-300 rounded-l-lg"> -->
+                <textarea rows="3" id="messageInput" placeholder="Type your message here..." class="flex-grow p-3 border border-gray-300 rounded-l-lg"></textarea>
+                <!-- Send Button -->
+                <button id="sendButton" class="flex-shrink-0 h-full p-3 bg-blue-500 text-white rounded-r-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Message Input Area -->
+        <!-- <div class="relative p-4 border-t border-gray-300 bg-gray-50">
+            <input type="text" id="messageInput" placeholder="Type your message here..." class="w-full p-3 border border-gray-300 rounded-lg pr-12">
+
+            <button id="sendButton" class="absolute right-4 top-1/2 transform -translate-y-1/2 text-xl text-white bg-blue-500 rounded-sm p-2">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
+                </svg>
+            </button>
+        </div> -->
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1/plugin/relativeTime.js"></script>
+
+    <script>
+        // States
+        let user = null;
+        let messages = [];
+        let rooms = [];
+        let currentRoom = 'general';
+
+        dayjs.extend(dayjs_plugin_relativeTime);
+
+        // Behaviors
+        // Scroll the messages window to the bottom
+        const scrollToBottom = () => {
+            const messagesContainer = document.getElementById('room_messages');
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        };
+
+        // Logout functionality
+        document.getElementById('logoutButton').addEventListener('click', () => {
+            localStorage.removeItem('userToken');
+            window.location.href = 'login.html';
+        });
+
+        // Update Current user Details
+        const updateCurrentUser = (user) => {
+            document.getElementById('userName').textContent = user.name;
+            document.getElementById('userAvatar').src = 'https://ui-avatars.com/api/?name=' + user.name;
+        }
+
+        const renderMessage = (message) => {
+            const isSentByCurrentUser = message.user_id === window.user.id; // Adjust this condition based on your user logic
+            const alignmentClass = isSentByCurrentUser ? 'justify-end text-right' : 'justify-start text-left';
+            const bubbleColor = isSentByCurrentUser ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800';
+
+            const formatMessage = (message) => {
+                // Check if mentions exist and is an object
+                if (!message.mentions || typeof message.mentions !== 'object') {
+                    return message.content.replaceAll("\n", "<br/>"); // No mentions to process
+                }
+
+                // Replace new lines with <br/> and handle mentions
+                return message.content
+                    .replaceAll("\n", "<br/>")
+                    .replaceAll(/\[@uid-(.*?)\]/g, (match, referralCode) => {
+                        // Find user based on referralCode
+                        const user = message.mentions[referralCode];
+                        if (user) {
+                            // Replace with formatted username
+                            if(isSentByCurrentUser)
+                                return `<span style="background-color: #d4edda; padding: 2px 5px; border-radius: 4px; color: #155724;">${user.name}</span>`;
+                            else 
+                                return `<span style="background-color: #b8daff; padding: 2px 5px; border-radius: 4px; color: #003366;">${user.name}</span>`;
+
+                        }
+                        // Return the original match if no user found
+                        return match;
+                    });
+            };
+
+            return `
+                <div class="relative flex items-start mb-4 ${alignmentClass}">
+                    ${!isSentByCurrentUser ? `<img src="${message.user_avatar}" alt="${message.user_name}" class="w-10 h-10 rounded-full mr-3">` : ''}
+                    <div class="flex flex-col w-full ${bubbleColor} p-3 rounded-lg max-w-xs">
+                        <span class="font-semibold">${message.user_name}</span>
+                        <span>${formatMessage(message)}</span>
+                        <span class="text-xs mt-1">${dayjs(message.sent_at).fromNow()}</span>
+                    </div>
+                    ${isSentByCurrentUser ? `<img src="${message.user_avatar}" alt="${message.user_name}" class="w-10 h-10 rounded-full ml-3">` : ''}
+                    <button onclick="mentionUserInMessage('${message.user_referral_code}')" id="mentionButton" class="absolute ${!isSentByCurrentUser ? 'right-[30px]' : 'left-[30px]'} top-[20%] transform -translate-y-1/2 text-xl text-gray-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 ${isSentByCurrentUser ? 'text-white' : 'text-gray-600'}">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0Zm0 0c0 1.657 1.007 3 2.25 3S21 13.657 21 12a9 9 0 1 0-2.636 6.364M16.5 12V8.25" />
+                        </svg>
+                    </button>
+                </div>
+            `;
+        };
+
+
+        const renderMessages = (messages) => {
+            const messagesContainer = document.getElementById('room_messages');
+            messagesContainer.innerHTML = ''; // Clear existing messages
+            messages.forEach(message => {
+                messagesContainer.innerHTML += renderMessage(message);
+            });
+        }
+
+        window.mentionUserInMessage = (userReferralCode) => {
+            const messageInput = document.getElementById('messageInput');
+            const mentionText = `[@uid-${userReferralCode}] `;
+
+            // Insert mention text into the input box
+            messageInput.value += mentionText;
+            
+            // Move the focus back to the input box
+            messageInput.focus();
+        }
+    </script>
+
+    <!-- <script src="http://localhost:3000/socket.io/socket.io.js"></script> -->
+    <script src="https://cdn.socket.io/3.1.3/socket.io.min.js" integrity="sha384-cPwlPLvBTa3sKAgddT6krw0cJat7egBga3DJepJyrLl4Q9/5WLra3rrnMcyTyOnh" crossorigin="anonymous"></script>
+    <script>
+        // Check for stored user token
+        const token = localStorage.getItem('userToken');
+        if (!token) {
+            window.location.href = 'login.html'; // Redirect to login if no token is found
+        }
+
+        // const socket = io('wss://freemoney-chat.enactweb.com', {
+        const socket = io('wss://chat.cashtipay.com', {
+            auth: {
+                token: token,
+            },
+            query: {
+                country: "IN",
+                // room: 'general'
+            },
+        });
+
+        const sendMessage = (message) => socket.emit('message', { message });
+        const joinRoom = (room_code) => socket.emit('join_room', { room_code }, (response) => {
+            console.log("🚀 ~ joinRoom ~ response:", response)
+
+            if(response.status !== 'success') {
+                alert('Error: ' + response.message);
+                return;
+            }
+
+            window.user = response.user;
+            window.currentRoom = response.room;
+            window.messages = response.messages;
+
+            updateCurrentUser(window.user);
+            renderMessages(window.messages);
+            scrollToBottom();
+        });
+
+        socket.on('connect', () => {
+            joinRoom(currentRoom);
+            console.log('Connected to the server');
+        });
+
+        socket.on('room_counts', (data) => {
+            console.log(data);
+            document.getElementById('room_count').style.display = 'block';
+            document.getElementById('room_count').innerText = `${currentRoom ?? ''} (${data.roomCounts[currentRoom]})`;
+        });
+        
+        // add the latest message from data to window.messages remove the oldest message from window.messages and then render messages
+        socket.on('message', (data) => {
+            console.log("🚀 ~ socket.on ~ data:", data)
+            window.messages.push(data.message);
+            if (window.messages.length > 20) {
+                window.messages.shift();
+            }
+            renderMessages(window.messages);
+            scrollToBottom();
+        });
+
+        socket.on('connect_error', (err) => {
+            console.log('Connection failed:', err.message);
+            alert('Error: ' + err.message);
+        });
+
+        document.querySelector('#messageInput').addEventListener('keydown', (e) => {
+            const messageInput = document.getElementById('messageInput');
+
+            if (e.key === 'Enter') {
+                // Check if Shift key is pressed
+                if (e.shiftKey) {
+                    // Insert a new line
+                    const cursorPos = messageInput.selectionStart;
+                    const textBefore = messageInput.value.substring(0, cursorPos);
+                    const textAfter = messageInput.value.substring(cursorPos);
+                    messageInput.value = textBefore + '\n' + textAfter;
+
+                    // Move the cursor to the new line
+                    messageInput.selectionStart = messageInput.selectionEnd = cursorPos + 1;
+
+                    // Prevent default behavior (new line creation)
+                    e.preventDefault();
+                } else {
+                    // Send the message
+                    const message = messageInput.value.trim();
+                    if (message) {
+                        sendMessage(message);
+                        messageInput.value = '';
+                    }
+
+                    // Prevent default behavior (form submission or newline)
+                    e.preventDefault();
+                }
+            }
+        });
+
+
+        // // Send message
+        // document.querySelector('#messageInput').addEventListener('keypress', (e) => {
+        //     // if enter key is pressed then emit the message and clear the input
+        //     if (e.keyCode !== 13) return;
+            
+        //     const message = document.getElementById('messageInput').value;
+        //     if (!message) return
+            
+        //     sendMessage(message);
+        //     document.getElementById('messageInput').value = '';
+            
+        // });
+        document.querySelector('#sendButton').addEventListener('click', () => {
+            const message = document.getElementById('messageInput').value;
+            if (!message) return
+            
+            sendMessage(message);
+            document.getElementById('messageInput').value = '';
+        });
+
+        // Handle Room Change
+        document.getElementById('roomDropdown').addEventListener('change', (e) => {
+            const room = e.target.value;
+            joinRoom(room);
+        });
+
+    </script>
+</body>
+</html>

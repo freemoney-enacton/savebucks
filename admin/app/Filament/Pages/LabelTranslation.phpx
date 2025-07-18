@@ -1,0 +1,215 @@
+<?php
+
+namespace App\Filament\Pages;
+
+use App\Forms\Components\jsonLangInput;
+use App\Jobs\translateTo;
+use App\Models\Language;
+use App\Models\Translation;
+use Closure;
+use Filament\Actions\Action;
+use Filament\Forms\Components\Field;
+use Filament\Pages\Page;
+use Filament\Forms\Contracts\HasForms;
+use Filament\Forms\Concerns\InteractsWithForms;
+use Filament\Forms\Form;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Section;
+use Filament\Forms\Components\Tabs;
+use Filament\Notifications\Notification;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Lang;
+use Stichoza\GoogleTranslate\GoogleTranslate;
+use App\Translator;
+use Filament\Actions\LocaleSwitcher;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+use Filament\Resources\Concerns\Translatable;
+
+class LabelTranslation extends Page implements HasForms
+{
+    protected static ?string $navigationIcon = 'heroicon-o-language';
+    protected static ?int $navigationSort = 25;
+    protected static ?string $navigationGroup = "Developer Config";
+    protected static string $view = 'filament.pages.label-translation';
+    protected static bool $shouldRegisterNavigation = false;
+    public $source_lang  = 'en';
+    public $langs = [];
+    public $dest_lang = 'fr';
+    public $module = 'translate';
+    public $translation = [];
+    public $activeTab = '';
+    public $data = [];
+    public $model, $access;
+    use InteractsWithForms;
+    use Translatable;
+
+    public function mount(): void
+    {
+        $this->translation = Translation::get()->groupBy('page')->toArray();
+        // dd();
+        $this->activeTab = array_keys($this->translationTabs())[0];
+        if (Cache::get('languageOptions') == null) {
+            Cache::remember('languageOptions', 15, function () {
+                return Language::where('is_enabled', 1)->get()->pluck('code', 'code')->toArray();
+            });
+        }
+        $this->langs = Cache::get('languageOptions');
+        $data = Translation::get()
+            ->pluck('trans_value', 'trans_key');
+        $this->form->fill($data->toArray());
+        $this->model = new Translation();
+        $this->access = array();
+    }
+
+    // protected function getHeaderActions(): array
+    // {
+    //     return [
+    //         Action::make('clear-web-cache')
+    //             ->action(function () {
+    //                 $response = Http::get('https://freecash-api.enactweb.com/api/v1/cache/translations');
+    //                 if (json_decode($response)->success == true) {
+    //                     Notification::make()
+    //                         ->success()
+    //                         ->title('cache cleared successfully')
+    //                         ->send();
+    //                 }
+    //             }),
+    //     ];
+    // }
+
+    public function copyTo()
+    {
+        $this->copyTranslations($this->source_lang, $this->dest_lang);
+    }
+
+    public function translateTo()
+    {
+        $this->translateTranslations($this->source_lang, $this->dest_lang);
+    }
+
+    protected function copyTranslations($sourceLang, $destLang)
+    {
+        foreach (Translation::all() as $trRow) {
+            $trans_value = json_decode($trRow->trans_value, true);
+
+            if (!strlen($trans_value[$destLang]))
+                $trans_value[$destLang] = $trans_value[$sourceLang] ?? null;
+            $trRow->trans_value = json_encode($trans_value);
+            $trRow->save();
+        }
+        Notification::make()
+            ->success()
+            ->title('copy translations successfully')
+            ->send();
+    }
+
+    protected function translateTranslations($sourceLang, $destLang)
+    {
+        Log::info($sourceLang . ' ' . $destLang);
+        translateTo::dispatch($sourceLang, $destLang);
+        Notification::make()
+            ->success()
+            ->title('translate translations successfully')
+            ->send();
+    }
+
+    public function applyChanges()
+    {
+        // Implement apply changes logic here
+    }
+
+    public function switchToEn()
+    {
+        // Implement switch to English logic here
+    }
+
+    public function changeTab($tab)
+    {
+        $this->activeTab = $tab;
+    }
+
+
+    protected function translationTabs()
+    {
+        $translations = Translation::get()->groupBy('page')->toArray();
+        return $translations;
+    }
+
+    public function form(Form $form): Form
+    {
+        $lanOptions = $this->langs;
+
+        return $form
+            ->columns(3)
+            ->schema(
+                Translation::where('page', $this->activeTab)->get()
+                    ->groupBy('module')
+                    ->map(function ($fields, $module) use ($lanOptions) {
+                        return Section::make($module)->schema(
+                            $fields->map(function ($field, $key) use ($lanOptions) {
+                                return jsonLangInput::make($field->trans_key, fn (jsonLangInput $component) => $component->label($field->trans_key))
+                                    ->langOptions($lanOptions)
+                                    ->activeLang('en')
+                                    ->name($field->trans_key)
+                                    ->required();
+                            })->toArray()
+                        )->columns(3);
+                    })->toArray()
+            )
+            ->statePath('data');
+    }
+
+    public function save(): void
+    {
+        try {
+            $this->callHook('beforeValidate');
+            $fields = collect($this->form->getFlatFields(true));
+            $fieldsWithNestedFields = $fields->filter(fn (Field $field) => count($field->getChildComponents()) > 0);
+
+            $fieldsWithNestedFields->each(function (Field $fieldWithNestedFields, string $fieldWithNestedFieldsKey) use (&$fields) {
+                $fields = $fields->reject(function (Field $field, string $fieldKey) use ($fieldWithNestedFields, $fieldWithNestedFieldsKey) {
+                    return \Str::startsWith($fieldKey, $fieldWithNestedFieldsKey . '.');
+                });
+            });
+
+            $data = $fields->mapWithKeys(function (Field $field, string $fieldKey) {
+                return [$fieldKey => data_get($this->form->getState(), $fieldKey)];
+            })->toArray();
+            $this->callHook('afterValidate');
+
+            $this->callHook('beforeSave');
+            $this->data = $this->form->getState();
+            foreach ($this->data as $key => $value) {
+                if (is_array($value)) {
+                    $value = json_encode($value);
+                    $this->data[$key] = $value;
+                }
+                Translation::where('trans_key', $key)->update(['trans_value' => $value]);
+            }
+
+            $this->callHook('afterSave');
+
+            Notification::make()
+                ->success()
+                ->title(__('filament-panels::resources/pages/edit-record.notifications.saved.title'))
+                ->send();
+        } catch (Halt $exception) {
+            return;
+        }
+    }
+
+    protected function getFormActions(): array
+    {
+        return [
+            Action::make('save')
+                ->label(__('filament-panels::resources/pages/edit-record.form.actions.save.label'))
+                ->submit('save'),
+        ];
+    }
+
+    public function updateTranslation($field, $lang, $value)
+    {
+        $this->translation[$field][$lang] = $value;
+    }
+}

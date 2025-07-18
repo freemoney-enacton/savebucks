@@ -1,0 +1,9 @@
+TAP version 14
+{"level":30,"time":1710997778345,"pid":40504,"hostname":"UV","reqId":"req-1","req":{"method":"GET","url":"/health","hostname":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+# Subtest: GET /health
+    ok 1 - should be equal
+    ok 2 - should be equal
+    1..2
+ok 1 - GET /health # time=3705.014ms
+
+{"level":30,"time":1710997778358,"pid":40504,"hostname":"UV","reqId":"req-1","res":{"statusCode":200},"responseTime":11.905000001192093,"msg":"request completed"}

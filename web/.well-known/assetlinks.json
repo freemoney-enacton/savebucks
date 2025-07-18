@@ -1,0 +1,15 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.app.savebucks",
+      "sha256_cert_fingerprints": [
+        "E0:D9:8E:5C:7B:6C:8E:23:00:C6:9B:69:1B:1E:FC:55:70:A0:1E:53:32:25:81:F5:30:AF:06:16:63:FF:DE:FB",
+        "51:DF:E9:72:1C:87:67:FB:DF:C3:A6:40:15:46:E4:4E:75:F1:E9:CB:26:99:6C:1E:A0:E9:68:E8:06:72:E0:21"
+      ]
+    }
+  }
+]

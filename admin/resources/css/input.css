@@ -1,0 +1,13 @@
+@import '/node_modules/cropperjs/dist/cropper.css';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+
+.avtive-tab{
+@apply bg-primary-400 text-white;
+}
+.lang-select select:not(.choices) {
+    background-image: none;
+}

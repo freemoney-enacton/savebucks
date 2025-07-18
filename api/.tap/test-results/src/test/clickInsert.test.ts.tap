@@ -1,0 +1,126 @@
+TAP version 14
+{"level":30,"time":1710997778321,"pid":34440,"hostname":"UV","reqId":"req-1","req":{"method":"GET","url":"/api/v1/click/insert?platform=web&network=adnetwork&task_type=click&campaign_id=1234","hostname":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+# Subtest: GET /api/v1/task/click/insert
+    not ok 1 - should be equal
+      ---
+      compare: ===
+      at:
+        fileName: src\test\clickInsert.test.ts
+        lineNumber: 24
+        columnNumber: 5
+        typeName: Test
+        generated:
+          fileName: src/test/clickInsert.test.ts
+          lineNumber: 22
+          columnNumber: 7
+      stack: |
+        Test.<anonymous> (src/test/clickInsert.test.ts:24:5)
+      source: "  });\r
+      
+        \r
+      
+        \  t.equal(res.statusCode, 201);\r
+      
+        ----^
+      
+        \  t.equal(res.json().success, 1);\r
+      
+        \  t.equal(res.json().message, \"Inserted Successfully\");\n"
+      diff: |
+        --- expected
+        +++ actual
+        @@ -1,1 +1,1 @@
+        -201
+        +401
+      ...
+    
+    not ok 2 - should be equal
+      ---
+      compare: ===
+      at:
+        fileName: src\test\clickInsert.test.ts
+        lineNumber: 25
+        columnNumber: 5
+        typeName: Test
+        generated:
+          fileName: src/test/clickInsert.test.ts
+          lineNumber: 23
+          columnNumber: 7
+      stack: |
+        Test.<anonymous> (src/test/clickInsert.test.ts:25:5)
+      source: "\r
+      
+        \  t.equal(res.statusCode, 201);\r
+      
+        \  t.equal(res.json().success, 1);\r
+      
+        ----^
+      
+        \  t.equal(res.json().message, \"Inserted Successfully\");\r
+      
+        \  t.end();\n"
+      diff: |
+        --- expected
+        +++ actual
+        @@ -1,1 +1,1 @@
+        -1
+        +undefined
+      ...
+    
+    not ok 3 - should be equal
+      ---
+      compare: ===
+      at:
+        fileName: src\test\clickInsert.test.ts
+        lineNumber: 26
+        columnNumber: 5
+        typeName: Test
+        generated:
+          fileName: src/test/clickInsert.test.ts
+          lineNumber: 24
+          columnNumber: 7
+      stack: |
+        Test.<anonymous> (src/test/clickInsert.test.ts:26:5)
+      source: "  t.equal(res.statusCode, 201);\r
+      
+        \  t.equal(res.json().success, 1);\r
+      
+        \  t.equal(res.json().message, \"Inserted Successfully\");\r
+      
+        ----^
+      
+        \  t.end();\r
+      
+        });\n"
+      diff: |
+        --- expected
+        +++ actual
+        @@ -1,1 +1,1 @@
+        -Inserted Successfully
+        +undefined
+      ...
+    
+    1..3
+not ok 1 - GET /api/v1/task/click/insert # time=3720.015ms
+  ---
+  at:
+    fileName: src\test\clickInsert.test.ts
+    lineNumber: 4
+    columnNumber: 6
+    typeName: Object
+    generated:
+      fileName: src/test/clickInsert.test.ts
+      lineNumber: 5
+      columnNumber: 16
+  source: "import { createApp } from \"../app\";\r
+  
+    \r
+  
+    test(\"GET /api/v1/task/click/insert\", async (t) => {\r
+  
+    -----^
+  
+    \  const app = await createApp();\n"
+  ...
+
+{"level":30,"time":1710997778334,"pid":34440,"hostname":"UV","reqId":"req-1","res":{"statusCode":401},"responseTime":10.830799996852875,"msg":"request completed"}

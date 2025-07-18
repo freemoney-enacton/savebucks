@@ -1,0 +1,10 @@
+{
+    "applinks": {
+        "apps": [],
+        "details": [{
+            "appID": "WX4TM32GX7.app.ios.savebucks",
+            "paths": ["*"]
+            }
+        ]
+    }
+}

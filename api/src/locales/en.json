@@ -1,0 +1,136 @@
+{
+  "error": {
+    "redirectUrlRequired": "Redirect Url Required",
+    "kycVerificationFailedToCreateSession": "Kyc verification failed to create session.",
+    "globalErrorHandler": "Something Went Wrong!",
+    "rateLimitError": "Please try again in #TIME",
+    "internalError": "Internal Server Error",
+    "notFound": "Not Found",
+    "categoriesNotFound": "Categories Not Found",
+    "fetchedFailed": "Fetched Failed",
+    "insertionFailed": "Insertion Failed",
+    "postbackFailed":"Postback Failed",
+    "adminFailed":"Couldn't send Request to admin",
+    "footersNotFound": "Footers Not Found",
+    "withdrawalRequestExists": "Withdrawal Request already in process",
+    "pagesNotFound": "Pages Not Found",
+    "chatRoomNotFound":"Room not found",
+    "kycVerification": {
+      "kycVerificatonRequiredOnPayout": "KYC Verification required on payout",
+      "redirectUrlRequired": "Redirect URL is required",
+      "kycVerificationFailedToCreateSession": "KYC verification failed to create session",
+      "unauthorized": "Unauthorized access",
+      "invalidWebhookSignature": "Invalid webhook signature",
+      "userNotFound": "User not found",
+      "webhookProcessingFailed": "Failed to process webhook",
+      "noKycSessionFound": "No KYC session found",
+      "authenticationFailed": "Authentication failed",
+      "failedToFetchKycStatus": "Failed to fetch KYC status",
+      "kycStatusCheckFailed": "Failed to check KYC status"
+    },
+    "user": {
+      "invalidUser": "Invalid User",
+      "insufficientBalance": "Insufficient Balance",
+      "insufficientTier":"Insufficient tier",
+      "paymentFailed": "Payment Failed!",
+      "feesAmountError": "Transaction fees is greater than your amount",
+      "payoutAmountError": "Amount can't be greater than Payout",
+      "minimumAmount": "Minimum Amount is #CURRENCY_SYMBOL#MINIMUM_AMOUNT",
+      "invalidAmount": "Invalid Amount",
+      "invalidPaymentCode": "Invalid Payment Method Code",
+      "ikeyInvalid": "ikey is invalid",
+      "invalidTransactionID": "Invalid transaction ID",
+      "phoneExists": "The phone number is already associated with another user.",
+      "referCodeExists": "Referral Code already exists!"
+    },
+    "task": {
+      "detailsNotFound": "Details Not Found",
+      "inputsNotReceived":"All fields are required",
+      "taskExists":"Task already exists",
+      "invalidTask":"Task is invalid",
+      "invalidProvider":"Task Provider is invalid",
+      "invalidPlatform":"Task Platform in invalid",
+      "taskNotFound":"Task not found",
+      "networkNotFound":"Network not found"
+    },
+    "cashback":{
+      "claimNotFound":"User claim not found",
+      "claimExists":"User claim already exists",
+      "storeNotFound":"Store not Found",
+      "rangeExceeded":"Transaction date out of range"
+    },
+    "images":{
+      "imageSizeExceeded":"Image size exceeds the limit",
+      "imageNotFound":"Image file not found",
+      "imageTypeMismatch":"Image type mismatch",
+      "imageExists":"Image file already exists"
+    },
+    "auth": {
+      "newPasswordMustDiffer": "Current Password and new Password should be different",
+      "captchaResponse": "Invalid Captcha",
+      "userNotFound": "User not found",
+      "emailNotFound": "Email not found",
+      "userExist": "User already exists",
+      "emailExist": "Email is already associated with another account",
+      "phoneNumberExist": "Phone Number is already associated with another account",
+      "invalidReferralCode": "Invalid Referral Code",
+      "invalidEmail": "Invalid Email",
+      "invalidPassword": "Invalid Password",
+      "disposableEmail": "Email is disposable",
+      "invalidOtp": "OTP is incorrect",
+      "expiredOtp": "OTP expired",
+      "emailPhoneOtpRequired": "Email OR Phone Number and OTP are required",
+      "emailPhoneRequired": "Either email or phone number is required",
+      "currentNewPasswordReq": "Current Password or New Password is missing",
+      "currentPasswordIncorrect": "Current Password is incorrect",
+      "verifiedEmail": "Your email is already verified",
+      "verifiedPhone": "Your Phone Number is already verified",
+      "loginSocial": "Please login through social",
+      "resetPassword": "Please Reset your password",
+      "registerRequest": "Please Register",
+      "loginRequest": "Please Login",
+      "alreadyRegisteredRequest": "Please login! You are already registered!",
+      "passwordChangeNotAllowed": "Password change not allowed: Account linked with #PROVIDER_TYPE",
+      "userBanned": "Your Account is banned! Please contact support for help"
+    },
+    "zod": {
+      "minError": "#VAR must contain minimum #NUM characters",
+      "maxError": "#VAR must contain maximum #NUM characters",
+      "requiredError": "#VAR is required",
+      "passwordMaxError": "Password must only contains 255 characters",
+      "invalidEmail": "Invalid Email",
+      "passwordMinError": "Password must atleast contains 6 characters",
+      "referralCodeValidation": "Referral code must  contain minimum 5 alphabetic characters.",
+      "referralCodeLettersValidation": "Referral code must  contain minimum #NUM alphabetic characters.",
+      "referralCodeMaxError": "Referral Code must be less than 255 character",
+      "passwordValidation": "Password must be at least 6 characters and contain at least one uppercase letter, one lowercase letter, and one digit",
+      "otpValidation": "OTP must be a 6-digit number",
+      "invalidPhoneNo": "Invalid phone number",
+      "passwordRequired": "Password is required",
+      "emailRequired": "Email is required"
+    },
+    "leaderboard": {
+      "notFound": "Leaderboard Not Found"
+    },
+    "bonuses": {
+      "bonus_code": {
+        "claimed": "Bonus code already claimed",
+        "expired": "Bonus code has expired",
+        "invalid_tier": "Bonus code tier is invalid",
+        "max_usage": "Bonus code has reached maximum usage",
+        "not_yet_available": "Bonus code not yet available",
+        "notfound": "Bonus code not found"
+      },
+      "daily_streaks": {
+        "already_claimed": "Daily streak already claimed",
+        "insufficient_earning": "Insufficient earnings to claim daily streak",
+        "invalid_day": "Invalid day for daily streak"
+      },
+      "ladder": {
+        "claimed": "Ladder reward claimed",
+        "ladder_insufficient_earning": "Ladder insufficient earnings.",
+        "ladder_claimed_already": "Ladder claimed already."
+      }
+    }
+  }
+}

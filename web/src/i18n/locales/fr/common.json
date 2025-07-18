@@ -1,0 +1,7 @@
+{
+  "greeting": "Bonjour le monde!",
+  "client_component": "Ceci est un composant client",
+  "count": "compter",
+  "increase": "augmenter",
+  "decrease": "diminuer"
+}

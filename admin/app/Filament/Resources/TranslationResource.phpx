@@ -1,0 +1,89 @@
+<?php
+
+namespace App\Filament\Resources;
+
+use App\Filament\Resources\TranslationResource\Pages;
+use App\Filament\Resources\TranslationResource\RelationManagers;
+use App\Forms\Components\jsonLangInput;
+use App\Models\Language;
+use App\Models\Translation;
+use App\Models\TranslationWithLang;
+use Filament\Forms;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Form;
+use Filament\Resources\Resource;
+use Filament\Tables;
+use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Facades\Cache;
+
+use Filament\Resources\Concerns\Translatable;
+
+class TranslationResource extends Resource
+{
+    protected static ?string $model = TranslationWithLang::class;
+    protected static ?string $navigationGroup = "Super Admin Control";
+    protected static ?string $navigationIcon = 'heroicon-o-language';
+    protected static ?string $navigationLabel = 'Translations';
+    protected static ?string $pluralLabel = 'Admin Panel Translations';
+    protected static ?string $pluralModelLabel = 'Admin Panel Translations';
+    protected static ?string $modelLabel = 'Admin Panel Translations';
+    protected static ?int $navigationSort = 28;
+    use Translatable;
+    public static function form(Form $form): Form
+    {
+        if (Cache::get('languageOptions') == null) {
+            Cache::remember('languageOptions', 15, function () {
+                return Language::where('is_enabled', 1)->get()->pluck('code', 'code')->toArray();
+            });
+        }
+        $lanOptions = Cache::get('languageOptions');
+        return $form
+            ->schema([
+                Forms\Components\TextInput::make('page')
+                    ->required()
+                    ->maxLength(100),
+                Forms\Components\TextInput::make('module')
+                    ->maxLength(100),
+                Forms\Components\TextInput::make('trans_key')
+                    ->required()
+                    ->maxLength(100),
+                TextInput::make('trans_value')
+                    ->required()
+                    ->columnSpanFull(),
+            ]);
+    }
+
+    public static function table(Table $table): Table
+    {
+        return $table
+            ->paginated([50, 100, 250, 'all'])
+            ->columns([
+                Tables\Columns\TextColumn::make('page')
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('module')
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('trans_key')
+                    ->searchable(),
+            ])
+            ->filters([
+                //
+            ])
+            ->actions([
+                Tables\Actions\EditAction::make(),
+            ])
+            ->bulkActions([
+                Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\DeleteBulkAction::make(),
+                ]),
+            ]);
+    }
+
+    public static function getPages(): array
+    {
+        return [
+            'index' => Pages\ManageTranslations::route('/'),
+        ];
+    }
+}

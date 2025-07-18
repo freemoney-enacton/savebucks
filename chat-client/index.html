@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Socket.IO Hello World</title>
+</head>
+<body>
+    <h1>Socket.IO Hello World</h1>
+    <p id="message">Connecting...</p>
+
+    <!-- <script src="http://localhost:3000/socket.io/socket.io.js"></script> -->
+    <script src="https://cdn.socket.io/3.1.3/socket.io.min.js" integrity="sha384-cPwlPLvBTa3sKAgddT6krw0cJat7egBga3DJepJyrLl4Q9/5WLra3rrnMcyTyOnh" crossorigin="anonymous"></script>
+    <script>
+        window.addEventListener('load', () => {
+            const socket = io('wss://freemoney-chat.enactweb.com');
+            console.log("🚀 ~ socket:", socket)
+
+            socket.on('connect', () => {
+                console.log('Connected to the server');
+                document.getElementById('message').innerText = 'Connected to the server!';
+                
+                // Test sending and receiving events
+                socket.emit('testEvent', { test: 'Hello server!' });
+            });
+
+            socket.on('responseEvent', (data) => {
+                console.log('Response from server:', data);
+                document.getElementById('message').innerText = data.message;
+            });
+
+            socket.on('disconnect', () => {
+                console.log('Disconnected from the server');
+                document.getElementById('message').innerText = 'Disconnected from the server';
+            });
+
+            socket.on("connect_error", (err) => {
+                // the reason of the error, for example "xhr poll error"
+                console.log(err.message);
+
+                // some additional description, for example the status code of the initial HTTP response
+                console.log(err.description);
+
+                // some additional context, for example the XMLHttpRequest object
+                console.log(err.context);
+            });
+        })
+        
+    </script>
+</body>
+</html>

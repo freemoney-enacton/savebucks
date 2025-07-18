@@ -1,0 +1,26 @@
+pipelines:
+  branches:
+    master:
+      - step:
+          name: Deploy to Server
+          image: atlassian/default-image:3
+          script:
+            # Install SSH key
+            - mkdir -p ~/.ssh
+            - echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+            - chmod 600 ~/.ssh/id_rsa
+            - ssh-keyscan -H $SERVER_HOST >> ~/.ssh/known_hosts
+            
+            # SSH and run commands with proper output handling
+            - |
+              ssh $SERVER_USER@$SERVER_HOST "
+                cd /var/www/
+                ./gitpullweb.sh
+              "
+          services:
+            - docker
+
+definitions:
+  services:
+    docker:
+      memory: 2048

@@ -1,0 +1,128 @@
+TAP version 14
+{"level":30,"time":1710997778664,"pid":17760,"hostname":"UV","reqId":"req-1","req":{"method":"POST","url":"/api/v1/auth/register","hostname":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1710997778805,"pid":17760,"hostname":"UV","reqId":"req-1","res":{"statusCode":409},"responseTime":138.19900000095367,"msg":"request completed"}
+# Subtest: POST /api/v1/auth/register
+    not ok 1 - should be equal
+      ---
+      compare: ===
+      at:
+        fileName: src\test\register.test.ts
+        lineNumber: 15
+        columnNumber: 5
+        typeName: Test
+        generated:
+          fileName: src/test/register.test.ts
+          lineNumber: 16
+          columnNumber: 7
+      stack: |
+        Test.<anonymous> (src/test/register.test.ts:15:5)
+      source: "    },\r
+      
+        \  });\r
+      
+        \  t.equal(res.statusCode, 200);\r
+      
+        ----^
+      
+        \  t.equal(res.json().success, true);\r
+      
+        \  t.equal(res.json().message, \"Registered successfully!\");\n"
+      diff: |
+        --- expected
+        +++ actual
+        @@ -1,1 +1,1 @@
+        -200
+        +409
+      ...
+    
+    not ok 2 - should be equal
+      ---
+      compare: ===
+      at:
+        fileName: src\test\register.test.ts
+        lineNumber: 16
+        columnNumber: 5
+        typeName: Test
+        generated:
+          fileName: src/test/register.test.ts
+          lineNumber: 17
+          columnNumber: 7
+      stack: |
+        Test.<anonymous> (src/test/register.test.ts:16:5)
+      source: "  });\r
+      
+        \  t.equal(res.statusCode, 200);\r
+      
+        \  t.equal(res.json().success, true);\r
+      
+        ----^
+      
+        \  t.equal(res.json().message, \"Registered successfully!\");\r
+      
+        \  t.end();\n"
+      diff: |
+        --- expected
+        +++ actual
+        @@ -1,1 +1,1 @@
+        -true
+        +false
+      ...
+    
+    not ok 3 - should be equal
+      ---
+      compare: ===
+      at:
+        fileName: src\test\register.test.ts
+        lineNumber: 17
+        columnNumber: 5
+        typeName: Test
+        generated:
+          fileName: src/test/register.test.ts
+          lineNumber: 18
+          columnNumber: 7
+      stack: |
+        Test.<anonymous> (src/test/register.test.ts:17:5)
+      source: "  t.equal(res.statusCode, 200);\r
+      
+        \  t.equal(res.json().success, true);\r
+      
+        \  t.equal(res.json().message, \"Registered successfully!\");\r
+      
+        ----^
+      
+        \  t.end();\r
+      
+        });\n"
+      diff: |
+        --- expected
+        +++ actual
+        @@ -1,1 +1,1 @@
+        -Registered successfully!
+        +undefined
+      ...
+    
+    1..3
+not ok 1 - POST /api/v1/auth/register # time=3929.662ms
+  ---
+  at:
+    fileName: src\test\register.test.ts
+    lineNumber: 4
+    columnNumber: 6
+    typeName: Object
+    generated:
+      fileName: src/test/register.test.ts
+      lineNumber: 5
+      columnNumber: 16
+  source: "import { createApp } from \"../app\";\r
+  
+    \r
+  
+    test(\"POST /api/v1/auth/register\", async (t) => {\r
+  
+    -----^
+  
+    \  const app = await createApp();\r
+  
+    \  const res = await app.inject({\n"
+  ...
+
