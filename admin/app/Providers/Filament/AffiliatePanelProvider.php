@@ -27,10 +27,10 @@ class AffiliatePanelProvider extends PanelProvider
         return $panel
             ->id('affiliate')
             ->login()
-            ->brandLogo(asset('swittch.png'))
-            ->brandLogoHeight('3rem')
+            // ->brandLogo(asset('swittch.png'))
+            // ->brandLogoHeight('3rem')
             ->path('affiliate')
-            ->brandName('Swittch Affiliate')
+            ->brandName('Savebucks Affiliate')
             ->colors([
                 'primary' => Color::Indigo,
             ])
