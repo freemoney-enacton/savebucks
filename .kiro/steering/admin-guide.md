@@ -16,6 +16,9 @@ The admin panel is built with Laravel 10.x and Filament 3.2, following Laravel's
 ### Models (`app/Models/`)
 All models should extend Laravel's base Model and follow these conventions:
 
+#### Core Business Models
+
+**`app/Models/Offer.php`**
 ```php
 <?php
 
@@ -73,6 +76,260 @@ class Offer extends Model
     public function getFormattedRewardAttribute(): string
     {
         return '$' . number_format($this->reward_amount, 2);
+    }
+}
+```
+
+#### Affiliate Management Models
+
+**`app/Models/Affiliate.php`**
+```php
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Enums\ApprovalStatus;
+
+class Affiliate extends Model
+{
+    use SoftDeletes;
+
+    protected $connection = 'pgsql'; // PostgreSQL connection
+
+    protected $fillable = [
+        'name',
+        'email',
+        'password_hash',
+        'approval_status',
+        'paypal_address',
+        'bank_details',
+        'address',
+        'tax_id',
+        'is_email_verified',
+        'email_verified_at',
+    ];
+
+    protected $casts = [
+        'approval_status' => ApprovalStatus::class,
+        'bank_details' => 'array',
+        'address' => 'array',
+        'is_email_verified' => 'boolean',
+        'email_verified_at' => 'datetime',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+    ];
+
+    protected $hidden = [
+        'password_hash',
+    ];
+
+    // Relationships
+    public function affiliateLinks(): HasMany
+    {
+        return $this->hasMany(AffiliateLink::class);
+    }
+
+    public function conversions(): HasMany
+    {
+        return $this->hasMany(Conversion::class);
+    }
+
+    public function payouts(): HasMany
+    {
+        return $this->hasMany(AffiliatePayout::class);
+    }
+
+    public function campaigns(): BelongsToMany
+    {
+        return $this->belongsToMany(Campaign::class, 'affiliate_campaign_goals')
+            ->withPivot('custom_commission_rate')
+            ->withTimestamps();
+    }
+
+    // Scopes
+    public function scopeApproved($query)
+    {
+        return $query->where('approval_status', ApprovalStatus::APPROVED);
+    }
+
+    public function scopePending($query)
+    {
+        return $query->where('approval_status', ApprovalStatus::PENDING);
+    }
+
+    // Accessors
+    public function getTotalEarningsAttribute(): float
+    {
+        return $this->conversions()
+            ->where('status', 'approved')
+            ->sum('commission');
+    }
+
+    public function getPendingEarningsAttribute(): float
+    {
+        return $this->conversions()
+            ->where('status', 'pending')
+            ->sum('commission');
+    }
+}
+```
+
+**`app/Models/Campaign.php`**
+```php
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use App\Enums\CampaignStatus;
+
+class Campaign extends Model
+{
+    protected $connection = 'pgsql';
+
+    protected $fillable = [
+        'name',
+        'description',
+        'logo_url',
+        'campaign_type',
+        'status',
+        'terms_and_conditions',
+        'terms_and_condition_url',
+        'min_payout_amount',
+    ];
+
+    protected $casts = [
+        'status' => CampaignStatus::class,
+        'min_payout_amount' => 'decimal:2',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+    ];
+
+    // Relationships
+    public function campaignGoals(): HasMany
+    {
+        return $this->hasMany(CampaignGoal::class);
+    }
+
+    public function affiliateLinks(): HasMany
+    {
+        return $this->hasMany(AffiliateLink::class);
+    }
+
+    public function affiliates(): BelongsToMany
+    {
+        return $this->belongsToMany(Affiliate::class, 'affiliate_campaign_goals')
+            ->withPivot('custom_commission_rate')
+            ->withTimestamps();
+    }
+
+    public function conversions(): HasMany
+    {
+        return $this->hasMany(Conversion::class);
+    }
+
+    // Scopes
+    public function scopeActive($query)
+    {
+        return $query->where('status', CampaignStatus::ACTIVE);
+    }
+
+    // Accessors
+    public function getTotalClicksAttribute(): int
+    {
+        return $this->affiliateLinks()->sum('total_clicks');
+    }
+
+    public function getTotalConversionsAttribute(): int
+    {
+        return $this->conversions()->count();
+    }
+}
+```
+
+**`app/Models/Conversion.php`**
+```php
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Enums\ConversionStatus;
+
+class Conversion extends Model
+{
+    protected $connection = 'pgsql';
+
+    protected $fillable = [
+        'campaign_id',
+        'postback_log_id',
+        'click_code',
+        'campaign_goal_id',
+        'affiliate_id',
+        'transaction_id',
+        'conversion_value',
+        'commission',
+        'sub1',
+        'sub2',
+        'sub3',
+        'status',
+        'payout_id',
+        'admin_notes',
+        'converted_at',
+    ];
+
+    protected $casts = [
+        'status' => ConversionStatus::class,
+        'conversion_value' => 'decimal:2',
+        'commission' => 'decimal:2',
+        'converted_at' => 'datetime',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+    ];
+
+    // Relationships
+    public function affiliate(): BelongsTo
+    {
+        return $this->belongsTo(Affiliate::class);
+    }
+
+    public function campaign(): BelongsTo
+    {
+        return $this->belongsTo(Campaign::class);
+    }
+
+    public function campaignGoal(): BelongsTo
+    {
+        return $this->belongsTo(CampaignGoal::class);
+    }
+
+    public function payout(): BelongsTo
+    {
+        return $this->belongsTo(AffiliatePayout::class, 'payout_id');
+    }
+
+    // Scopes
+    public function scopePending($query)
+    {
+        return $query->where('status', ConversionStatus::PENDING);
+    }
+
+    public function scopeApproved($query)
+    {
+        return $query->where('status', ConversionStatus::APPROVED);
+    }
+
+    // Accessors
+    public function getFormattedCommissionAttribute(): string
+    {
+        return '$' . number_format($this->commission, 2);
     }
 }
 ```
