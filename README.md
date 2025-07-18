@@ -1,42 +1,48 @@
 # SaveBucks Monorepo
 
-SaveBucks is a multi-application repository containing three core projects:
+SaveBucks is a comprehensive cashback and affiliate marketing platform consisting of four interconnected applications:
 
-- **Admin** – Laravel Filament PHP application providing the administrative interface.
-- **API** – Fastify Node application exposing REST endpoints and real-time services.
-- **Web** – Next.js React application serving the customer-facing website.
+- **Admin** – Laravel Filament PHP application providing the administrative interface for managing users, offers, campaigns, affiliates, and platform settings.
+- **API** – Fastify Node application exposing REST endpoints and real-time services for core platform functionality.
+- **Web** – Next.js React application serving the customer-facing website for cashback rewards.
+- **Affiliate Panel** – Next.js React application providing affiliates with campaign management, link generation, commission tracking, and payout capabilities.
 
-This monorepo aims to consolidate development and deployment of all services.
+This monorepo consolidates development and deployment of all services in the SaveBucks ecosystem.
 
 ## Architecture Diagram
 
 ```text
-+---------+       HTTP      +-------+
-|  Web    | <------------> |  API  |
-+---------+                 +-------+
-     ^                           ^
-     |                           |
-     |   Admin actions via API   |
-     +-------->+---------+<------+
-               | Admin   |
-               +---------+
++---------+       HTTP      +-------+       PostgreSQL    +----------------+
+|  Web    | <------------> |  API  | <----------------> | Affiliate      |
++---------+                 +-------+                     | Panel          |
+     ^                           ^                        +----------------+
+     |                           |                               ^
+     |   Admin actions via API   |                               |
+     +-------->+---------+<------+                               |
+               | Admin   |                                       |
+               +---------+                                       |
+                    |                                            |
+                    |         Affiliate Management               |
+                    +--------------------------------------------+
 ```
 
 ## Technologies Used
 
-- PHP 8 / Laravel / Filament
-- Node.js / Fastify / TypeScript
-- React / Next.js / Tailwind CSS
-- MySQL, Redis and other supporting services
+- **Backend**: PHP 8 / Laravel / Filament
+- **API Server**: Node.js / Fastify / TypeScript
+- **Frontend**: React / Next.js / Tailwind CSS
+- **Databases**: MySQL (core platform), PostgreSQL (affiliate panel)
+- **Additional**: Redis, Drizzle ORM, NextAuth, Radix UI
 
 ## Folder Structure Overview
 
 ```
 / (repo root)
-├── admin        # Laravel Filament application
-├── api          # Fastify API server
-├── web          # Next.js web frontend
-└── chat-client  # Static chat prototype (HTML)
+├── admin           # Laravel Filament application
+├── api             # Fastify API server
+├── web             # Next.js web frontend
+├── affiliate-panel # Next.js affiliate portal
+└── chat-client     # Static chat prototype (HTML)
 ```
 
 ## Getting Started
@@ -45,7 +51,9 @@ This monorepo aims to consolidate development and deployment of all services.
 
 - **PHP** >= 8.1 with Composer
 - **Node.js** >= 18
-- MySQL or compatible database server
+- **MySQL** for core platform database
+- **PostgreSQL** for affiliate panel database
+- **Redis** for caching and sessions
 
 ### Installation
 
@@ -65,18 +73,31 @@ npm install
 # Web
 cd ../web
 npm install
+
+# Affiliate Panel
+cd ../affiliate-panel
+npm install
+cp .env.example .env
+npm run migrate
 ```
 
 ### Running Locally
 
-```
-# Admin
+```bash
+# Admin (port 8000)
+cd admin
 php artisan serve
 
-# API
+# API (port 3003)
+cd api
 npm run dev
 
-# Web
+# Web (port 3000)
+cd web
+npm run dev
+
+# Affiliate Panel (port 3001)
+cd affiliate-panel
 npm run dev
 ```
 
@@ -93,6 +114,7 @@ Each application can be deployed independently.
 - **Admin**: run database migrations and configure the web server to point to the `public/` directory.
 - **API**: build or run with `ts-node`, configure environment variables and reverse proxy (e.g., Nginx).
 - **Web**: execute `npm run build` then serve with `next start` or export as static assets.
+- **Affiliate Panel**: run `npm run build` and `npm start`, ensure PostgreSQL database is configured and migrations are run.
 
 ## Contributing
 
