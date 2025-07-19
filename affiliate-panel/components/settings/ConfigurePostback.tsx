@@ -98,29 +98,6 @@ export default function ConfigurePostback({
     <Card>
       <CardContent className="p-4 sm:p-6">
         <h2 className="text-lg font-medium mb-6">{t("postback.title")}</h2>
-        <div className="mb-6">
-          <Label htmlFor="campaign" className="text-sm text-gray-600">
-            {t("campaign.selectCampaign")}
-          </Label>
-          <Select
-            value={String(selectedCampaignId)}
-            onValueChange={handleCampaignChange}
-          >
-            <SelectTrigger className="bg-white mt-1">
-              <SelectValue
-                placeholder={t("campaign.selectPlaceholder")}
-              />
-            </SelectTrigger>
-            <SelectContent>
-              {campaigns.map((c: any) => (
-                <SelectItem key={c.id} value={String(c.id)}>
-                  {c.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
         <Formik
           initialValues={initialValues}
           validationSchema={postbackSchema}
@@ -130,6 +107,31 @@ export default function ConfigurePostback({
         >
           {({ values, setFieldValue, isSubmitting, errors, touched }) => (
             <Form className="space-y-4 sm:space-y-6">
+              {values.postbackType === "goal" && (
+                <div className="mb-6">
+                  <Label htmlFor="campaign" className="text-sm text-gray-600">
+                    {t("campaign.selectCampaign")}
+                  </Label>
+                  <Select
+                    value={String(selectedCampaignId)}
+                    onValueChange={handleCampaignChange}
+                  >
+                    <SelectTrigger className="bg-white mt-1">
+                      <SelectValue
+                        placeholder={t("campaign.selectPlaceholder")}
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {campaigns.map((c: any) => (
+                        <SelectItem key={c.id} value={String(c.id)}>
+                          {c.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
               <div className="grid md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label

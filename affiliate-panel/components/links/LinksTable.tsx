@@ -116,6 +116,17 @@ export default function LinksTable({ data, campaignId }: { data: any; campaignId
       },
     },
     {
+      accessorKey: "campaign",
+      header: t("links.campaign"),
+      cell: ({ row }) => {
+        return (
+          <div className="flex items-center text-gray-700">
+            {row.original.campaign?.name}
+          </div>
+        );
+      },
+    },
+    {
       accessorKey: "clicks",
       header: t("links.clicks"),
       cell: ({ row }) => {
