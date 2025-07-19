@@ -29,7 +29,7 @@ import DateFilter from "../DateFilter";
 
 type PayoutStatus = "paid" | "pending" | "rejected" | "processing";
 
-export default function PayoutsTable({ data, campaignId }: { data: any; campaignId?: string }) {
+export default function PayoutsTable({ data }: { data: any }) {
   const { t } = useTranslation();
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
