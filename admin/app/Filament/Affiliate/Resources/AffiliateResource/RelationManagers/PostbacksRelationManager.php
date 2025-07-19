@@ -64,6 +64,12 @@ class PostbacksRelationManager extends RelationManager
                         'success' => 'Success',
                         'failure' => 'Failure',
                     ]),
+
+                Tables\Filters\SelectFilter::make('campaign_id')
+                    ->label('Campaign')
+                    ->relationship('campaign', 'name')
+                    ->searchable()
+                    ->preload(),
             ])
             ->headerActions([
                 // Tables\Actions\CreateAction::make(),

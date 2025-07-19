@@ -4,6 +4,7 @@ namespace App\Filament\Affiliate\Resources\AffiliateResource\RelationManagers;
 
 use Filament\Forms;
 use Filament\Forms\Form;
+use App\Models\Affiliate\CampaignGoal;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -28,14 +29,28 @@ class AffiliateCampaignGoalsRelationManager extends RelationManager
                     ->relationship('campaign', 'name')
                     ->preload()
                     ->searchable()
+                    ->reactive()
+                    ->afterStateUpdated(fn (callable $set) => $set('campaign_goal_id', null))
                     ->required(),
 
                 Forms\Components\Select::make('campaign_goal_id')
-                    ->required()
-                    ->relationship('campaignGoal', 'name')
                     ->label('Campaign Goal')
+                    ->options(function (callable $get) {
+                        $campaignId = $get('campaign_id');
+
+                        if (!$campaignId) {
+                            return [];
+                        }
+
+                        return CampaignGoal::where('status', 'active')
+                            ->where('campaign_id', $campaignId)
+                            ->pluck('name', 'id');
+                    })
                     ->preload()
-                    ->searchable(),        
+                    ->searchable()
+                    ->reactive()
+                    ->required()
+                    ->disabled(fn (callable $get) => !$get('campaign_id')),
 
                 Forms\Components\TextInput::make('custom_commission_rate')
                     ->label('Custom Commission Rate')       

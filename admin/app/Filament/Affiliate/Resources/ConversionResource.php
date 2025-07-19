@@ -36,6 +36,8 @@ class ConversionResource extends Resource
                         ->relationship('campaign', 'name')
                         ->preload()
                         ->searchable()
+                        ->reactive()
+                        ->afterStateUpdated(fn (callable $set) => $set('campaign_goal_id', null))
                         ->required(),
 
                     Forms\Components\Select::make('postback_log_id')
@@ -50,10 +52,22 @@ class ConversionResource extends Resource
                         ->maxLength(255),
 
                     Forms\Components\Select::make('campaign_goal_id')
-                        ->relationship('campaignGoal', 'name')
                         ->label('Campaign Goal')
+                        ->options(function (callable $get) {
+                            $campaignId = $get('campaign_id');
+
+                            if (!$campaignId) {
+                                return [];
+                            }
+
+                            return \App\Models\Affiliate\CampaignGoal::where('status', 'active')
+                                ->where('campaign_id', $campaignId)
+                                ->pluck('name', 'id');
+                        })
                         ->preload()
-                        ->searchable(),       
+                        ->searchable()
+                        ->reactive()
+                        ->disabled(fn (callable $get) => !$get('campaign_id')),
 
                     Forms\Components\Select::make('affiliate_id')
                         ->label('affiliate')
@@ -128,8 +142,9 @@ class ConversionResource extends Resource
         return $table
             ->columns([
 
-                Tables\Columns\TextColumn::make('campaign.id')
-                    ->numeric()
+                Tables\Columns\TextColumn::make('campaign.name')
+                    ->label('Campaign')
+                    ->searchable()
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('click_code')

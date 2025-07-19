@@ -47,17 +47,17 @@ class AffiliateCampaignGoalResource extends Resource
                         ->disabledon("edit")           
                         ->label("Affiliate"),
            
-                    // Forms\Components\Select::make('campaign_id')
-                    //     ->label('Campaign')
-                    //     ->options(Campaign::where('status', 'active')->pluck("name", 'id'))
-                    //     ->default(1)
-                    //     ->preload()
-                    //     ->searchable()
-                    //     ->visibleon([''])
-                    //     ->required(),
-                        
-                    Forms\Components\Hidden::make('campaign_id')
-                        ->default(1),
+                    Forms\Components\Select::make('campaign_id')
+                        ->label('Campaign')
+                        ->options(fn () => Campaign::where('status', 'active')->pluck('name', 'id'))
+                        ->preload()
+                        ->searchable()
+                        ->reactive()
+                        ->afterStateUpdated(fn (callable $set) => $set('campaign_goal_id', null))
+                        ->validationMessages([
+                            'required' => 'Please select campaign to proceed.',
+                        ])
+                        ->required(),
 
                     Forms\Components\Select::make('campaign_goal_id')
                         ->label('Campaign Goal')
@@ -69,11 +69,19 @@ class AffiliateCampaignGoalResource extends Resource
                             }
 
                             // Get all campaign goals
-                            $allGoals = \App\Models\Affiliate\CampaignGoal::where('status', 'active')->pluck('name', 'id');
-                            
+                            $campaignId = $get('campaign_id');
+
+                            if (!$campaignId) {
+                                return [];
+                            }
+
+                            $allGoals = \App\Models\Affiliate\CampaignGoal::where('status', 'active')
+                                ->where('campaign_id', $campaignId)
+                                ->pluck('name', 'id');
+
                             // Get already assigned goals for this affiliate
                             $assignedGoals = \App\Models\Affiliate\AffiliateCampaignGoal::where('affiliate_id', $affiliateId)
-                                ->where('campaign_id', 1)
+                                ->where('campaign_id', $campaignId)
                                 ->pluck('campaign_goal_id')
                                 ->toArray();
                             
