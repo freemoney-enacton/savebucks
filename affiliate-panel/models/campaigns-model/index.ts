@@ -2,7 +2,7 @@ import { db } from "@/db";
 import { campaigns } from "@/db/schema";
 import { and, eq, sql } from "drizzle-orm";
 
-export const getAllCampaigns = async ({ filters }: any) => {
+export const getAllCampaigns = async ({ filters }: { filters?: any }) => {
   try {
     let rows_per_page = 10;
     let page = 1;
