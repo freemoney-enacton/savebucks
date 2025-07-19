@@ -10,6 +10,7 @@ import { getAffiliatePostbacksByAffiliate } from "@/models/affiliate-postback-mo
 import { getAffiliateByEmail } from "@/models/affiliates-model";
 import { getAuthSession } from "@/models/auth-models";
 import { getCampaignGoalsByCampaignId } from "@/models/campaign-goal-model";
+import { getAllCampaigns } from "@/models/campaigns-model";
 import { AppRoutes } from "@/utils/routes";
 import { redirect } from "next/navigation";
 
@@ -26,13 +27,21 @@ export default async function SettingsPage({ searchParams }: any) {
     return redirect(AppRoutes.auth.signIn);
   }
 
-  const affiliate = (await getAffiliateByEmail(user.user.email as string))
-    ?.data;
+  const affiliate = (await getAffiliateByEmail(user.user.email as string))?.data;
 
-  const campaignGoals = (await getCampaignGoalsByCampaignId(1)).data || [];
+  const campaignData = (await getAllCampaigns({ filters: { status: "active" } }))
+    ?.data;
+  const campaigns = campaignData ? campaignData.result : [];
+  const selectedCampaignId = searchParams.campaignId
+    ? parseInt(searchParams.campaignId)
+    : campaigns[0]?.id || 0;
+
+  const campaignGoals = (await getCampaignGoalsByCampaignId(selectedCampaignId))
+    .data || [];
 
   const affiliateCampaignGoals =
-    (await getAffiliateCampaignGoalsByCampaignId(1, user.user.id)).data || [];
+    (await getAffiliateCampaignGoalsByCampaignId(selectedCampaignId, user.user.id))
+      .data || [];
 
   const finalGoals = campaignGoals
     .filter((goal) => goal.status === "active")
@@ -71,7 +80,11 @@ export default async function SettingsPage({ searchParams }: any) {
         <PasswordChange affiliateUser={affiliate} />
 
         {/* Configure Postback */}
-        <ConfigurePostback goals={finalGoals} />
+        <ConfigurePostback
+          goals={finalGoals}
+          campaigns={campaigns}
+          selectedCampaignId={selectedCampaignId}
+        />
 
         <PostbacksTable data={postbacks} />
 
