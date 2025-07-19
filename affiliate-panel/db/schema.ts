@@ -68,9 +68,7 @@ export const campaigns = mysqlTable("campaigns", {
   description: text("description").notNull(),
   logoUrl: varchar("logo_url", { length: 255 }),
   campaignType: varchar("campaign_type", { length: 255 }).notNull(),
-  status: mysqlEnum("campaign_status", campaignStatusEnum)
-    .notNull()
-    .default("active"),
+  status: mysqlEnum("status", campaignStatusEnum).notNull().default("active"),
   termsAndConditions: text("terms_and_conditions"),
   termsAndConditionsUrl: text("terms_and_condition_url"),
   minPayoutAmount: decimal("min_payout_request").notNull().default("0.00"),
@@ -154,7 +152,7 @@ export const postbackLogs = mysqlTable("postback_logs", {
   id: serial("id").primaryKey(),
   rawPostbackData: json("raw_postback_data").notNull(),
   transactionId: varchar("transaction_id", { length: 255 }).notNull(),
-  status: mysqlEnum("postback_status", postbackStatusEnum).notNull(),
+  status: mysqlEnum("status", postbackStatusEnum).notNull(),
   statusMessages: json("status_messages"),
   receivedAt: timestamp("received_at").notNull(),
   processedAt: timestamp("processed_at"),
@@ -168,9 +166,7 @@ export const payouts = mysqlTable("payouts", {
     precision: 12,
     scale: 2,
   }).notNull(),
-  status: mysqlEnum("payout_status", payoutStatusEnum)
-    .notNull()
-    .default("pending"),
+  status: mysqlEnum("status", payoutStatusEnum).notNull().default("pending"),
   paymentMethod: varchar("payment_method", { length: 50 }).notNull(),
   paymentAccount: varchar("payment_account", { length: 255 }).notNull(),
   paymentDetails: json("payment_details"),
@@ -199,7 +195,7 @@ export const conversions = mysqlTable("conversions", {
   sub1: varchar("sub1", { length: 255 }),
   sub2: varchar("sub2", { length: 255 }),
   sub3: varchar("sub3", { length: 255 }),
-  status: mysqlEnum("conversion_status", conversionStatusEnum)
+  status: mysqlEnum("status", conversionStatusEnum)
     .notNull()
     .default("pending"),
   payoutId: bigint("payout_id", { mode: "number" }),
@@ -280,3 +276,13 @@ export const affiliateConversionsSummary = mysqlTable(
     conversionYear: int("conversion_year"),
   }
 );
+
+export const appInstallEvents = mysqlTable("app_install_events", {
+  id: serial("id").primaryKey(),
+  clickCode: varchar("click_code", { length: 255 }).notNull().unique(),
+  deviceId: varchar("device_id", { length: 255 }).notNull(),
+  deviceType: varchar("device_type", { length: 255 }).notNull(),
+  installTimestamp: varchar("install_timestamp", { length: 255 }).notNull(),
+  metadata: json("metadata"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
