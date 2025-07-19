@@ -22,7 +22,7 @@ export default async function SettingsPage({ searchParams }: any) {
     return redirect(AppRoutes.auth.pending);
   }
   const { t } = await createTranslation();
-  const { from, to, rows_per_page, page } = searchParams;
+  const { from, to, rows_per_page, page, campaignId } = searchParams;
   if (!user) {
     return redirect(AppRoutes.auth.signIn);
   }
@@ -65,6 +65,7 @@ export default async function SettingsPage({ searchParams }: any) {
       to,
       rows_per_page,
       page,
+      campaignId,
     })
   ).data;
 
@@ -86,7 +87,7 @@ export default async function SettingsPage({ searchParams }: any) {
           selectedCampaignId={selectedCampaignId}
         />
 
-        <PostbacksTable data={postbacks} />
+        <PostbacksTable data={postbacks} campaignId={campaignId} />
 
         {/* Postback Documentation */}
         <Card>
