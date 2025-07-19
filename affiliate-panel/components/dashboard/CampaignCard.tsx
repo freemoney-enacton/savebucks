@@ -36,9 +36,14 @@ export function CampaignCard({ campaign }: { campaign: any }) {
                 <h4 className="text-lg font-semibold text-gray-900">
                   {campaign.name || t("campaign.fallbackTitle")}
                 </h4>
-                <p className="text-sm text-gray-500">
-                  {campaign.description || t("campaign.fallbackDescription")}
-                </p>
+                <p
+                  className="text-sm text-gray-500"
+                  dangerouslySetInnerHTML={{
+                    __html:
+                      campaign.description ||
+                      t("campaign.fallbackDescription"),
+                  }}
+                />
                 <div>
                   <Link
                     href={
