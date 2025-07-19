@@ -33,7 +33,7 @@ class AffiliatePayoutRequestMail extends Mailable
      */
     public function envelope(): Envelope
     {
-        $adminEmails      = config('freemoney.default.affiliate_admin_emails', 'hello@swittch.app');
+        $adminEmails      = config('freemoney.default.affiliate_admin_emails', 'savebucks@givmail.com');
         $affiliateAdminEmailsArray = explode(',', $adminEmails);
 
         Log::info('Affiliate Payout Request sending for admins! ====>', ['adminEmailsArray'=>$affiliateAdminEmailsArray]);

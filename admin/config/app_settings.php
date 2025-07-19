@@ -141,6 +141,28 @@ return [
                         '1' => 'YES',
                     ],
                 ],
+                [
+                    'name'  => 'admin_emails',
+                    'type'  => 'text',
+                    'label' => 'Admin Emails',
+                    // optional properties
+                    'placeholder' => 'Enter Admin Emails, e.g: admin@gmail.com, admin2@gmail.com', // placeholder for input
+                    'class' => 'fi-input-wrp flex rounded-lg shadow-sm ring-1 transition duration-75 bg-white dark:bg-white/5 [&:not(:has(.fi-ac-action:focus))]:focus-within:ring-2 ring-gray-950/10 dark:ring-white/20 [&:not(:has(.fi-ac-action:focus))]:focus-within:ring-primary-600 dark:[&:not(:has(.fi-ac-action:focus))]:focus-within:ring-primary-500 fi-fo-text-input overflow-hidden text-sm sm:leading-6 bg-white/0 ps-3 pe-3 placeholder:!text-gray-400 placeholder:!text-sm  w-full border-none outline-none', // override global input_class
+                    'style' => '', // any inline styles
+                    'rules' => 'required|min:2',
+                    'hint'  => 'Enter coma seperated Admin Emails for recieve mails, e.g: admin@gmail.com, admin2@gmail.com',
+                ],
+                [
+                    'name'  => 'affiliate_admin_emails',
+                    'type'  => 'text',
+                    'label' => 'Affiliate Panel Admin Emails',
+                    // optional properties
+                    'placeholder' => 'Enter Affiliate Admin Emails, e.g: admin@gmail.com, admin2@gmail.com', // placeholder for input
+                    'class' => 'fi-input-wrp flex rounded-lg shadow-sm ring-1 transition duration-75 bg-white dark:bg-white/5 [&:not(:has(.fi-ac-action:focus))]:focus-within:ring-2 ring-gray-950/10 dark:ring-white/20 [&:not(:has(.fi-ac-action:focus))]:focus-within:ring-primary-600 dark:[&:not(:has(.fi-ac-action:focus))]:focus-within:ring-primary-500 fi-fo-text-input overflow-hidden text-sm sm:leading-6 bg-white/0 ps-3 pe-3 placeholder:!text-gray-400 placeholder:!text-sm  w-full border-none outline-none', // override global input_class
+                    'style' => '', // any inline styles
+                    'rules' => 'required|min:2',
+                    'hint'  => 'Enter coma seperated Admin Emails for affiliate panel to recieve mails, e.g: admin@gmail.com, admin2@gmail.com',
+                ],
                 // [
                 //     'type' => 'select',
                 //     'name' => 'timezone',
@@ -421,7 +443,7 @@ return [
         ],
 
 
-      
+
 
 
 
@@ -614,7 +636,7 @@ return [
                     'label' => 'Neeto API Key',
                     'class' => 'fi-input-wrp flex rounded-lg shadow-sm ring-1 transition duration-75 bg-white dark:bg-white/5 [&:not(:has(.fi-ac-action:focus))]:focus-within:ring-2 ring-gray-950/10 dark:ring-white/20 [&:not(:has(.fi-ac-action:focus))]:focus-within:ring-primary-600 dark:[&:not(:has(.fi-ac-action:focus))]:focus-within:ring-primary-500 fi-fo-text-input overflow-hidden  sm:text-sm sm:leading-6 bg-white/0 ps-3 pe-3 placeholder:text-gray-400 w-full border-none outline-none',
                 ],
-               
+
 
 
             ]
@@ -1055,12 +1077,12 @@ return [
         ],
 
         'store_settings' => [
-            'title' => 'Store Settings', 
-            'descriptions' => 'Configure your stores here', 
+            'title' => 'Store Settings',
+            'descriptions' => 'Configure your stores here',
             'icon' => 'fa fa-store',
-            
+
             'inputs' => [
-                
+
                 [
                     'name'      => 'tracking_speed',
                     'type'      => 'multilang_text',
@@ -1095,7 +1117,7 @@ return [
                     'value'     => 0
 
                 ],
-               
+
             ]
         ],
 
@@ -1304,13 +1326,13 @@ return [
                 // ]
             ]
         ],
-        
+
         'trust_pilot' => [
             'title' => 'Trust Pilot Settings',
             'descriptions' => 'Links for setting up trust pilot',
             'icon' => 'fa fa-window-restore ',
             'inputs' => [
-                
+
                 [
                     'name' => 'trust_pilot_logo',
                     'type' => 'image',
@@ -1321,7 +1343,7 @@ return [
                     'path' => '/', // path on the disk,
                     'preview_class' => 'thumbnail',
                     'preview_style' => 'height:40px',
-                ],                
+                ],
                 [
                     'name' => 'trust_pilot_link',
                     'type' => 'text',
@@ -1331,12 +1353,12 @@ return [
                     'hint' => 'Url link for trust pilot'
                 ],
             ]
-   
+
         ],
 
 
 
-   
+
     ],
 
     // Setting page url, will be used for get and post request

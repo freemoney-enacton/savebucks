@@ -23,7 +23,7 @@ Congratulations on joining our affiliate program! We're excited to have you on b
 
 ## Need Help?
 
-Our affiliate support team is here to help you succeed. If you have any questions or need assistance, don't hesitate to reach out to hello@swittch.app.
+Our affiliate support team is here to help you succeed. If you have any questions or need assistance, don't hesitate to reach out to savebucks@givmail.com.
 
 Let's start earning together!
 

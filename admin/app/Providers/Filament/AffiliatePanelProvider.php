@@ -27,7 +27,7 @@ class AffiliatePanelProvider extends PanelProvider
         return $panel
             ->id('affiliate')
             ->login()
-            // ->brandLogo(asset('swittch.png'))
+            // ->brandLogo(asset('savebucks.png'))
             // ->brandLogoHeight('3rem')
             ->path('affiliate')
             ->brandName('Savebucks Affiliate')
@@ -38,16 +38,16 @@ class AffiliatePanelProvider extends PanelProvider
                 'Affiliate',
                 'Campaigns',
                 'Payout',
-                'Logs & Reports', 
+                'Logs & Reports',
                 'Clicks & Conversions',
-                'Settings',              
+                'Settings',
             ])
             ->discoverResources(in: app_path('Filament/Affiliate/Resources'), for: 'App\\Filament\\Affiliate\\Resources')
             ->discoverPages(in: app_path('Filament/Affiliate/Pages'), for: 'App\\Filament\\Affiliate\\Pages')
             ->pages([
                 Pages\Dashboard::class,
             ])
-            ->discoverWidgets(in: app_path('Filament/Affiliate/Widgets'), for: 'App\\Filament\\Affiliate\\Widgets')    
+            ->discoverWidgets(in: app_path('Filament/Affiliate/Widgets'), for: 'App\\Filament\\Affiliate\\Widgets')
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
@@ -59,7 +59,7 @@ class AffiliatePanelProvider extends PanelProvider
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
             ])
-            ->sidebarCollapsibleOnDesktop() 
+            ->sidebarCollapsibleOnDesktop()
             ->databaseNotifications()
             ->authMiddleware([
                 Authenticate::class,

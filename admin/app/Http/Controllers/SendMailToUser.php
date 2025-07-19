@@ -66,7 +66,7 @@ class SendMailToUser extends Controller
                     ];
 
                     // Send email to admin
-                    $adminEmails        = config('freemoney.default.admin_emails', 'hello@swittch.app');
+                    $adminEmails        = config('freemoney.default.admin_emails', 'savebucks@givmail.com');
                     $adminEmailsArray   = explode(',', $adminEmails);
 
                     foreach ($adminEmailsArray as $adminEmail) {
@@ -214,14 +214,14 @@ class SendMailToUser extends Controller
                 ];
 
                 //Send Email To Admin
-                $adminEmails        = config('freemoney.default.admin_emails', 'hello@swittch.app');
+                $adminEmails        = config('freemoney.default.admin_emails', 'savebucks@givmail.com');
                 $adminEmailsArray   = explode(',', $adminEmails);
 
                 foreach ($adminEmailsArray as $adminEmail) {
                     Mail::to(trim($adminEmail))->send(new \App\Mail\AffiliateAdminPayoutRequestMail($data));
                 }
                 Log::info('Affiliate Payout request email sent to admin', ['user_payment_id' => $request->payout_id, "admin emails" => $adminEmailsArray]);
-               
+
                 //Send Email To Affiliate
                 Mail::to($affiliate->email)->send(new \App\Mail\AffiliatePayoutRequestMail($data));
 
