@@ -150,19 +150,25 @@ export const getAffiliatePostbacksByAffiliate = async (
     const toDate = filters?.to ? new Date(filters?.to) : defaultTo;
     toDate.setHours(23, 59, 59, 999);
 
+    const whereConditions = [
+      eq(affiliatePostbacks.affiliateId, affiliateId),
+      eq(affiliatePostbacks.isDeleted, false),
+      gte(affiliatePostbacks.createdAt, fromDate),
+      lte(affiliatePostbacks.createdAt, toDate),
+    ];
+
+    if (filters?.campaignId) {
+      whereConditions.push(
+        eq(affiliatePostbacks.campaignId, parseInt(filters.campaignId))
+      );
+    }
+
     const countResult = await db
       .select({
         count: sql<number>`count(*)`,
       })
       .from(affiliatePostbacks)
-      .where(
-        and(
-          eq(affiliatePostbacks.affiliateId, affiliateId),
-          eq(affiliatePostbacks.isDeleted, false),
-          gte(affiliatePostbacks.createdAt, fromDate),
-          lte(affiliatePostbacks.createdAt, toDate)
-        )
-      );
+      .where(and(...whereConditions));
 
     const totalCount = countResult[0]?.count || 0;
     const totalPages = Math.ceil(totalCount / rows_per_page);
@@ -174,14 +180,7 @@ export const getAffiliatePostbacksByAffiliate = async (
         campaignName: campaigns.name,
       })
       .from(affiliatePostbacks)
-      .where(
-        and(
-          eq(affiliatePostbacks.affiliateId, affiliateId),
-          eq(affiliatePostbacks.isDeleted, false),
-          gte(affiliatePostbacks.createdAt, fromDate),
-          lte(affiliatePostbacks.createdAt, toDate)
-        )
-      )
+      .where(and(...whereConditions))
       .leftJoin(
         campaignGoals,
         eq(affiliatePostbacks.campaignGoalId, campaignGoals.id)

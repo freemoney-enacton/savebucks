@@ -330,6 +330,10 @@
     "pending": "Pending",
     "declined": "Declined"
   },
+  "campaign": {
+    "label": "Campaign",
+    "all": "All campaigns"
+  },
   "dateRange": "Date Range",
   "placeholder": "Pick a date",
   "clear": "Clear filters"

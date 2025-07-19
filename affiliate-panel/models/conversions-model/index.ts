@@ -540,7 +540,8 @@ export const getAllAffiliateTransactions = async (
   page: number = 1,
   status?: "pending" | "approved" | "declined" | "paid",
   from?: string,
-  to?: string
+  to?: string,
+  campaignId?: string
 ) => {
   try {
     const defaultTo = new Date();
@@ -561,6 +562,12 @@ export const getAllAffiliateTransactions = async (
     if (status) {
       whereConditions.push(
         eq(affiliateConversionsSummary.conversionStatus, status)
+      );
+    }
+
+    if (campaignId) {
+      whereConditions.push(
+        eq(affiliateConversionsSummary.campaignId, parseInt(campaignId))
       );
     }
 

@@ -30,9 +30,12 @@ const getDateFromParams = (param: string): Date | undefined => {
   return isNaN(date.getTime()) ? undefined : date;
 };
 
-export default function FilterComponent() {
+export default function FilterComponent({ campaigns = [] }: { campaigns?: any[] }) {
   const { t } = useTranslation();
   const [statusFilter, setStatusFilter] = useState("all");
+  const [campaignFilter, setCampaignFilter] = useState(
+    searchParams.get("campaignId") || "all"
+  );
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
@@ -68,10 +71,12 @@ export default function FilterComponent() {
     router.push(`${pathname}?${params.toString()}`);
   };
 
-  const hasActiveFilters = statusFilter !== "all" || (date?.from && date?.to);
+  const hasActiveFilters =
+    statusFilter !== "all" || campaignFilter !== "all" || (date?.from && date?.to);
 
   const clearFilters = () => {
     setStatusFilter("all");
+    setCampaignFilter("all");
     setDate(undefined);
     router.push(pathname);
   };
@@ -83,7 +88,7 @@ export default function FilterComponent() {
       </CardHeader>
       <CardContent>
         <div className="space-y-4 sm:space-y-6">
-          <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid md:grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label>{t("filters.status.label")}</Label>
               <Select
@@ -107,6 +112,27 @@ export default function FilterComponent() {
                   <SelectItem value="declined">
                     {t("filters.status.declined")}
                   </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>{t("filters.campaign.label")}</Label>
+              <Select
+                value={campaignFilter}
+                onValueChange={(value) => {
+                  setCampaignFilter(value);
+                  updateSearchParams("campaignId", value);
+                }}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder={t("filters.campaign.all")} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t("filters.campaign.all")}</SelectItem>
+                  {campaigns.map((c) => (
+                    <SelectItem key={c.id} value={`${c.id}`}>{c.name}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>

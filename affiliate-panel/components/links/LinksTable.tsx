@@ -29,7 +29,7 @@ import { useRouter } from "next/navigation";
 import TablePagination from "../TablePagination";
 import DateFilter from "../DateFilter";
 
-export default function LinksTable({ data }: { data: any }) {
+export default function LinksTable({ data, campaignId }: { data: any; campaignId?: string }) {
   const { t } = useTranslation();
   const router = useRouter();
 

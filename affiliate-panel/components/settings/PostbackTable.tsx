@@ -34,7 +34,7 @@ import { Api } from "@/services/api-services";
 import { toast } from "@/hooks/use-toast";
 import DateFilter from "../DateFilter";
 
-export default function PostbacksTable({ data }: any) {
+export default function PostbacksTable({ data, campaignId }: { data: any; campaignId?: string }) {
   const { t } = useTranslation();
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);

@@ -241,6 +241,12 @@ export const getAffiliateLinksByAffiliateId = async (
       whereConditions.push(eq(affiliateLinks.status, filters.status));
     }
 
+    if (filters?.campaignId) {
+      whereConditions.push(
+        eq(affiliateLinks.campaignId, parseInt(filters.campaignId))
+      );
+    }
+
     const whereClause = and(...whereConditions);
 
     const countResult = await db
