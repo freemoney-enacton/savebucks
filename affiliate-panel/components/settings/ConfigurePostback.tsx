@@ -17,12 +17,18 @@ import { postbackSchema } from "@/utils/validation";
 import { Api } from "@/services/api-services";
 import { useSession } from "next-auth/react";
 import { useTranslation } from "@/i18n/client";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import Textarea from "../ui/Textarea";
 
-export default function ConfigurePostback({ goals }: any) {
+export default function ConfigurePostback({
+  goals,
+  campaigns,
+  selectedCampaignId,
+}: any) {
   const { t } = useTranslation();
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const user = useSession().data?.user;
 
   const initialValues = {
@@ -33,6 +39,16 @@ export default function ConfigurePostback({ goals }: any) {
     methodType: undefined,
   };
 
+  const handleCampaignChange = (value: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (value) {
+      params.set("campaignId", value);
+    } else {
+      params.delete("campaignId");
+    }
+    router.push(`${pathname}?${params.toString()}`);
+  };
+
   const handleSubmit = async (
     values: any,
     { setSubmitting, resetForm }: any
@@ -41,7 +57,7 @@ export default function ConfigurePostback({ goals }: any) {
       setSubmitting(true);
       const data = {
         affiliateId: user?.id,
-        campaignId: 1,
+        campaignId: selectedCampaignId,
         campaignGoalId:
           values.postbackType === "goal"
             ? goals?.find((g: any) => g.name === values.selectedGoal).id
@@ -82,6 +98,28 @@ export default function ConfigurePostback({ goals }: any) {
     <Card>
       <CardContent className="p-4 sm:p-6">
         <h2 className="text-lg font-medium mb-6">{t("postback.title")}</h2>
+        <div className="mb-6">
+          <Label htmlFor="campaign" className="text-sm text-gray-600">
+            {t("campaign.selectCampaign")}
+          </Label>
+          <Select
+            value={String(selectedCampaignId)}
+            onValueChange={handleCampaignChange}
+          >
+            <SelectTrigger className="bg-white mt-1">
+              <SelectValue
+                placeholder={t("campaign.selectPlaceholder")}
+              />
+            </SelectTrigger>
+            <SelectContent>
+              {campaigns.map((c: any) => (
+                <SelectItem key={c.id} value={String(c.id)}>
+                  {c.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
         <Formik
           initialValues={initialValues}

@@ -10,12 +10,20 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
 import { useTranslation } from "@/i18n/client";
 import { Api } from "@/services/api-services";
 import { Config } from "@/utils/config";
 import { AffiliateLinkSchema } from "@/utils/validation";
 import { Formik } from "formik";
+import { useEffect } from "react";
 import { Plus } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -26,16 +34,30 @@ export function CreateAffiliateLink() {
   const user = useSession().data?.user;
   const [isLoading, setIsLoading] = useState(false);
   const [open, setOpen] = useState(false);
-  const router = useRouter();
-  const mainUrl = `${Config.env.app.app_url}/l`;
-
-  const initialValues = {
+  const [campaigns, setCampaigns] = useState<any[]>([]);
+  const [initialValues, setInitialValues] = useState({
+    campaignId: "",
     link: "",
     name: "",
     sub1: "",
     sub2: "",
     sub3: "",
-  };
+  });
+  const router = useRouter();
+  const mainUrl = `${Config.env.app.app_url}/l`;
+
+  useEffect(() => {
+    const fetchCampaigns = async () => {
+      const res = await Api.get({ path: "/campaigns" });
+      if (res && res.status === "success") {
+        setCampaigns(res.data || []);
+        if ((res.data || []).length > 0) {
+          setInitialValues((prev) => ({ ...prev, campaignId: String(res.data[0].id) }));
+        }
+      }
+    };
+    fetchCampaigns();
+  }, []);
 
   const buildDestinationUrl = (mainUrl: any, values: any) => {
     const url = new URL(`${mainUrl}/${values.link}`);
@@ -51,7 +73,7 @@ export function CreateAffiliateLink() {
     try {
       setIsLoading(true);
       const data = {
-        campaignId: 1,
+        campaignId: Number(values.campaignId),
         affiliateId: Number(user?.id || 1),
         name: values.name,
         slug: values.link,
@@ -113,6 +135,7 @@ export function CreateAffiliateLink() {
             initialValues={initialValues}
             validationSchema={AffiliateLinkSchema}
             onSubmit={onSubmit}
+            enableReinitialize
           >
             {({
               values,
@@ -169,6 +192,34 @@ export function CreateAffiliateLink() {
                   />
                   {touched.name && errors.name && (
                     <p className="text-sm text-red-500">{errors.name}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="campaignId">
+                    {t("campaign.selectCampaign")}
+                    <span className="text-red-500"> *</span>
+                  </Label>
+                  <Select
+                    value={values.campaignId}
+                    onValueChange={(value) => handleChange({
+                      target: { name: "campaignId", value },
+                    })}
+                  >
+                    <SelectTrigger className="bg-white">
+                      <SelectValue placeholder={t("campaign.selectPlaceholder")}
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {campaigns.map((c) => (
+                        <SelectItem key={c.id} value={String(c.id)}>
+                          {c.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {touched.campaignId && errors.campaignId && (
+                    <p className="text-sm text-red-500">{errors.campaignId}</p>
                   )}
                 </div>
 

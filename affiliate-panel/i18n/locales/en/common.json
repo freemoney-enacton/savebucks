@@ -280,7 +280,9 @@
   "fallbackDescription": "Campaign Description.",
   "earn": "{amount}",
   "termsAndConditions": "Terms & Conditions",
-  "noActiveCampaigns": "No active campaigns found."
+  "noActiveCampaigns": "No active campaigns found.",
+  "selectCampaign": "Select Campaign",
+  "selectPlaceholder": "Choose campaign"
 },
 "earnings": {
   "chartTitle": "Total Earnings ($)",

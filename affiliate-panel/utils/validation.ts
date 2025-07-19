@@ -89,6 +89,7 @@ export const PersonalInformationSchema = Yup.object().shape({
 });
 
 export const AffiliateLinkSchema = Yup.object({
+  campaignId: Yup.number().required("Campaign is required"),
   link: Yup.string()
     .required("Keyword is required")
     .min(3, "Keyword must be at least 3 characters")

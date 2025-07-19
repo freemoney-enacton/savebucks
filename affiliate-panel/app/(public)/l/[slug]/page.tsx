@@ -64,7 +64,7 @@ export default async function Page({
   }
 
   const data = {
-    campaignId: 1,
+    campaignId: affiliateLink.campaignId,
     affiliateId: affiliateLink.affiliateId,
     affiliateLinkId: affiliateLink.id,
     clickCode,

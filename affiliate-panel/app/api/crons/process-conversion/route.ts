@@ -78,9 +78,12 @@ export async function POST(request: NextRequest) {
           clickRecord
         );
 
-        let campaign = (await getCampaignById(clickRecord.campaignId))?.data;
-        let campaignGoal = (await getCampaignGoalByTrackingCode(tracking_code))
-          ?.data;
+        const campaignId = body.campaign_id
+          ? Number(body.campaign_id)
+          : clickRecord.campaignId;
+
+        let campaign = campaignId ? (await getCampaignById(campaignId))?.data : null;
+        let campaignGoal = (await getCampaignGoalByTrackingCode(tracking_code))?.data;
         let affiliateCampaignGoal = null;
 
         console.log(
@@ -180,9 +183,7 @@ export async function POST(request: NextRequest) {
 
           const newConversion = {
             campaignGoalId: goal_code ? Number(goal_code) : 1,
-            campaignId: clickRecord.campaignId
-              ? Number(clickRecord.campaignId)
-              : 1,
+            campaignId: campaignId || null,
             clickCode: clickRecord.clickCode,
             affiliateId: clickRecord.affiliateId,
             transactionId: `${transaction_id}_${goal_code}`,
@@ -229,7 +230,7 @@ export async function POST(request: NextRequest) {
           const affiliatePostback = (
             await getAffiliatePostbackByCampaignAndGoal(
               clickRecord.affiliateId,
-              clickRecord.campaignId ? Number(clickRecord.campaignId) : 1,
+              campaignId || 0,
               Number(goal_code)
             )
           )?.data;
@@ -242,9 +243,7 @@ export async function POST(request: NextRequest) {
               const postbackData: any = {
                 affiliate_id: clickRecord.affiliateId,
                 affiliate_link_id: clickRecord.affiliateLinkId,
-                campaign_id: clickRecord.campaignId
-                  ? Number(clickRecord.campaignId)
-                  : 1,
+                campaign_id: campaignId || 0,
                 link_name: link_name,
                 goal_name: campaignGoal?.name,
                 campaign_goal_id: goal_code ? Number(goal_code) : 1,
