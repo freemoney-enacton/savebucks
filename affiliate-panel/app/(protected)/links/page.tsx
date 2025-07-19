@@ -9,7 +9,7 @@ import { AppRoutes } from "@/utils/routes";
 import { redirect } from "next/navigation";
 
 export default async function LinksPage({ searchParams }: any) {
-  const { from, to, rows_per_page, page } = searchParams;
+  const { from, to, rows_per_page, page, campaignId } = searchParams;
   const { t } = await createTranslation();
   const user = await getAuthSession();
   const userStatus = user?.user?.status;
@@ -26,6 +26,7 @@ export default async function LinksPage({ searchParams }: any) {
         to,
         rows_per_page,
         page,
+        campaignId,
       })
     )?.data || [];
 
@@ -37,7 +38,7 @@ export default async function LinksPage({ searchParams }: any) {
 
       <ActiveCampaign campaigns={campaigns || []} />
 
-      <LinksTable data={data} />
+      <LinksTable data={data} campaignId={campaignId} />
     </DashboardLayout>
   );
 }
