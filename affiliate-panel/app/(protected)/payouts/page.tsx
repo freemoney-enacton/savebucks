@@ -24,7 +24,7 @@ export default async function PayoutsPage({ searchParams }: any) {
   if (userStatus === "pending") {
     return redirect(AppRoutes.auth.pending);
   }
-  const { from, to, rows_per_page, page, campaignId } = searchParams;
+  const { from, to, rows_per_page, page } = searchParams;
   const affilite = (await getAffiliateById(user.user.id))?.data || null;
   const minAmount = (await getCampaignById(1))?.data?.minPayoutAmount || 0;
   const paymentInfo = {
@@ -38,7 +38,6 @@ export default async function PayoutsPage({ searchParams }: any) {
         to,
         rows_per_page,
         page,
-        campaignId,
       })
     )?.data || [];
 
@@ -83,7 +82,7 @@ export default async function PayoutsPage({ searchParams }: any) {
           minAmount={minAmount}
         />
 
-        <PayoutsTable data={payouts} campaignId={campaignId} />
+        <PayoutsTable data={payouts} />
       </div>
     </DashboardLayout>
   );

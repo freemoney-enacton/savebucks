@@ -122,10 +122,6 @@ export const getPayoutsByAffiliateId = async (
       lte(payouts.createdAt, toDate),
     ];
 
-    if (filters?.campaignId) {
-      whereConditions.push(eq(payouts.campaignId, parseInt(filters.campaignId)));
-    }
-
     const whereClause = and(...whereConditions);
 
     const countResult = await db
