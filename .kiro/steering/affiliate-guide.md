@@ -3,6 +3,7 @@
 The affiliate panel is built with Next.js 14.2 using the App Router, React 18, and TypeScript. It provides affiliates with campaign management, link generation, commission tracking, and payout management capabilities for the SaveBucks affiliate marketing platform.
 
 ### Core Principles
+
 - **Component-First**: Reusable, composable UI components with Radix UI
 - **Type Safety**: Full TypeScript coverage with Drizzle ORM
 - **Performance**: Optimized for affiliate dashboard analytics and reporting
@@ -44,6 +45,7 @@ affiliate-panel/
 ### Core Database Schema
 
 **`db/schema.ts`**
+
 ```typescript
 import {
   pgTable,
@@ -60,19 +62,30 @@ import {
 
 // Enums
 export const approvalStatusEnum = pgEnum("approval_status", [
-  "approved", "rejected", "suspended", "pending"
+  "approved",
+  "rejected",
+  "suspended",
+  "pending",
 ]);
 
 export const campaignStatusEnum = pgEnum("campaign_status", [
-  "active", "paused", "ended"
+  "active",
+  "paused",
+  "ended",
 ]);
 
 export const conversionStatusEnum = pgEnum("conversion_status", [
-  "pending", "approved", "declined", "paid"
+  "pending",
+  "approved",
+  "declined",
+  "paid",
 ]);
 
 export const payoutStatusEnum = pgEnum("payout_status", [
-  "pending", "processing", "rejected", "paid"
+  "pending",
+  "processing",
+  "rejected",
+  "paid",
 ]);
 
 // Affiliates table
@@ -132,6 +145,7 @@ export type CampaignGoal = typeof campaignGoals.$inferSelect;
 ### Model Implementation
 
 **`models/affiliates-model/index.ts`**
+
 ```typescript
 import { db } from "@/db";
 import { affiliates } from "@/db/schema";
@@ -166,7 +180,7 @@ export const updateAffiliateProfile = async (id: number, updateData: any) => {
         .set({
           name: updateData.name,
           address: updateData.address,
-          updatedAt: new Date().toISOString(),
+          updatedAt: new Date(),
         })
         .where(eq(affiliates.id, id))
         .returning();
@@ -201,16 +215,17 @@ export const updateAffiliateProfile = async (id: number, updateData: any) => {
 ### Dashboard Components
 
 **`components/dashboard/StatsCard.tsx`**
+
 ```typescript
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { LucideIcon } from 'lucide-react';
+import React from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { LucideIcon } from "lucide-react";
 
 interface StatsCardProps {
   title: string;
   value: string | number;
   change?: string;
-  changeType?: 'positive' | 'negative' | 'neutral';
+  changeType?: "positive" | "negative" | "neutral";
   icon: LucideIcon;
   description?: string;
 }
@@ -219,14 +234,14 @@ export const StatsCard: React.FC<StatsCardProps> = ({
   title,
   value,
   change,
-  changeType = 'neutral',
+  changeType = "neutral",
   icon: Icon,
-  description
+  description,
 }) => {
   const changeColors = {
-    positive: 'text-green-600',
-    negative: 'text-red-600',
-    neutral: 'text-gray-600'
+    positive: "text-green-600",
+    negative: "text-red-600",
+    neutral: "text-gray-600",
   };
 
   return (
@@ -240,9 +255,7 @@ export const StatsCard: React.FC<StatsCardProps> = ({
       <CardContent>
         <div className="text-2xl font-bold text-gray-900">{value}</div>
         {change && (
-          <p className={`text-xs ${changeColors[changeType]} mt-1`}>
-            {change}
-          </p>
+          <p className={`text-xs ${changeColors[changeType]} mt-1`}>{change}</p>
         )}
         {description && (
           <p className="text-xs text-gray-500 mt-1">{description}</p>
@@ -254,8 +267,9 @@ export const StatsCard: React.FC<StatsCardProps> = ({
 ```
 
 **`components/dashboard/EarningsChart.tsx`**
+
 ```typescript
-import React from 'react';
+import React from "react";
 import {
   LineChart,
   Line,
@@ -263,9 +277,9 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  ResponsiveContainer
-} from 'recharts';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+  ResponsiveContainer,
+} from "recharts";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface EarningsData {
   date: string;
@@ -279,7 +293,10 @@ interface EarningsChartProps {
   period: string;
 }
 
-export const EarningsChart: React.FC<EarningsChartProps> = ({ data, period }) => {
+export const EarningsChart: React.FC<EarningsChartProps> = ({
+  data,
+  period,
+}) => {
   return (
     <Card>
       <CardHeader>
@@ -289,32 +306,32 @@ export const EarningsChart: React.FC<EarningsChartProps> = ({ data, period }) =>
         <ResponsiveContainer width="100%" height={300}>
           <LineChart data={data}>
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis 
-              dataKey="date" 
+            <XAxis
+              dataKey="date"
               tick={{ fontSize: 12 }}
               tickFormatter={(value) => new Date(value).toLocaleDateString()}
             />
             <YAxis tick={{ fontSize: 12 }} />
-            <Tooltip 
+            <Tooltip
               labelFormatter={(value) => new Date(value).toLocaleDateString()}
               formatter={(value: number, name: string) => [
-                name === 'earnings' ? `$${value.toFixed(2)}` : value,
-                name.charAt(0).toUpperCase() + name.slice(1)
+                name === "earnings" ? `$${value.toFixed(2)}` : value,
+                name.charAt(0).toUpperCase() + name.slice(1),
               ]}
             />
-            <Line 
-              type="monotone" 
-              dataKey="earnings" 
-              stroke="#3b82f6" 
+            <Line
+              type="monotone"
+              dataKey="earnings"
+              stroke="#3b82f6"
               strokeWidth={2}
-              dot={{ fill: '#3b82f6', strokeWidth: 2, r: 4 }}
+              dot={{ fill: "#3b82f6", strokeWidth: 2, r: 4 }}
             />
-            <Line 
-              type="monotone" 
-              dataKey="conversions" 
-              stroke="#10b981" 
+            <Line
+              type="monotone"
+              dataKey="conversions"
+              stroke="#10b981"
               strokeWidth={2}
-              dot={{ fill: '#10b981', strokeWidth: 2, r: 4 }}
+              dot={{ fill: "#10b981", strokeWidth: 2, r: 4 }}
             />
           </LineChart>
         </ResponsiveContainer>
@@ -327,18 +344,25 @@ export const EarningsChart: React.FC<EarningsChartProps> = ({ data, period }) =>
 ### Link Management Components
 
 **`components/links/LinkGenerator.tsx`**
+
 ```typescript
-import React, { useState } from 'react';
-import { useFormik } from 'formik';
-import * as Yup from 'yup';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
-import { Copy, ExternalLink } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import React, { useState } from "react";
+import { useFormik } from "formik";
+import * as Yup from "yup";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { Copy, ExternalLink } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface Campaign {
   id: number;
@@ -352,53 +376,56 @@ interface LinkGeneratorProps {
 }
 
 const validationSchema = Yup.object({
-  campaignId: Yup.number().required('Campaign is required'),
-  name: Yup.string().required('Link name is required'),
-  destinationUrl: Yup.string().url('Must be a valid URL').required('Destination URL is required'),
+  campaignId: Yup.number().required("Campaign is required"),
+  name: Yup.string().required("Link name is required"),
+  destinationUrl: Yup.string()
+    .url("Must be a valid URL")
+    .required("Destination URL is required"),
   sub1: Yup.string().optional(),
   sub2: Yup.string().optional(),
   sub3: Yup.string().optional(),
 });
 
-export const LinkGenerator: React.FC<LinkGeneratorProps> = ({ 
-  campaigns, 
-  onLinkGenerated 
+export const LinkGenerator: React.FC<LinkGeneratorProps> = ({
+  campaigns,
+  onLinkGenerated,
 }) => {
   const [isGenerating, setIsGenerating] = useState(false);
-  const [generatedLink, setGeneratedLink] = useState<string>('');
+  const [generatedLink, setGeneratedLink] = useState<string>("");
   const { toast } = useToast();
 
   const formik = useFormik({
     initialValues: {
-      campaignId: '',
-      name: '',
-      destinationUrl: '',
-      sub1: '',
-      sub2: '',
-      sub3: '',
+      campaignId: "",
+      name: "",
+      destinationUrl: "",
+      sub1: "",
+      sub2: "",
+      sub3: "",
     },
     validationSchema,
     onSubmit: async (values) => {
       setIsGenerating(true);
       try {
-        const response = await fetch('/api/affiliate-links', {
-          method: 'POST',
+        const response = await fetch("/api/affiliate-links", {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify(values),
         });
 
         const result = await response.json();
-        
-        if (result.status === 'success') {
+
+        if (result.status === "success") {
           const affiliateLink = `${window.location.origin}/l/${result.data.slug}`;
           setGeneratedLink(affiliateLink);
           onLinkGenerated(result.data);
-          
+
           toast({
             title: "Link Generated Successfully",
-            description: "Your affiliate link has been created and is ready to use.",
+            description:
+              "Your affiliate link has been created and is ready to use.",
           });
         } else {
           throw new Error(result.message);
@@ -443,21 +470,30 @@ export const LinkGenerator: React.FC<LinkGeneratorProps> = ({
               <Label htmlFor="campaignId">Campaign *</Label>
               <Select
                 value={formik.values.campaignId}
-                onValueChange={(value) => formik.setFieldValue('campaignId', value)}
+                onValueChange={(value) =>
+                  formik.setFieldValue("campaignId", value)
+                }
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select a campaign" />
                 </SelectTrigger>
                 <SelectContent>
-                  {campaigns.filter(c => c.status === 'active').map((campaign) => (
-                    <SelectItem key={campaign.id} value={campaign.id.toString()}>
-                      {campaign.name}
-                    </SelectItem>
-                  ))}
+                  {campaigns
+                    .filter((c) => c.status === "active")
+                    .map((campaign) => (
+                      <SelectItem
+                        key={campaign.id}
+                        value={campaign.id.toString()}
+                      >
+                        {campaign.name}
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
               {formik.touched.campaignId && formik.errors.campaignId && (
-                <p className="text-sm text-red-600 mt-1">{formik.errors.campaignId}</p>
+                <p className="text-sm text-red-600 mt-1">
+                  {formik.errors.campaignId}
+                </p>
               )}
             </div>
 
@@ -472,7 +508,9 @@ export const LinkGenerator: React.FC<LinkGeneratorProps> = ({
                 placeholder="e.g., Homepage Banner"
               />
               {formik.touched.name && formik.errors.name && (
-                <p className="text-sm text-red-600 mt-1">{formik.errors.name}</p>
+                <p className="text-sm text-red-600 mt-1">
+                  {formik.errors.name}
+                </p>
               )}
             </div>
           </div>
@@ -488,7 +526,9 @@ export const LinkGenerator: React.FC<LinkGeneratorProps> = ({
               placeholder="https://example.com/landing-page"
             />
             {formik.touched.destinationUrl && formik.errors.destinationUrl && (
-              <p className="text-sm text-red-600 mt-1">{formik.errors.destinationUrl}</p>
+              <p className="text-sm text-red-600 mt-1">
+                {formik.errors.destinationUrl}
+              </p>
             )}
           </div>
 
@@ -525,12 +565,12 @@ export const LinkGenerator: React.FC<LinkGeneratorProps> = ({
             </div>
           </div>
 
-          <Button 
-            type="submit" 
+          <Button
+            type="submit"
             disabled={isGenerating || !formik.isValid}
             className="w-full"
           >
-            {isGenerating ? 'Generating...' : 'Generate Link'}
+            {isGenerating ? "Generating..." : "Generate Link"}
           </Button>
         </form>
 
@@ -540,11 +580,7 @@ export const LinkGenerator: React.FC<LinkGeneratorProps> = ({
               Your Affiliate Link:
             </Label>
             <div className="flex items-center gap-2 mt-2">
-              <Input
-                value={generatedLink}
-                readOnly
-                className="bg-white"
-              />
+              <Input value={generatedLink} readOnly className="bg-white" />
               <Button
                 type="button"
                 variant="outline"
@@ -557,7 +593,7 @@ export const LinkGenerator: React.FC<LinkGeneratorProps> = ({
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={() => window.open(generatedLink, '_blank')}
+                onClick={() => window.open(generatedLink, "_blank")}
               >
                 <ExternalLink className="h-4 w-4" />
               </Button>
@@ -575,19 +611,15 @@ export const LinkGenerator: React.FC<LinkGeneratorProps> = ({
 ### Dashboard Page
 
 **`app/(protected)/dashboard/page.tsx`**
-```typescript
-'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
-import { StatsCard } from '@/components/dashboard/StatsCard';
-import { EarningsChart } from '@/components/dashboard/EarningsChart';
-import { 
-  DollarSign, 
-  MousePointer, 
-  TrendingUp, 
-  Users 
-} from 'lucide-react';
+```typescript
+"use client";
+
+import React, { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
+import { StatsCard } from "@/components/dashboard/StatsCard";
+import { EarningsChart } from "@/components/dashboard/EarningsChart";
+import { DollarSign, MousePointer, TrendingUp, Users } from "lucide-react";
 
 interface DashboardStats {
   totalEarnings: number;
@@ -609,7 +641,7 @@ export default function DashboardPage() {
   const { data: session } = useSession();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [earningsData, setEarningsData] = useState<EarningsData[]>([]);
-  const [period, setPeriod] = useState('30d');
+  const [period, setPeriod] = useState("30d");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -619,24 +651,28 @@ export default function DashboardPage() {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      
+
       // Fetch stats
-      const statsResponse = await fetch(`/api/dashboard/stats?period=${period}`);
+      const statsResponse = await fetch(
+        `/api/dashboard/stats?period=${period}`
+      );
       const statsResult = await statsResponse.json();
-      
-      if (statsResult.status === 'success') {
+
+      if (statsResult.status === "success") {
         setStats(statsResult.data);
       }
 
       // Fetch earnings chart data
-      const earningsResponse = await fetch(`/api/dashboard/earnings?period=${period}`);
+      const earningsResponse = await fetch(
+        `/api/dashboard/earnings?period=${period}`
+      );
       const earningsResult = await earningsResponse.json();
-      
-      if (earningsResult.status === 'success') {
+
+      if (earningsResult.status === "success") {
         setEarningsData(earningsResult.data);
       }
     } catch (error) {
-      console.error('Failed to fetch dashboard data:', error);
+      console.error("Failed to fetch dashboard data:", error);
     } finally {
       setLoading(false);
     }
@@ -662,7 +698,7 @@ export default function DashboardPage() {
             Here's your affiliate performance overview
           </p>
         </div>
-        
+
         <div className="mt-4 md:mt-0">
           <select
             value={period}
@@ -681,31 +717,31 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatsCard
           title="Total Earnings"
-          value={`$${stats?.totalEarnings.toFixed(2) || '0.00'}`}
-          change={`$${stats?.pendingEarnings.toFixed(2) || '0.00'} pending`}
+          value={`$${stats?.totalEarnings.toFixed(2) || "0.00"}`}
+          change={`$${stats?.pendingEarnings.toFixed(2) || "0.00"} pending`}
           changeType="neutral"
           icon={DollarSign}
           description="Lifetime commission earnings"
         />
-        
+
         <StatsCard
           title="Total Clicks"
-          value={stats?.totalClicks.toLocaleString() || '0'}
+          value={stats?.totalClicks.toLocaleString() || "0"}
           icon={MousePointer}
           description="Total link clicks generated"
         />
-        
+
         <StatsCard
           title="Conversions"
-          value={stats?.totalConversions.toLocaleString() || '0'}
+          value={stats?.totalConversions.toLocaleString() || "0"}
           icon={TrendingUp}
           description="Successful conversions"
         />
-        
+
         <StatsCard
           title="Conversion Rate"
-          value={`${stats?.conversionRate.toFixed(2) || '0.00'}%`}
-          changeType={stats?.conversionRate > 2 ? 'positive' : 'neutral'}
+          value={`${stats?.conversionRate.toFixed(2) || "0.00"}%`}
+          changeType={stats?.conversionRate > 2 ? "positive" : "neutral"}
           icon={Users}
           description="Click to conversion ratio"
         />
@@ -771,19 +807,20 @@ export default function DashboardPage() {
 ### NextAuth Configuration
 
 **`app/api/auth/[...nextauth]/route.ts`**
+
 ```typescript
-import NextAuth from 'next-auth';
-import CredentialsProvider from 'next-auth/providers/credentials';
-import bcrypt from 'bcrypt';
-import { getAffiliateByEmail } from '@/models/affiliates-model';
+import NextAuth from "next-auth";
+import CredentialsProvider from "next-auth/providers/credentials";
+import bcrypt from "bcrypt";
+import { getAffiliateByEmail } from "@/models/affiliates-model";
 
 const handler = NextAuth({
   providers: [
     CredentialsProvider({
-      name: 'credentials',
+      name: "credentials",
       credentials: {
-        email: { label: 'Email', type: 'email' },
-        password: { label: 'Password', type: 'password' }
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
@@ -792,21 +829,21 @@ const handler = NextAuth({
 
         try {
           const result = await getAffiliateByEmail(credentials.email);
-          
-          if (result.status !== 'success' || !result.data) {
+
+          if (result.status !== "success" || !result.data) {
             return null;
           }
 
           const affiliate = result.data;
-          
+
           // Check if email is verified
           if (!affiliate.isEmailVerified) {
-            throw new Error('Please verify your email before signing in');
+            throw new Error("Please verify your email before signing in");
           }
 
           // Check approval status
-          if (affiliate.approvalStatus !== 'approved') {
-            throw new Error('Your account is pending approval');
+          if (affiliate.approvalStatus !== "approved") {
+            throw new Error("Your account is pending approval");
           }
 
           // Verify password
@@ -826,14 +863,14 @@ const handler = NextAuth({
             approvalStatus: affiliate.approvalStatus,
           };
         } catch (error) {
-          console.error('Auth error:', error);
+          console.error("Auth error:", error);
           return null;
         }
-      }
-    })
+      },
+    }),
   ],
   session: {
-    strategy: 'jwt',
+    strategy: "jwt",
   },
   callbacks: {
     async jwt({ token, user }) {
@@ -852,8 +889,8 @@ const handler = NextAuth({
     },
   },
   pages: {
-    signIn: '/signin',
-    error: '/signin',
+    signIn: "/signin",
+    error: "/signin",
   },
 });
 
@@ -865,36 +902,37 @@ export { handler as GET, handler as POST };
 ### Dashboard Stats API
 
 **`app/api/dashboard/stats/route.ts`**
+
 ```typescript
-import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { db } from '@/db';
-import { conversions, clicks, payouts } from '@/db/schema';
-import { eq, and, gte, sql } from 'drizzle-orm';
+import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { db } from "@/db";
+import { conversions, clicks, payouts } from "@/db/schema";
+import { eq, and, gte, sql } from "drizzle-orm";
 
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession();
-    
+
     if (!session?.user?.id) {
       return NextResponse.json(
-        { status: 'error', message: 'Unauthorized' },
+        { status: "error", message: "Unauthorized" },
         { status: 401 }
       );
     }
 
     const affiliateId = parseInt(session.user.id);
     const { searchParams } = new URL(request.url);
-    const period = searchParams.get('period') || '30d';
+    const period = searchParams.get("period") || "30d";
 
     // Calculate date range
     const daysMap: { [key: string]: number } = {
-      '7d': 7,
-      '30d': 30,
-      '90d': 90,
-      '1y': 365
+      "7d": 7,
+      "30d": 30,
+      "90d": 90,
+      "1y": 365,
     };
-    
+
     const days = daysMap[period] || 30;
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
@@ -910,7 +948,7 @@ export async function GET(request: NextRequest) {
       .where(
         and(
           eq(conversions.affiliateId, affiliateId),
-          gte(conversions.convertedAt, startDate.toISOString())
+          gte(conversions.convertedAt, startDate)
         )
       );
 
@@ -923,7 +961,7 @@ export async function GET(request: NextRequest) {
       .where(
         and(
           eq(clicks.affiliateId, affiliateId),
-          gte(clicks.clickedAt, startDate.toISOString())
+          gte(clicks.clickedAt, startDate)
         )
       );
 
@@ -936,7 +974,7 @@ export async function GET(request: NextRequest) {
       .where(
         and(
           eq(conversions.affiliateId, affiliateId),
-          gte(conversions.convertedAt, startDate.toISOString())
+          gte(conversions.convertedAt, startDate)
         )
       );
 
@@ -946,19 +984,22 @@ export async function GET(request: NextRequest) {
       paidEarnings: earningsResult[0]?.paidEarnings || 0,
       totalClicks: clicksResult[0]?.totalClicks || 0,
       totalConversions: conversionsResult[0]?.totalConversions || 0,
-      conversionRate: clicksResult[0]?.totalClicks > 0 
-        ? ((conversionsResult[0]?.totalConversions || 0) / clicksResult[0].totalClicks) * 100
-        : 0,
+      conversionRate:
+        clicksResult[0]?.totalClicks > 0
+          ? ((conversionsResult[0]?.totalConversions || 0) /
+              clicksResult[0].totalClicks) *
+            100
+          : 0,
     };
 
     return NextResponse.json({
-      status: 'success',
+      status: "success",
       data: stats,
     });
   } catch (error: any) {
-    console.error('Dashboard stats error:', error);
+    console.error("Dashboard stats error:", error);
     return NextResponse.json(
-      { status: 'error', message: 'Internal server error' },
+      { status: "error", message: "Internal server error" },
       { status: 500 }
     );
   }
@@ -968,6 +1009,7 @@ export async function GET(request: NextRequest) {
 ## Best Practices
 
 ### DO:
+
 - Use TypeScript for all components and functions
 - Implement proper error boundaries and loading states
 - Use Drizzle ORM for type-safe database operations
@@ -982,6 +1024,7 @@ export async function GET(request: NextRequest) {
 - Use proper HTTP status codes in API responses
 
 ### DON'T:
+
 - Skip input validation and sanitization
 - Store sensitive data in client-side storage
 - Use `any` type in TypeScript

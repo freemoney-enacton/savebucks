@@ -41,14 +41,14 @@ export async function POST(request: NextRequest) {
       password: hashedPassword,
       token,
       tokenExpiry,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      createdAt: new Date(),
+      updatedAt: new Date(),
     };
 
     const newAffiliate = await insertAffiliate(newUser);
     if (newAffiliate.status === "error") {
       return commonResponse({
-        data: null,
+        data: newAffiliate,
         status: "error",
         message: t("auth.signUp.errorCreatingUser"),
       });

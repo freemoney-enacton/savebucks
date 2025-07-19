@@ -118,7 +118,7 @@ export const updateAffiliateProfile = async (id: number, updateData: any) => {
         .set({
           name: updateData.name,
           address: updateData.address,
-          updatedAt: new Date().toISOString(),
+          updatedAt: new Date(),
         })
         .where(eq(affiliates.id, id))
         .execute();
@@ -250,7 +250,7 @@ export const updateAffiliatePassword = async (id: number, updateData: any) => {
         .update(affiliates)
         .set({
           password: updateData,
-          updatedAt: new Date().toISOString(),
+          updatedAt: new Date(),
           token: null,
           tokenExpiry: null,
         })
@@ -285,7 +285,7 @@ export const updateAffiliatePaypalId = async (id: number, updateData: any) => {
     await db.transaction(async (tx) => {
       await tx
         .update(affiliates)
-        .set({ paypalAddress: updateData, updatedAt: new Date().toISOString() })
+        .set({ paypalAddress: updateData, updatedAt: new Date() })
         .where(eq(affiliates.id, id))
         .execute();
     });
@@ -320,7 +320,7 @@ export const updateAffiliateBankDetails = async (
     await db.transaction(async (tx) => {
       await tx
         .update(affiliates)
-        .set({ bankDetails: updateData, updatedAt: new Date().toISOString() })
+        .set({ bankDetails: updateData, updatedAt: new Date() })
         .where(eq(affiliates.id, id))
         .execute();
     });
@@ -355,7 +355,7 @@ export const verifyAffiliateEmail = async (id: number) => {
         .set({
           isEmailVerified: true,
           emailVerifiedAt: new Date(),
-          updatedAt: new Date().toISOString(),
+          updatedAt: new Date(),
           token: null,
           tokenExpiry: null,
         })

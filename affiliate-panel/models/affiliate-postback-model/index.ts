@@ -66,7 +66,7 @@ export const deleteAffiliatePostback = async (id: number) => {
         .set({
           isDeleted: true,
           deletedAt: new Date(),
-          updatedAt: new Date().toISOString(),
+          updatedAt: new Date(),
         })
         .where(eq(affiliatePostbacks.id, id))
         .execute();
@@ -159,8 +159,8 @@ export const getAffiliatePostbacksByAffiliate = async (
         and(
           eq(affiliatePostbacks.affiliateId, affiliateId),
           eq(affiliatePostbacks.isDeleted, false),
-          gte(affiliatePostbacks.createdAt, fromDate.toISOString()),
-          lte(affiliatePostbacks.createdAt, toDate.toISOString())
+          gte(affiliatePostbacks.createdAt, fromDate),
+          lte(affiliatePostbacks.createdAt, toDate)
         )
       );
 
@@ -178,8 +178,8 @@ export const getAffiliatePostbacksByAffiliate = async (
         and(
           eq(affiliatePostbacks.affiliateId, affiliateId),
           eq(affiliatePostbacks.isDeleted, false),
-          gte(affiliatePostbacks.createdAt, fromDate.toISOString()),
-          lte(affiliatePostbacks.createdAt, toDate.toISOString())
+          gte(affiliatePostbacks.createdAt, fromDate),
+          lte(affiliatePostbacks.createdAt, toDate)
         )
       )
       .leftJoin(

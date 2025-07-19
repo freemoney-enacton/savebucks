@@ -24,8 +24,8 @@ export async function POST(request: NextRequest) {
 
     const data = {
       ...body,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      createdAt: new Date(),
+      updatedAt: new Date(),
     };
 
     const result = await insertAffiliateLink(data);

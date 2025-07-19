@@ -6,7 +6,6 @@ import {
   updateAffiliateLinkStats,
 } from "@/models/affiliate-link-model";
 import { insertClick } from "@/models/clicks-model";
-import { NewClick } from "@/db/schema";
 import { redirect } from "next/navigation";
 import AuthLayout from "@/components/layouts/AuthLayout";
 import Link from "next/link";
@@ -64,7 +63,7 @@ export default async function Page({
     );
   }
 
-  const data: NewClick = {
+  const data = {
     campaignId: 1,
     affiliateId: affiliateLink.affiliateId,
     affiliateLinkId: affiliateLink.id,
@@ -76,7 +75,7 @@ export default async function Page({
     sub2: sub2 || affiliateLink.sub2 || "",
     sub3: sub3 || affiliateLink.sub3 || "",
     isConverted: false,
-    clickedAt: new Date().toISOString(),
+    clickedAt: new Date(),
   };
 
   const result = await insertClick(data);

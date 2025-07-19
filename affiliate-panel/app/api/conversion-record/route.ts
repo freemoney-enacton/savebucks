@@ -1,4 +1,4 @@
-import { conversionStatusEnum, NewPostbackLog } from "@/db/schema";
+import { conversionStatusEnum } from "@/db/schema";
 import { createTranslation } from "@/i18n/server";
 import { getClickByClickCode } from "@/models/clicks-model";
 import { insertPostbackLog } from "@/models/postback-log-model";
@@ -56,12 +56,12 @@ async function handleRequest(
       });
     }
 
-    const data: NewPostbackLog = {
+    const data = {
       rawPostbackData: params,
       transactionId: transaction_id!,
       status: "pending",
       statusMessages: null,
-      receivedAt: new Date().toISOString(),
+      receivedAt: new Date(),
     };
 
     const postback_log = await insertPostbackLog(data);

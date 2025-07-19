@@ -10,10 +10,9 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
-import { CampaignWithGoals } from "./active-campaign";
 import { useTranslation } from "@/i18n/client";
 
-export function CampaignCard({ campaign }: { campaign: CampaignWithGoals }) {
+export function CampaignCard({ campaign }: { campaign: any }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const { t } = useTranslation();
 
@@ -92,7 +91,7 @@ export function CampaignCard({ campaign }: { campaign: CampaignWithGoals }) {
               {t("campaign.goals")}
             </h3>
             <div className="space-y-3 mt-2">
-              {campaign.goals.map((goal, goalIndex) => (
+              {campaign.goals.map((goal: any, goalIndex: any) => (
                 <div key={goalIndex} className="flex items-center gap-2">
                   <CheckCircle className="shrink-0 h-4 w-4 text-green-500" />
                   <span className="text-sm text-gray-700">{goal.name}</span>
