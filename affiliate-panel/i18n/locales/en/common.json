@@ -79,6 +79,7 @@
   "date": "Date",
   "url": "Links",
   "name": "Name",
+  "campaign": "Campaign",
   "clicks": "Clicks",
   "actions": "Actions",
   "noLinks": "No links found.",
