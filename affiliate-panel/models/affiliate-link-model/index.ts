@@ -233,8 +233,8 @@ export const getAffiliateLinksByAffiliateId = async (
 
     const whereConditions = [
       eq(affiliateLinks.affiliateId, affiliateId),
-      gte(affiliateLinks.createdAt, fromDate.toISOString()),
-      lte(affiliateLinks.createdAt, toDate.toISOString()),
+      gte(affiliateLinks.createdAt, fromDate),
+      lte(affiliateLinks.createdAt, toDate),
     ];
 
     if (filters?.status) {
@@ -533,7 +533,7 @@ export const updateAffiliateLinkStatus = async (
     await db.transaction(async (tx) => {
       await tx
         .update(affiliateLinks)
-        .set({ status, updatedAt: new Date().toISOString() })
+        .set({ status, updatedAt: new Date() })
         .where(eq(affiliateLinks.id, id))
         .execute();
     });

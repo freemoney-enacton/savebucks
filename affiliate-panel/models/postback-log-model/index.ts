@@ -175,7 +175,7 @@ export const markPostbackLogAsProcessed = async (
     await db.transaction(async (tx) => {
       await tx
         .update(postbackLogs)
-        .set({ processedAt })
+        .set({ processedAt: new Date(processedAt) })
         .where(eq(postbackLogs.id, id))
         .execute();
     });
@@ -205,10 +205,7 @@ export const markPostbackLogAsProcessed = async (
 export const deletePostbackLog = async (id: number) => {
   try {
     await db.transaction(async (tx) => {
-      await tx
-        .delete(postbackLogs)
-        .where(eq(postbackLogs.id, id))
-        .execute();
+      await tx.delete(postbackLogs).where(eq(postbackLogs.id, id)).execute();
     });
 
     if (!id) {
@@ -266,7 +263,7 @@ export const updatePostbackLogStatus = async (
         .set({
           status,
           statusMessages: message,
-          processedAt: new Date().toISOString(),
+          processedAt: new Date(),
         })
         .where(eq(postbackLogs.id, id))
         .execute();

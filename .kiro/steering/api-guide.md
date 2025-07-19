@@ -1,6 +1,7 @@
 rver is built with Fastify 4.28 and TypeScript, following a modular architecture with feature-based organization. It serves as the central communication hub between the admin panel and web frontend.
 
 ### Core Principles
+
 - **Modular Design**: Feature-based modules with clear boundaries
 - **Type Safety**: Full TypeScript coverage with Zod validation
 - **Plugin Architecture**: Extensible through Fastify plugins
@@ -42,27 +43,33 @@ modules/auth/
 ### Example Module Implementation
 
 **`modules/auth/schemas.ts`**
+
 ```typescript
-import { z } from 'zod';
+import { z } from "zod";
 
 export const LoginSchema = z.object({
-  email: z.string().email('Invalid email format'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
-  remember: z.boolean().optional().default(false)
+  email: z.string().email("Invalid email format"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+  remember: z.boolean().optional().default(false),
 });
 
 export const RegisterSchema = z.object({
-  email: z.string().email('Invalid email format'),
-  password: z.string().min(8, 'Password must be at least 8 characters')
-    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Password must contain uppercase, lowercase and number'),
-  firstName: z.string().min(2, 'First name must be at least 2 characters'),
-  lastName: z.string().min(2, 'Last name must be at least 2 characters'),
+  email: z.string().email("Invalid email format"),
+  password: z
+    .string()
+    .min(8, "Password must be at least 8 characters")
+    .regex(
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
+      "Password must contain uppercase, lowercase and number"
+    ),
+  firstName: z.string().min(2, "First name must be at least 2 characters"),
+  lastName: z.string().min(2, "Last name must be at least 2 characters"),
   phone: z.string().optional(),
-  referralCode: z.string().optional()
+  referralCode: z.string().optional(),
 });
 
 export const RefreshTokenSchema = z.object({
-  refreshToken: z.string().min(1, 'Refresh token is required')
+  refreshToken: z.string().min(1, "Refresh token is required"),
 });
 
 export type LoginRequest = z.infer<typeof LoginSchema>;
@@ -71,19 +78,17 @@ export type RefreshTokenRequest = z.infer<typeof RefreshTokenSchema>;
 ```
 
 **`modules/auth/services.ts`**
+
 ```typescript
-import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
-import { Database } from '../database/database';
-import { LoginRequest, RegisterRequest } from './schemas';
-import { EventBus } from '../events/eventBus';
-import { Events } from '../events/Events';
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
+import { Database } from "../database/database";
+import { LoginRequest, RegisterRequest } from "./schemas";
+import { EventBus } from "../events/eventBus";
+import { Events } from "../events/Events";
 
 export class AuthService {
-  constructor(
-    private db: Database,
-    private eventBus: EventBus
-  ) {}
+  constructor(private db: Database, private eventBus: EventBus) {}
 
   async login(data: LoginRequest): Promise<{
     user: any;
@@ -92,20 +97,20 @@ export class AuthService {
   }> {
     // Find user by email
     const user = await this.db
-      .selectFrom('users')
+      .selectFrom("users")
       .selectAll()
-      .where('email', '=', data.email)
-      .where('status', '=', 'active')
+      .where("email", "=", data.email)
+      .where("status", "=", "active")
       .executeTakeFirst();
 
     if (!user) {
-      throw new Error('Invalid credentials');
+      throw new Error("Invalid credentials");
     }
 
     // Verify password
     const isValidPassword = await bcrypt.compare(data.password, user.password);
     if (!isValidPassword) {
-      throw new Error('Invalid credentials');
+      throw new Error("Invalid credentials");
     }
 
     // Generate tokens
@@ -114,25 +119,25 @@ export class AuthService {
 
     // Update last login
     await this.db
-      .updateTable('users')
-      .set({ 
+      .updateTable("users")
+      .set({
         lastLoginAt: new Date(),
-        lastLoginIp: this.getClientIp()
+        lastLoginIp: this.getClientIp(),
       })
-      .where('id', '=', user.id)
+      .where("id", "=", user.id)
       .execute();
 
     // Emit login event
     this.eventBus.emit(Events.USER_LOGGED_IN, {
       userId: user.id,
       email: user.email,
-      timestamp: new Date()
+      timestamp: new Date(),
     });
 
     return {
       user: this.sanitizeUser(user),
       accessToken,
-      refreshToken
+      refreshToken,
     };
   }
 
@@ -143,13 +148,13 @@ export class AuthService {
   }> {
     // Check if user already exists
     const existingUser = await this.db
-      .selectFrom('users')
-      .select('id')
-      .where('email', '=', data.email)
+      .selectFrom("users")
+      .select("id")
+      .where("email", "=", data.email)
       .executeTakeFirst();
 
     if (existingUser) {
-      throw new Error('User already exists');
+      throw new Error("User already exists");
     }
 
     // Hash password
@@ -157,7 +162,7 @@ export class AuthService {
 
     // Create user
     const userId = await this.db
-      .insertInto('users')
+      .insertInto("users")
       .values({
         email: data.email,
         password: hashedPassword,
@@ -165,16 +170,16 @@ export class AuthService {
         lastName: data.lastName,
         phone: data.phone,
         referralCode: data.referralCode,
-        status: 'active',
-        createdAt: new Date()
+        status: "active",
+        createdAt: new Date(),
       })
-      .returning('id')
+      .returning("id")
       .executeTakeFirstOrThrow();
 
     const user = await this.db
-      .selectFrom('users')
+      .selectFrom("users")
       .selectAll()
-      .where('id', '=', userId.id)
+      .where("id", "=", userId.id)
       .executeTakeFirstOrThrow();
 
     // Generate tokens
@@ -186,36 +191,36 @@ export class AuthService {
       userId: user.id,
       email: user.email,
       referralCode: data.referralCode,
-      timestamp: new Date()
+      timestamp: new Date(),
     });
 
     return {
       user: this.sanitizeUser(user),
       accessToken,
-      refreshToken
+      refreshToken,
     };
   }
 
   private generateAccessToken(user: any): string {
     return jwt.sign(
-      { 
-        userId: user.id, 
+      {
+        userId: user.id,
         email: user.email,
-        type: 'access'
+        type: "access",
       },
       process.env.JWT_SECRET!,
-      { expiresIn: '15m' }
+      { expiresIn: "15m" }
     );
   }
 
   private generateRefreshToken(user: any): string {
     return jwt.sign(
-      { 
+      {
         userId: user.id,
-        type: 'refresh'
+        type: "refresh",
       },
       process.env.JWT_REFRESH_SECRET!,
-      { expiresIn: '7d' }
+      { expiresIn: "7d" }
     );
   }
 
@@ -226,17 +231,18 @@ export class AuthService {
 
   private getClientIp(): string {
     // Implementation to get client IP
-    return '127.0.0.1';
+    return "127.0.0.1";
   }
 }
 ```
 
 **`modules/auth/handlers.ts`**
+
 ```typescript
-import { FastifyRequest, FastifyReply } from 'fastify';
-import { LoginRequest, RegisterRequest, RefreshTokenRequest } from './schemas';
-import { AuthService } from './services';
-import { sendResponse } from '../../utils/sendResponse';
+import { FastifyRequest, FastifyReply } from "fastify";
+import { LoginRequest, RegisterRequest, RefreshTokenRequest } from "./schemas";
+import { AuthService } from "./services";
+import { sendResponse } from "../../utils/sendResponse";
 
 export class AuthHandlers {
   constructor(private authService: AuthService) {}
@@ -247,22 +253,22 @@ export class AuthHandlers {
   ) {
     try {
       const result = await this.authService.login(request.body);
-      
+
       return sendResponse(reply, {
         success: true,
         data: result,
-        message: 'Login successful'
+        message: "Login successful",
       });
     } catch (error) {
-      request.log.error('Login failed', { 
+      request.log.error("Login failed", {
         email: request.body.email,
-        error: error.message 
+        error: error.message,
       });
 
       return sendResponse(reply, {
         success: false,
         message: error.message,
-        statusCode: 401
+        statusCode: 401,
       });
     }
   }
@@ -273,23 +279,23 @@ export class AuthHandlers {
   ) {
     try {
       const result = await this.authService.register(request.body);
-      
+
       return sendResponse(reply, {
         success: true,
         data: result,
-        message: 'Registration successful',
-        statusCode: 201
+        message: "Registration successful",
+        statusCode: 201,
       });
     } catch (error) {
-      request.log.error('Registration failed', { 
+      request.log.error("Registration failed", {
         email: request.body.email,
-        error: error.message 
+        error: error.message,
       });
 
       return sendResponse(reply, {
         success: false,
         message: error.message,
-        statusCode: 400
+        statusCode: 400,
       });
     }
   }
@@ -299,18 +305,20 @@ export class AuthHandlers {
     reply: FastifyReply
   ) {
     try {
-      const result = await this.authService.refreshToken(request.body.refreshToken);
-      
+      const result = await this.authService.refreshToken(
+        request.body.refreshToken
+      );
+
       return sendResponse(reply, {
         success: true,
         data: result,
-        message: 'Token refreshed successfully'
+        message: "Token refreshed successfully",
       });
     } catch (error) {
       return sendResponse(reply, {
         success: false,
-        message: 'Invalid refresh token',
-        statusCode: 401
+        message: "Invalid refresh token",
+        statusCode: 401,
       });
     }
   }
@@ -318,81 +326,99 @@ export class AuthHandlers {
 ```
 
 **`modules/auth/routes.ts`**
+
 ```typescript
-import { FastifyInstance } from 'fastify';
-import { LoginSchema, RegisterSchema, RefreshTokenSchema } from './schemas';
-import { AuthHandlers } from './handlers';
-import { AuthService } from './services';
+import { FastifyInstance } from "fastify";
+import { LoginSchema, RegisterSchema, RefreshTokenSchema } from "./schemas";
+import { AuthHandlers } from "./handlers";
+import { AuthService } from "./services";
 
 export async function authRoutes(fastify: FastifyInstance) {
   const authService = new AuthService(fastify.db, fastify.eventBus);
   const authHandlers = new AuthHandlers(authService);
 
   // Login endpoint
-  fastify.post('/login', {
-    schema: {
-      body: LoginSchema,
-      tags: ['Authentication'],
-      summary: 'User login',
-      response: {
-        200: {
-          type: 'object',
-          properties: {
-            success: { type: 'boolean' },
-            data: {
-              type: 'object',
-              properties: {
-                user: { type: 'object' },
-                accessToken: { type: 'string' },
-                refreshToken: { type: 'string' }
-              }
+  fastify.post(
+    "/login",
+    {
+      schema: {
+        body: LoginSchema,
+        tags: ["Authentication"],
+        summary: "User login",
+        response: {
+          200: {
+            type: "object",
+            properties: {
+              success: { type: "boolean" },
+              data: {
+                type: "object",
+                properties: {
+                  user: { type: "object" },
+                  accessToken: { type: "string" },
+                  refreshToken: { type: "string" },
+                },
+              },
+              message: { type: "string" },
             },
-            message: { type: 'string' }
-          }
-        }
-      }
-    }
-  }, authHandlers.login.bind(authHandlers));
+          },
+        },
+      },
+    },
+    authHandlers.login.bind(authHandlers)
+  );
 
   // Register endpoint
-  fastify.post('/register', {
-    schema: {
-      body: RegisterSchema,
-      tags: ['Authentication'],
-      summary: 'User registration'
-    }
-  }, authHandlers.register.bind(authHandlers));
+  fastify.post(
+    "/register",
+    {
+      schema: {
+        body: RegisterSchema,
+        tags: ["Authentication"],
+        summary: "User registration",
+      },
+    },
+    authHandlers.register.bind(authHandlers)
+  );
 
   // Refresh token endpoint
-  fastify.post('/refresh', {
-    schema: {
-      body: RefreshTokenSchema,
-      tags: ['Authentication'],
-      summary: 'Refresh access token'
-    }
-  }, authHandlers.refreshToken.bind(authHandlers));
+  fastify.post(
+    "/refresh",
+    {
+      schema: {
+        body: RefreshTokenSchema,
+        tags: ["Authentication"],
+        summary: "Refresh access token",
+      },
+    },
+    authHandlers.refreshToken.bind(authHandlers)
+  );
 
   // Logout endpoint
-  fastify.post('/logout', {
-    preHandler: [fastify.authenticate],
-    schema: {
-      tags: ['Authentication'],
-      summary: 'User logout'
+  fastify.post(
+    "/logout",
+    {
+      preHandler: [fastify.authenticate],
+      schema: {
+        tags: ["Authentication"],
+        summary: "User logout",
+      },
+    },
+    async (request, reply) => {
+      // Implement logout logic (blacklist token, etc.)
+      return { success: true, message: "Logged out successfully" };
     }
-  }, async (request, reply) => {
-    // Implement logout logic (blacklist token, etc.)
-    return { success: true, message: 'Logged out successfully' };
-  });
+  );
 }
 ```
 
 ## Database Layer
 
 **`database/database.ts`**
+
 ```typescript
-import { Kysely, MysqlDialect } from 'kysely';
-import { createPool } from 'mysql2';
-import { DB } from './db'; // Generated types
+import { Kysely, MysqlDialect } from "kysely";
+import { createPool } from "mysql2";
+import { DB } from "./db"; // Generated types
 
 export class Database {
   private static instance: Kysely<DB>;
@@ -405,19 +431,19 @@ export class Database {
           host: process.env.DB_HOST,
           user: process.env.DB_USERNAME,
           password: process.env.DB_PASSWORD,
-          port: parseInt(process.env.DB_PORT || '3306'),
+          port: parseInt(process.env.DB_PORT || "3306"),
           connectionLimit: 10,
-        })
+        }),
       });
 
       Database.instance = new Kysely<DB>({
         dialect,
         log: (event) => {
-          if (event.level === 'query') {
-            console.log('Query:', event.query.sql);
-            console.log('Parameters:', event.query.parameters);
+          if (event.level === "query") {
+            console.log("Query:", event.query.sql);
+            console.log("Parameters:", event.query.parameters);
           }
-        }
+        },
       });
     }
 
@@ -429,11 +455,12 @@ export class Database {
 ## Middleware
 
 **`middleware/authMiddleware.ts`**
-```typescript
-import { FastifyRequest, FastifyReply } from 'fastify';
-import jwt from 'jsonwebtoken';
 
-declare module 'fastify' {
+```typescript
+import { FastifyRequest, FastifyReply } from "fastify";
+import jwt from "jsonwebtoken";
+
+declare module "fastify" {
   interface FastifyRequest {
     user?: {
       userId: number;
@@ -448,33 +475,32 @@ export async function authMiddleware(
 ) {
   try {
     const authHeader = request.headers.authorization;
-    
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return reply.status(401).send({
         success: false,
-        message: 'Authorization token required'
+        message: "Authorization token required",
       });
     }
 
     const token = authHeader.substring(7);
     const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
 
-    if (decoded.type !== 'access') {
+    if (decoded.type !== "access") {
       return reply.status(401).send({
         success: false,
-        message: 'Invalid token type'
+        message: "Invalid token type",
       });
     }
 
     request.user = {
       userId: decoded.userId,
-      email: decoded.email
+      email: decoded.email,
     };
-
   } catch (error) {
     return reply.status(401).send({
       success: false,
-      message: 'Invalid or expired token'
+      message: "Invalid or expired token",
     });
   }
 }
@@ -483,8 +509,9 @@ export async function authMiddleware(
 ## Event System
 
 **`events/eventBus.ts`**
+
 ```typescript
-import { EventEmitter } from 'events';
+import { EventEmitter } from "events";
 
 export class EventBus extends EventEmitter {
   private static instance: EventBus;
@@ -504,23 +531,24 @@ export class EventBus extends EventEmitter {
 ```
 
 **`events/listeners/userEventListeners.ts`**
+
 ```typescript
-import { EventBus } from '../eventBus';
-import { Events } from '../Events';
-import { Database } from '../../database/database';
+import { EventBus } from "../eventBus";
+import { Events } from "../Events";
+import { Database } from "../../database/database";
 
 export function setupUserEventListeners(eventBus: EventBus, db: Database) {
   eventBus.on(Events.USER_REGISTERED, async (data) => {
     // Send welcome email
     // Create user bonus
     // Track analytics
-    console.log('User registered:', data);
+    console.log("User registered:", data);
   });
 
   eventBus.on(Events.USER_LOGGED_IN, async (data) => {
     // Update login statistics
     // Check for daily bonuses
-    console.log('User logged in:', data);
+    console.log("User logged in:", data);
   });
 }
 ```
@@ -528,8 +556,9 @@ export function setupUserEventListeners(eventBus: EventBus, db: Database) {
 ## Utilities
 
 **`utils/sendResponse.ts`**
+
 ```typescript
-import { FastifyReply } from 'fastify';
+import { FastifyReply } from "fastify";
 
 interface ResponseOptions {
   success: boolean;
@@ -545,7 +574,7 @@ export function sendResponse(reply: FastifyReply, options: ResponseOptions) {
     data,
     message,
     statusCode = success ? 200 : 400,
-    errors
+    errors,
   } = options;
 
   return reply.status(statusCode).send({
@@ -553,7 +582,7 @@ export function sendResponse(reply: FastifyReply, options: ResponseOptions) {
     data,
     message,
     errors,
-    timestamp: new Date().toISOString()
+    timestamp: new Date(),
   });
 }
 ```
@@ -561,53 +590,54 @@ export function sendResponse(reply: FastifyReply, options: ResponseOptions) {
 ## Server Setup
 
 **`server.ts`**
+
 ```typescript
-import Fastify from 'fastify';
-import { Database } from './src/database/database';
-import { EventBus } from './src/events/eventBus';
-import { authMiddleware } from './src/middleware/authMiddleware';
-import { authRoutes } from './src/modules/auth/routes';
+import Fastify from "fastify";
+import { Database } from "./src/database/database";
+import { EventBus } from "./src/events/eventBus";
+import { authMiddleware } from "./src/middleware/authMiddleware";
+import { authRoutes } from "./src/modules/auth/routes";
 
 const fastify = Fastify({
   logger: {
-    level: process.env.LOG_LEVEL || 'info'
-  }
+    level: process.env.LOG_LEVEL || "info",
+  },
 });
 
 // Register plugins
-fastify.register(require('@fastify/cors'), {
-  origin: process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000']
+fastify.register(require("@fastify/cors"), {
+  origin: process.env.ALLOWED_ORIGINS?.split(",") || ["http://localhost:3000"],
 });
 
-fastify.register(require('@fastify/helmet'));
-fastify.register(require('@fastify/rate-limit'), {
+fastify.register(require("@fastify/helmet"));
+fastify.register(require("@fastify/rate-limit"), {
   max: 100,
-  timeWindow: '1 minute'
+  timeWindow: "1 minute",
 });
 
 // Add database and event bus to fastify instance
-fastify.decorate('db', Database.getInstance());
-fastify.decorate('eventBus', EventBus.getInstance());
+fastify.decorate("db", Database.getInstance());
+fastify.decorate("eventBus", EventBus.getInstance());
 
 // Add authentication decorator
-fastify.decorate('authenticate', authMiddleware);
+fastify.decorate("authenticate", authMiddleware);
 
 // Register routes
-fastify.register(authRoutes, { prefix: '/api/auth' });
+fastify.register(authRoutes, { prefix: "/api/auth" });
 
 // Health check
-fastify.get('/health', async () => {
-  return { status: 'ok', timestamp: new Date().toISOString() };
+fastify.get("/health", async () => {
+  return { status: "ok", timestamp: new Date() };
 });
 
 // Start server
 const start = async () => {
   try {
-    await fastify.listen({ 
-      port: parseInt(process.env.PORT || '3003'),
-      host: '0.0.0.0'
+    await fastify.listen({
+      port: parseInt(process.env.PORT || "3003"),
+      host: "0.0.0.0",
     });
-    console.log('Server started successfully');
+    console.log("Server started successfully");
   } catch (err) {
     fastify.log.error(err);
     process.exit(1);
@@ -620,6 +650,7 @@ start();
 ## Best Practices
 
 ### DO:
+
 - Use TypeScript for all code
 - Validate all inputs with Zod schemas
 - Implement proper error handling
@@ -632,6 +663,7 @@ start();
 - Use environment variables for configuration
 
 ### DON'T:
+
 - Skip input validation
 - Put business logic in route handlers
 - Use synchronous operations for I/O
@@ -645,24 +677,25 @@ start();
 ## Testing
 
 **`modules/auth/tests/auth.test.ts`**
-```typescript
-import { test } from 'tap';
-import { build } from '../../../test/helper';
 
-test('POST /api/auth/login', async (t) => {
+```typescript
+import { test } from "tap";
+import { build } from "../../../test/helper";
+
+test("POST /api/auth/login", async (t) => {
   const app = await build(t);
 
   const response = await app.inject({
-    method: 'POST',
-    url: '/api/auth/login',
+    method: "POST",
+    url: "/api/auth/login",
     payload: {
-      email: 'test@example.com',
-      password: 'password123'
-    }
+      email: "test@example.com",
+      password: "password123",
+    },
   });
 
   t.equal(response.statusCode, 200);
-  
+
   const body = JSON.parse(response.body);
   t.equal(body.success, true);
   t.ok(body.data.accessToken);

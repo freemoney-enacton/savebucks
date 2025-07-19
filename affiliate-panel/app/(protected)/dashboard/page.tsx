@@ -16,7 +16,6 @@ import { redirect } from "next/navigation";
 export default async function DashboardPage({ searchParams }: any) {
   const { t } = await createTranslation();
   const { from, to } = searchParams;
-
   const user = await getAuthSession();
   const userStatus = user?.user?.status;
 
@@ -39,7 +38,7 @@ export default async function DashboardPage({ searchParams }: any) {
   return (
     <DashboardLayout>
       <h1 className="text-2xl font-semibold mb-6">{t("dashboard.title")}</h1>
-      <ActiveCampaign campaigns={campaigns} />
+      <ActiveCampaign campaigns={campaigns || []} />
       <MetricsCards />
       <EarningsChart
         earningsData={commissionData.data}

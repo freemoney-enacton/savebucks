@@ -78,10 +78,7 @@ export const updateConversion = async (id: number, updateData: any) => {
 export const deleteConversion = async (id: number) => {
   try {
     await db.transaction(async (tx) => {
-      await tx
-        .delete(conversions)
-        .where(eq(conversions.id, id))
-        .execute();
+      await tx.delete(conversions).where(eq(conversions.id, id)).execute();
     });
 
     if (!id) {
@@ -154,8 +151,8 @@ export const getConversionsByAffiliate = async (
 
     let whereConditions = [
       eq(conversions.affiliateId, affiliateId),
-      gte(conversions.createdAt, fromDate.toISOString()),
-      lte(conversions.createdAt, toDate.toISOString()),
+      gte(conversions.createdAt, fromDate),
+      lte(conversions.createdAt, toDate),
     ];
 
     if (status) {
@@ -270,7 +267,7 @@ export const updateConversionStatus = async (
     const result = await db.transaction(async (tx) => {
       const updated = await tx
         .update(conversions)
-        .set({ status, updatedAt: new Date().toISOString() })
+        .set({ status, updatedAt: new Date() })
         .where(eq(conversions.id, id))
         .execute();
       return updated[0];
@@ -351,7 +348,6 @@ function getDateGrouping(startDate: Date, endDate: Date) {
   }
 }
 
-// Helper function to format date based on grouping
 function formatDateForGrouping(date: moment.Moment, grouping: string) {
   switch (grouping) {
     case "day":
@@ -364,21 +360,6 @@ function formatDateForGrouping(date: moment.Moment, grouping: string) {
       return date.format("MMM DD");
   }
 }
-
-// Helper function to get SQL grouping expression
-function getSQLGrouping(grouping: string) {
-  switch (grouping) {
-    case "day":
-      return sql`DATE(${conversions.updatedAt})`;
-    case "week":
-      return sql`EXTRACT(WEEK FROM ${conversions.updatedAt}), EXTRACT(YEAR FROM ${conversions.updatedAt})`;
-    case "month":
-      return sql`EXTRACT(MONTH FROM ${conversions.updatedAt}), EXTRACT(YEAR FROM ${conversions.updatedAt})`;
-    default:
-      return sql`DATE(${conversions.updatedAt})`;
-  }
-}
-
 export async function getCommissionDataByDateRange(
   affiliate_id: number,
   fromDate: string,
@@ -403,8 +384,8 @@ export async function getCommissionDataByDateRange(
           and(
             eq(conversions.affiliateId, affiliate_id),
             eq(conversions.status, "approved"),
-            gte(conversions.updatedAt, startDate.toISOString()),
-            lte(conversions.updatedAt, endDate.toISOString())
+            gte(conversions.updatedAt, startDate),
+            lte(conversions.updatedAt, endDate)
           )
         )
         .groupBy(sql`DATE(${conversions.updatedAt})`)
@@ -421,8 +402,8 @@ export async function getCommissionDataByDateRange(
           and(
             eq(conversions.affiliateId, affiliate_id),
             eq(conversions.status, "approved"),
-            gte(conversions.updatedAt, startDate.toISOString()),
-            lte(conversions.updatedAt, endDate.toISOString())
+            gte(conversions.updatedAt, startDate),
+            lte(conversions.updatedAt, endDate)
           )
         )
         .groupBy(
@@ -443,8 +424,8 @@ export async function getCommissionDataByDateRange(
           and(
             eq(conversions.affiliateId, affiliate_id),
             eq(conversions.status, "approved"),
-            gte(conversions.updatedAt, startDate.toISOString()),
-            lte(conversions.updatedAt, endDate.toISOString())
+            gte(conversions.updatedAt, startDate),
+            lte(conversions.updatedAt, endDate)
           )
         )
         .groupBy(
@@ -564,22 +545,17 @@ export const getAllAffiliateTransactions = async (
   try {
     const defaultTo = new Date();
     const defaultFrom = new Date();
-    defaultFrom.setMonth(defaultFrom.getMonth() - 1);
 
+    defaultFrom.setMonth(defaultFrom.getMonth() - 1);
     const fromDate = from ? new Date(from) : defaultFrom;
     const toDate = to ? new Date(to) : defaultTo;
+    fromDate.setHours(0, 0, 0, 0);
     toDate.setHours(23, 59, 59, 999);
 
     let whereConditions = [
       eq(affiliateConversionsSummary.affiliateId, affiliateId),
-      gte(
-        affiliateConversionsSummary.conversionCreatedAt,
-        fromDate.toISOString()
-      ),
-      lte(
-        affiliateConversionsSummary.conversionCreatedAt,
-        toDate.toISOString()
-      ),
+      gte(affiliateConversionsSummary.conversionCreatedAt, fromDate),
+      lte(affiliateConversionsSummary.conversionCreatedAt, toDate),
     ];
 
     if (status) {

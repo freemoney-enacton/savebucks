@@ -1,6 +1,5 @@
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
-import { NewPayout } from "@/db/schema";
 import { createTranslation } from "@/i18n/server";
 import { getAffiliateById } from "@/models/affiliates-model";
 import { getEarningsDataForAffiliate } from "@/models/conversions-model";
@@ -90,7 +89,7 @@ export async function POST(request: NextRequest) {
       return `${timestamp}-${randomPart}`;
     };
 
-    const data: NewPayout = {
+    const data = {
       affiliateId: id,
       paymentMethod: type,
       paymentAccount:
@@ -102,8 +101,8 @@ export async function POST(request: NextRequest) {
       paymentDetails: JSON.stringify(payment_details),
       transactionId: generateTransactionId(),
       status: "pending",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      createdAt: new Date(),
+      updatedAt: new Date(),
     };
 
     const result = await insertPayout(data);

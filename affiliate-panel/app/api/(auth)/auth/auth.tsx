@@ -69,6 +69,7 @@ export const {
         if (!isValid) {
           return null;
         }
+
         const data = {
           id: user.data.id.toString(),
           email: user.data.email,

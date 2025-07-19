@@ -118,8 +118,8 @@ export const getPayoutsByAffiliateId = async (
 
     const whereConditions = [
       eq(payouts.affiliateId, affiliateId),
-      gte(payouts.createdAt, fromDate.toISOString()),
-      lte(payouts.createdAt, toDate.toISOString()),
+      gte(payouts.createdAt, fromDate),
+      lte(payouts.createdAt, toDate),
     ];
 
     const whereClause = and(...whereConditions);
@@ -281,8 +281,8 @@ export const approvePayoutRequest = async (
           status: "paid",
           transactionId,
           apiResponse,
-          paidAt,
-          updatedAt: new Date().toISOString(),
+          paidAt: new Date(paidAt),
+          updatedAt: new Date(),
         })
         .where(eq(payouts.id, id))
         .execute();
@@ -318,7 +318,7 @@ export const declinePayoutRequest = async (id: number, adminNotes: string) => {
         .set({
           status: "rejected",
           adminNotes,
-          updatedAt: new Date().toISOString(),
+          updatedAt: new Date(),
         })
         .where(eq(payouts.id, id))
         .execute();
@@ -349,10 +349,7 @@ export const declinePayoutRequest = async (id: number, adminNotes: string) => {
 export const deletePayout = async (id: number) => {
   try {
     await db.transaction(async (tx) => {
-      await tx
-        .delete(payouts)
-        .where(eq(payouts.id, id))
-        .execute();
+      await tx.delete(payouts).where(eq(payouts.id, id)).execute();
     });
 
     if (!id) {

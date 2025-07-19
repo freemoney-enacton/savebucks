@@ -1,4 +1,3 @@
-import { Conversion, NewConversion } from "@/db/schema";
 import { createTranslation } from "@/i18n/server";
 import { getAffiliateCampaignGoalById } from "@/models/affiliate-campaign-goal-model";
 import {
@@ -179,7 +178,7 @@ export async function POST(request: NextRequest) {
             commission = affiliateCampaignGoal.customCommissionRate || "0";
           }
 
-          const newConversion: NewConversion = {
+          const newConversion = {
             campaignGoalId: goal_code ? Number(goal_code) : 1,
             campaignId: clickRecord.campaignId
               ? Number(clickRecord.campaignId)
@@ -194,9 +193,9 @@ export async function POST(request: NextRequest) {
             sub3: clickRecord.sub3,
             status: "approved",
             postbackLogId: postbackLog.id,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            convertedAt: new Date().toISOString(),
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            convertedAt: new Date(),
           };
 
           console.log("New Conversion", newConversion);
@@ -217,7 +216,7 @@ export async function POST(request: NextRequest) {
             continue;
           }
 
-          const conversionData: Conversion = createConversion.data;
+          const conversionData = createConversion.data;
 
           await markClickAsConverted(clickRecord.clickCode);
 

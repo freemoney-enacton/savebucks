@@ -93,7 +93,7 @@ export function CreateAffiliateLink() {
   return (
     <>
       <Button
-        className="bg-brand-500 hover:bg-brand-600 max-w-sm px-3 w-auto gap-2 m-0 max-sm:ml-auto"
+        className="bg-brand-500 hover:bg-brand-600 max-w-sm px-4 w-auto gap-2 m-0 max-sm:ml-auto"
         onClick={() => setOpen(true)}
       >
         <Plus className="h-4 w-4" />
@@ -145,7 +145,7 @@ export function CreateAffiliateLink() {
                       onBlur={handleBlur}
                       value={values.link}
                       className="pl-[calc( (100%) / 3 )] pr-3"
-                      style={{ paddingLeft: `${mainUrl.length - 5}ch` }}
+                      style={{ paddingLeft: `${mainUrl.length - 4}ch` }}
                     />
                   </div>
                   {touched.link && errors.link && (

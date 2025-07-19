@@ -1,28 +1,20 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Campaign } from "@/db/schema";
 import { createTranslation } from "@/i18n/server";
 import { getAffiliateCampaignGoalsByCampaignId } from "@/models/affiliate-campaign-goal-model";
 import { getAuthSession } from "@/models/auth-models";
 import { getCampaignGoalsByCampaignId } from "@/models/campaign-goal-model";
 import { CampaignCard } from "./CampaignCard";
 
-export interface CampaignWithGoals extends Campaign {
-  goals: {
-    name: string;
-    amount: string | number | null;
-  }[];
-}
-
 export async function ActiveCampaign({
   campaigns,
 }: {
-  campaigns: Campaign[] | null;
+  campaigns: any[];
 }) {
   const { t } = await createTranslation();
   const user = await getAuthSession();
 
   // Process each campaign to get their goals
-  const campaignWithGoals: CampaignWithGoals[] = [];
+  const campaignWithGoals: any = [];
 
   if (campaigns) {
     for (const campaign of campaigns) {
@@ -67,9 +59,15 @@ export async function ActiveCampaign({
         </h2>
       </CardHeader>
       <CardContent className="p-6 space-y-6">
-        {campaignWithGoals.map((campaign, index) => (
-          <CampaignCard key={campaign.id || index} campaign={campaign} />
-        ))}
+        {campaignWithGoals.length > 0 ? (
+          campaignWithGoals.map((campaign: any, index: any) => (
+            <CampaignCard key={campaign.id || index} campaign={campaign} />
+          ))
+        ) : (
+          <p className="text-center text-gray-500">
+            {t("campaign.noActiveCampaigns")}
+          </p>
+        )}
       </CardContent>
     </Card>
   );
