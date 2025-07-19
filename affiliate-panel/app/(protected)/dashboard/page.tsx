@@ -16,7 +16,6 @@ import { redirect } from "next/navigation";
 export default async function DashboardPage({ searchParams }: any) {
   const { t } = await createTranslation();
   const { from, to } = searchParams;
-  console.log("from", from, "to", to)
   const user = await getAuthSession();
   const userStatus = user?.user?.status;
 

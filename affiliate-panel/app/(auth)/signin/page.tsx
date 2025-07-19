@@ -31,7 +31,6 @@ export default function SignInPage() {
         description: t("validation.signInSuccess"),
       });
       setTimeout(() => {
-        console.log("Redirecting to pending page...");
         window.location.href = AppRoutes.auth.pending;
         // router.push(AppRoutes.auth.pending);
       }, 1500);

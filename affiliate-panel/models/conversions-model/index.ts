@@ -545,26 +545,12 @@ export const getAllAffiliateTransactions = async (
   try {
     const defaultTo = new Date();
     const defaultFrom = new Date();
-    console.log("Default dates:", {
-      defaultFrom,
-      defaultTo,
-    });
 
     defaultFrom.setMonth(defaultFrom.getMonth() - 1);
-    console.log("Dates from params", { from, to });
     const fromDate = from ? new Date(from) : defaultFrom;
     const toDate = to ? new Date(to) : defaultTo;
     fromDate.setHours(0, 0, 0, 0);
     toDate.setHours(23, 59, 59, 999);
-
-    console.log("Fetching transactions for affiliate:", {
-      affiliateId,
-      fromDate,
-      toDate,
-      status,
-      rows_per_page,
-      page,
-    });
 
     let whereConditions = [
       eq(affiliateConversionsSummary.affiliateId, affiliateId),
@@ -587,8 +573,6 @@ export const getAllAffiliateTransactions = async (
       .from(affiliateConversionsSummary)
       .where(and(...whereConditions));
 
-    console.log("Count result:", countResult);
-
     const totalCount = countResult[0]?.count || 0;
     const totalPages = Math.ceil(totalCount / rows_per_page);
 
@@ -600,7 +584,6 @@ export const getAllAffiliateTransactions = async (
       .offset(offset)
       .orderBy(desc(affiliateConversionsSummary.conversionCreatedAt));
 
-    console.log("Transaction results:", result);
     return {
       data: result,
       pagination: {
