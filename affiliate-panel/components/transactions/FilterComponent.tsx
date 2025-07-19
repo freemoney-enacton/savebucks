@@ -33,13 +33,13 @@ const getDateFromParams = (param: string): Date | undefined => {
 export default function FilterComponent({ campaigns = [] }: { campaigns?: any[] }) {
   const { t } = useTranslation();
   const [statusFilter, setStatusFilter] = useState("all");
+  const params = useSearchParams();
+  const searchParams = new URLSearchParams(params);
   const [campaignFilter, setCampaignFilter] = useState(
     searchParams.get("campaignId") || "all"
   );
   const router = useRouter();
   const pathname = usePathname();
-  const params = useSearchParams();
-  const searchParams = new URLSearchParams(params);
 
   const fromParam = searchParams.get("from");
   const toParam = searchParams.get("to");
