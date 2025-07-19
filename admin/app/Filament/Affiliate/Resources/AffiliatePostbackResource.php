@@ -45,13 +45,27 @@ class AffiliatePostbackResource extends Resource
                         ->relationship('campaign', 'name')
                         ->preload()
                         ->searchable()
+                        ->reactive()
+                        ->afterStateUpdated(fn (callable $set) => $set('campaign_goal_id', null))
                         ->required(),
 
                     Forms\Components\Select::make('campaign_goal_id')
-                        ->relationship('campaignGoal', 'name')
                         ->label('Campaign Goal')
+                        ->options(function (callable $get) {
+                            $campaignId = $get('campaign_id');
+
+                            if (!$campaignId) {
+                                return [];
+                            }
+
+                            return \App\Models\Affiliate\CampaignGoal::where('status', 'active')
+                                ->where('campaign_id', $campaignId)
+                                ->pluck('name', 'id');
+                        })
                         ->preload()
-                        ->searchable(),                
+                        ->searchable()
+                        ->reactive()
+                        ->disabled(fn (callable $get) => !$get('campaign_id')),
 
                     Forms\Components\Textarea::make('postback_url')
                         ->required()
