@@ -220,7 +220,7 @@ export const affiliatePostbacks = mysqlTable("affiliate_postbacks", {
 });
 
 export const affiliateConversionsSummary = mysqlTable(
-  "conversion_details_view",
+  "vw_affiliate_conversions",
   {
     conversionId: int("conversion_id"),
     transactionId: varchar("transaction_id", { length: 255 }),
