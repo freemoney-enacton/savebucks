@@ -9,6 +9,7 @@ use Filament\Notifications\Actions\Action;
 use App\Models\User;
 use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Log;
+use Exception;
 
 class GiftCardPayoutObserver
 {
@@ -36,7 +37,7 @@ class GiftCardPayoutObserver
      * Send Filament notification to admin about payout status change
      */
     private function notifyAdminOfStatusChange(GiftCardPayout $payout, PaymentStatus $oldStatus, PaymentStatus $newStatus): void
-    {   
+    {
         try {
             // Check if admin roles exist and get users
             $adminUsers = Role::where('name', 'admin')->exists()
@@ -49,7 +50,7 @@ class GiftCardPayoutObserver
 
             // Combine collections and remove duplicates by 'id'
             $recipients = $adminUsers->merge($superAdminUsers)->unique('id');
-            
+
             if ($recipients->isEmpty()) {
                 Log::warning('No admin users found', ['payout_id' => $payout->id]);
                 return;
@@ -57,7 +58,7 @@ class GiftCardPayoutObserver
 
             $statusColor = $this->getStatusColor($newStatus);
             $statusIcon = $this->getStatusIcon($newStatus);
-            
+
             $notification = Notification::make()
                 ->title('GiftCard Payout Status Changed')
                 ->body($this->buildNotificationBody($payout, $oldStatus, $newStatus))
@@ -69,13 +70,13 @@ class GiftCardPayoutObserver
                         ->url(route('filament.admin.resources.gift-card-payouts.edit', $payout))
                         ->button(),
                 ])
-                ->persistent() 
+                ->persistent()
                 ->duration(null);
 
             // Send to all admin users
             $successCount = 0;
             $failedUsers = [];
-            
+
             foreach ($recipients as $admin) {
                 try {
                     $notification->sendToDatabase($admin);
@@ -92,15 +93,15 @@ class GiftCardPayoutObserver
             }
 
             // Log success summary
-            // Log::info('Admin notification process completed', [
-            //     'payout_id' => $payout->id,
-            //     'old_status' => $oldStatus->value,
-            //     'new_status' => $newStatus->value,
-            //     'total_admins' => $adminUsers->count(),
-            //     'successful_notifications' => $successCount,
-            //     'failed_notifications' => count($failedUsers),
-            //     'failed_admin_ids' => $failedUsers,
-            // ]);
+            Log::info('Admin notification process completed', [
+                'payout_id' => $payout->id,
+                'old_status' => $oldStatus->value,
+                'new_status' => $newStatus->value,
+                'total_admins' => $adminUsers->count(),
+                'successful_notifications' => $successCount,
+                'failed_notifications' => count($failedUsers),
+                'failed_admin_ids' => $failedUsers,
+            ]);
 
         } catch (Exception $e) {
             Log::error('Critical error in notifyAdminOfStatusChange', [
@@ -119,7 +120,7 @@ class GiftCardPayoutObserver
     private function buildNotificationBody(GiftCardPayout $payout, PaymentStatus $oldStatus, PaymentStatus $newStatus): string
     {
         $userName = $payout->user->name ?? 'Unknown User';
-        
+
         // Build a notification message
         $message = "The payout status for $userName has changed from " . ucfirst($oldStatus->value) .
                 " to " . ucfirst($newStatus->value) . ". Payment ID: " . $payout->payment_id .
