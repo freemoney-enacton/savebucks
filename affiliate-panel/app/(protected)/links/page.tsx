@@ -35,7 +35,7 @@ export default async function LinksPage({ searchParams }: any) {
         <h1 className="text-2xl font-semibold">{t("links.title")}</h1>
       </div>
 
-      <ActiveCampaign campaigns={campaigns} />
+      <ActiveCampaign campaigns={campaigns || []} />
 
       <LinksTable data={data} />
     </DashboardLayout>
