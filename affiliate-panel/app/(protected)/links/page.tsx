@@ -3,7 +3,7 @@ import { ActiveCampaign } from "@/components/dashboard/active-campaign";
 import LinksTable from "@/components/links/LinksTable";
 import { getAuthSession } from "@/models/auth-models";
 import { getAffiliateLinksByAffiliateId } from "@/models/affiliate-link-model";
-import { getCampaignById } from "@/models/campaigns-model";
+import { getAllCampaigns, getCampaignById } from "@/models/campaigns-model";
 import { createTranslation } from "@/i18n/server";
 import { AppRoutes } from "@/utils/routes";
 import { redirect } from "next/navigation";
@@ -17,8 +17,8 @@ export default async function LinksPage({ searchParams }: any) {
   if (userStatus === "pending") {
     return redirect(AppRoutes.auth.pending);
   }
-  const campaignDetails = (await getCampaignById(1))?.data;
-  const campaigns = campaignDetails ? [campaignDetails] : null;
+  const campaignDetails = (await getAllCampaigns({}))?.data;
+  const campaigns = campaignDetails ? campaignDetails?.result : null;
   const data =
     (
       await getAffiliateLinksByAffiliateId(user.user.id, {

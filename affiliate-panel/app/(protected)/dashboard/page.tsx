@@ -5,7 +5,7 @@ import { TransactionsTable } from "@/components/dashboard/transactions-table";
 import { DashboardLayout } from "@/components/layouts/DashboardLayout";
 import { createTranslation } from "@/i18n/server";
 import { getAuthSession } from "@/models/auth-models";
-import { getCampaignById } from "@/models/campaigns-model";
+import { getAllCampaigns, getCampaignById } from "@/models/campaigns-model";
 import {
   getAllAffiliateTransactions,
   getCommissionDataByDateRange,
@@ -23,8 +23,8 @@ export default async function DashboardPage({ searchParams }: any) {
     return redirect(AppRoutes.auth.pending);
   }
 
-  const campaignDetails = (await getCampaignById(1))?.data;
-  const campaigns = campaignDetails ? [campaignDetails] : null;
+  const campaignDetails = (await getAllCampaigns({}))?.data;
+  const campaigns = campaignDetails ? campaignDetails?.result : null;
 
   const transactions =
     (await getAllAffiliateTransactions(user.user.id, 10)) || [];
