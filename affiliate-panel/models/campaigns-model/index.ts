@@ -1,8 +1,8 @@
 import { db } from "@/db";
-import { campaigns } from "@/db/schema";
-import { and, eq, sql } from "drizzle-orm";
+import { campaigns, affiliateCampaigns } from "@/db/schema";
+import { and, eq, sql, inArray } from "drizzle-orm";
 
-export const getAllCampaigns = async ({ filters }: { filters?: any }) => {
+export const getAllCampaigns = async ({ filters, affiliateId }: { filters?: any; affiliateId?: number }) => {
   try {
     let rows_per_page = 10;
     let page = 1;
@@ -21,6 +21,23 @@ export const getAllCampaigns = async ({ filters }: { filters?: any }) => {
 
     if (filters?.status) {
       whereConditions.push(eq(campaigns.status, filters.status));
+    }
+
+    if (affiliateId) {
+      whereConditions.push(
+        inArray(
+          campaigns.id,
+          db
+            .select({ campaignId: affiliateCampaigns.campaignId })
+            .from(affiliateCampaigns)
+            .where(
+              and(
+                eq(affiliateCampaigns.affiliateId, affiliateId),
+                eq(affiliateCampaigns.status, "approved")
+              )
+            )
+        )
+      );
     }
 
     const countResult = await db

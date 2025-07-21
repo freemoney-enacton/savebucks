@@ -29,8 +29,12 @@ export default async function SettingsPage({ searchParams }: any) {
 
   const affiliate = (await getAffiliateByEmail(user.user.email as string))?.data;
 
-  const campaignData = (await getAllCampaigns({ filters: { status: "active" } }))
-    ?.data;
+  const campaignData = (
+    await getAllCampaigns({
+      filters: { status: "active" },
+      affiliateId: Number(user.user.id),
+    })
+  )?.data;
   const campaigns = campaignData ? campaignData.result : [];
   const selectedCampaignId = searchParams.campaignId
     ? parseInt(searchParams.campaignId)
@@ -56,6 +60,10 @@ export default async function SettingsPage({ searchParams }: any) {
         amount: affiliateGoal
           ? affiliateGoal.customCommissionRate
           : goal.commissionAmount,
+        qualificationAmount:
+          affiliateGoal && affiliateGoal.qualificationAmount !== null
+            ? affiliateGoal.qualificationAmount
+            : goal.qualificationAmount,
       };
     });
 

@@ -25,6 +25,7 @@ class Conversion extends Model
         'transaction_id',
         'conversion_value',
         'commission',
+        'user_earned',
         'sub1',
         'sub2',
         'sub3',
@@ -37,6 +38,7 @@ class Conversion extends Model
     protected $casts = [
         'conversion_value' => 'decimal:2',
         'commission' => 'decimal:2',
+        'user_earned' => 'decimal:2',
         'converted_at' => 'datetime',
     ];
 

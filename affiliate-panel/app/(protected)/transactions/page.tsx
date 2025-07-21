@@ -17,7 +17,9 @@ export default async function TransactionsPage({ searchParams }: any) {
     return redirect(AppRoutes.auth.pending);
   }
   const { t } = await createTranslation();
-  const campaigns = (await getAllCampaigns({}))?.data?.result || [];
+  const campaigns = (
+    await getAllCampaigns({ affiliateId: Number(user.user.id) })
+  )?.data?.result || [];
   const transactions =
     (await getAllAffiliateTransactions(
       user.user.id,

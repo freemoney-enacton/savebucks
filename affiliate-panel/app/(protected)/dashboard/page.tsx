@@ -23,7 +23,9 @@ export default async function DashboardPage({ searchParams }: any) {
     return redirect(AppRoutes.auth.pending);
   }
 
-  const campaignDetails = (await getAllCampaigns({}))?.data;
+  const campaignDetails = (
+    await getAllCampaigns({ affiliateId: Number(user.user.id) })
+  )?.data;
   const campaigns = campaignDetails ? campaignDetails?.result : null;
 
   const transactions =

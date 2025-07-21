@@ -53,8 +53,13 @@ class AffiliateCampaignGoalsRelationManager extends RelationManager
                     ->disabled(fn (callable $get) => !$get('campaign_id')),
 
                 Forms\Components\TextInput::make('custom_commission_rate')
-                    ->label('Custom Commission Rate')       
-                    ->prefix(config('freemoney.default.default_currency'))                 
+                    ->label('Custom Commission Rate')
+                    ->prefix(config('freemoney.default.default_currency'))
+                    ->numeric(),
+
+                Forms\Components\TextInput::make('qualification_amount')
+                    ->label('Qualification Amount')
+                    ->prefix(config('freemoney.default.default_currency'))
                     ->numeric(),
 
             ]);
@@ -81,6 +86,10 @@ class AffiliateCampaignGoalsRelationManager extends RelationManager
                 Tables\Columns\TextColumn::make('custom_commission_rate')
                     ->label('Custom Commission Rate')
                     ->money(config('freemoney.default.default_currency'))                    
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('qualification_amount')
+                    ->label('Qualification Amount')
+                    ->money(config('freemoney.default.default_currency'))
                     ->sortable(),
             ])
             ->filters([

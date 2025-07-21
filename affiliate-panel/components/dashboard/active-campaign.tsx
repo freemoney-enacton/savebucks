@@ -41,6 +41,10 @@ export async function ActiveCampaign({
             amount: affiliateGoal
               ? affiliateGoal.customCommissionRate
               : goal.commissionAmount,
+            qualificationAmount:
+              affiliateGoal && affiliateGoal.qualificationAmount !== null
+                ? affiliateGoal.qualificationAmount
+                : goal.qualificationAmount,
           };
         });
 

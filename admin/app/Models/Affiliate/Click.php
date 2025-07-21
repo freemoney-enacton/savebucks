@@ -30,6 +30,7 @@ class Click extends Model
         'sub1',
         'sub2',
         'sub3',
+        'campaign_goals',
         'is_converted',
         'clicked_at',
     ];
@@ -37,6 +38,7 @@ class Click extends Model
     protected $casts = [
         'is_converted' => 'boolean',
         'clicked_at' => 'datetime',
+        'campaign_goals' => 'array',
     ];
 
     public $timestamps = false; // Using clicked_at instead

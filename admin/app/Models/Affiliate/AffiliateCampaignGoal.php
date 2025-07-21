@@ -24,11 +24,13 @@ class AffiliateCampaignGoal extends Model
         'campaign_id',
         'campaign_goal_id',
         'custom_commission_rate',
+        'qualification_amount',
         'approval_status',
     ];
 
     protected $casts = [
         'custom_commission_rate' => 'decimal:2',
+        'qualification_amount' => 'decimal:2',
     ];
 
     // Relationships

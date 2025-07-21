@@ -29,6 +29,7 @@ export const conversionStatusEnum = [
   "approved",
   "declined",
   "paid",
+  "untracked",
 ] as const;
 
 export const payoutStatusEnum = [
@@ -71,6 +72,7 @@ export const campaigns = mysqlTable("campaigns", {
   status: mysqlEnum("status", campaignStatusEnum).notNull().default("active"),
   termsAndConditions: text("terms_and_conditions"),
   termsAndConditionsUrl: text("terms_and_condition_url"),
+  isDefault: boolean("is_default").notNull().default(false),
   minPayoutAmount: decimal("min_payout_request").notNull().default("0.00"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
@@ -87,6 +89,7 @@ export const campaignGoals = mysqlTable("campaign_goals", {
     precision: 10,
     scale: 2,
   }).notNull(),
+  qualificationAmount: decimal("qualification_amount", { precision: 10, scale: 2 }).notNull().default("0"),
   trackingCode: char("tracking_code", { length: 10 }).notNull().unique(),
   status: mysqlEnum("status", statusEnum).notNull().default("active"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
@@ -103,6 +106,17 @@ export const affiliateCampaignGoals = mysqlTable("affiliate_campaign_goals", {
     precision: 5,
     scale: 2,
   }),
+  qualificationAmount: decimal("qualification_amount", { precision: 10, scale: 2 }).default("0"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// Affiliate campaigns access table
+export const affiliateCampaigns = mysqlTable("affiliate_campaigns", {
+  id: serial("id").primaryKey(),
+  affiliateId: bigint("affiliate_id", { mode: "number" }).notNull(),
+  campaignId: bigint("campaign_id", { mode: "number" }).notNull(),
+  status: mysqlEnum("status", ["pending", "approved", "rejected"]).notNull().default("pending"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
@@ -143,6 +157,7 @@ export const clicks = mysqlTable("clicks", {
   sub1: varchar("sub1", { length: 255 }),
   sub2: varchar("sub2", { length: 255 }),
   sub3: varchar("sub3", { length: 255 }),
+  campaignGoals: json("campaign_goals"),
   isConverted: boolean("is_converted").notNull().default(false),
   clickedAt: timestamp("clicked_at").notNull(),
 });
@@ -192,6 +207,9 @@ export const conversions = mysqlTable("conversions", {
     scale: 2,
   }).notNull(),
   commission: decimal("commission", { precision: 12, scale: 2 }).notNull(),
+  userEarned: decimal("user_earned", { precision: 12, scale: 2 })
+    .notNull()
+    .default("0"),
   sub1: varchar("sub1", { length: 255 }),
   sub2: varchar("sub2", { length: 255 }),
   sub3: varchar("sub3", { length: 255 }),
@@ -225,9 +243,10 @@ export const affiliateConversionsSummary = mysqlTable(
     conversionId: int("conversion_id"),
     transactionId: varchar("transaction_id", { length: 255 }),
     clickCode: varchar("click_code", { length: 255 }),
-    conversionValue: decimal("conversion_value", { precision: 10, scale: 2 }),
-    commission: decimal("commission", { precision: 10, scale: 2 }),
-    conversionStatus: varchar("conversion_status", { length: 50 }),
+  conversionValue: decimal("conversion_value", { precision: 10, scale: 2 }),
+  commission: decimal("commission", { precision: 10, scale: 2 }),
+  userEarned: decimal("user_earned", { precision: 10, scale: 2 }),
+  conversionStatus: varchar("conversion_status", { length: 50 }),
     convertedAt: timestamp("converted_at"),
     conversionCreatedAt: timestamp("conversion_created_at"),
     conversionSub1: varchar("conversion_sub1", { length: 255 }),

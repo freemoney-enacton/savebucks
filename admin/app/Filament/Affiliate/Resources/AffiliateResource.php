@@ -17,6 +17,7 @@ use Illuminate\Validation\Rules\Password;
 use Illuminate\Support\Str;
 use App\Filament\Affiliate\Resources\AffiliateResource\RelationManagers\AffiliateLinksRelationManager;
 use App\Filament\Affiliate\Resources\AffiliateResource\RelationManagers\PayoutsRelationManager;
+use App\Filament\Affiliate\Resources\AffiliateResource\RelationManagers\AffiliateCampaignsRelationManager;
 use App\Filament\Affiliate\Resources\AffiliateResource\RelationManagers\AffiliateCampaignGoalsRelationManager;
 use App\Filament\Affiliate\Resources\AffiliateResource\RelationManagers\ClicksRelationManager;
 use App\Filament\Affiliate\Resources\AffiliateResource\RelationManagers\PostbacksRelationManager;
@@ -285,6 +286,7 @@ class AffiliateResource extends Resource
         return [
             AffiliateLinksRelationManager::class,
             PayoutsRelationManager::class,
+            AffiliateCampaignsRelationManager::class,
             AffiliateCampaignGoalsRelationManager::class,
             ClicksRelationManager::class,
             PostbacksRelationManager::class,

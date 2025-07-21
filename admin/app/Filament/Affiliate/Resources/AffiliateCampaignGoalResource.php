@@ -108,8 +108,15 @@ class AffiliateCampaignGoalResource extends Resource
                     Forms\Components\TextInput::make('custom_commission_rate')
                         ->required()
                         ->prefix(config('freemoney.default.default_currency'))
-                        ->label('Custom Commission Rate')        
-                        ->minValue(0)        
+                        ->label('Custom Commission Rate')
+                        ->minValue(0)
+                        ->numeric(),
+
+                    Forms\Components\TextInput::make('qualification_amount')
+                        ->required()
+                        ->prefix(config('freemoney.default.default_currency'))
+                        ->label('Qualification Amount')
+                        ->minValue(0)
                         ->numeric(),
 
                 ]),
@@ -141,6 +148,12 @@ class AffiliateCampaignGoalResource extends Resource
                     ->money(config('freemoney.default.default_currency'))
                     ->searchable()
                     // ->align('right')
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('qualification_amount')
+                    ->label('Qualification Amount')
+                    ->money(config('freemoney.default.default_currency'))
+                    ->searchable()
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('created_at')
