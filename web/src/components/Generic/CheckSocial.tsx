@@ -5,8 +5,10 @@ import { useEffect } from 'react';
 import { Toast } from '../Core/Toast';
 import { Spinner } from '@nextui-org/react';
 import { config } from '@/config';
+import Cookies from 'js-cookie';
 
-const CheckSocial = ({ token }) => {
+const CheckSocial = ({ token, action }) => {
+  const click_code = Cookies.get(config.CLICK_CODE_COOKIE);
   useEffect(() => {
     (async () => {
       if (token) {
@@ -35,6 +37,16 @@ const CheckSocial = ({ token }) => {
                     },
                   })
                 );
+              if (click_code && action == 'register') {
+                window.ReactNativeWebView.postMessage(
+                  JSON.stringify({
+                    type: 'REMOVE_AFFILIATE_DATA',
+                  })
+                );
+              }
+              if (click_code && action == 'register') {
+                Cookies.remove(config.CLICK_CODE_COOKIE, { domain: `.${config.ROOT_DOMAIN}` });
+              }
               window.location.replace(window.location.origin + DEFAULT_LOGIN_REDIRECT);
               // router.push(DEFAULT_LOGIN_REDIRECT);
             })
