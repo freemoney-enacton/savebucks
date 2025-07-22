@@ -36,14 +36,14 @@ export function CampaignCard({ campaign }: { campaign: any }) {
                 <h4 className="text-lg font-semibold text-gray-900">
                   {campaign.name || t("campaign.fallbackTitle")}
                 </h4>
-                <p
+                {/* <p
                   className="text-sm text-gray-500"
                   dangerouslySetInnerHTML={{
                     __html:
                       campaign.description ||
                       t("campaign.fallbackDescription"),
                   }}
-                />
+                /> */}
                 <div>
                   <Link
                     href={
@@ -99,21 +99,25 @@ export function CampaignCard({ campaign }: { campaign: any }) {
               {campaign.goals.map((goal: any, goalIndex: any) => (
                 <div key={goalIndex} className="flex items-center gap-2">
                   <CheckCircle className="shrink-0 h-4 w-4 text-green-500" />
-                  <span className="text-sm text-gray-700">{goal.name}</span>
-              <span className="text-sm font-semibold text-gray-900 ml-auto">
-                {getCurrencySymbol() +
-                  t("campaign.earn").replace(
-                    "{amount}",
-                    String(goal.amount ?? 0)
-                  )}
-              </span>
-              <span className="text-sm text-gray-500 ml-2">
-                {t("campaign.qualify").replace(
-                  "{amount}",
-                  String(goal.qualificationAmount ?? 0)
-                )}
-              </span>
-            </div>
+                  <span className="text-sm text-gray-700 flex flex-col gap-1">
+                    {goal.name}
+
+                    <span className="text-xs text-gray-500">
+                      {t("campaign.qualify").replace(
+                        "{amount}",
+                        getCurrencySymbol() +
+                          String(goal.qualificationAmount ?? 0)
+                      )}
+                    </span>
+                  </span>
+                  <span className="text-sm font-semibold text-gray-900 ml-auto">
+                    {getCurrencySymbol() +
+                      t("campaign.earn").replace(
+                        "{amount}",
+                        String(goal.amount ?? 0)
+                      )}
+                  </span>
+                </div>
               ))}
             </div>
           </div>

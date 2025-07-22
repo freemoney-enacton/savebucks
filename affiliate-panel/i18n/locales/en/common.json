@@ -274,7 +274,7 @@
 }
 },
 "campaign": {
-  "activeCampaign": "Active Campaign",
+  "activeCampaigns": "Active Campaigns",
   "details": "Campaign Details",
   "goals": "Campaign Goals",
   "fallbackTitle": "Campaign Title",

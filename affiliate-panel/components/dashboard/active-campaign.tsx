@@ -5,11 +5,7 @@ import { getAuthSession } from "@/models/auth-models";
 import { getCampaignGoalsByCampaignId } from "@/models/campaign-goal-model";
 import { CampaignCard } from "./CampaignCard";
 
-export async function ActiveCampaign({
-  campaigns,
-}: {
-  campaigns: any[];
-}) {
+export async function ActiveCampaign({ campaigns }: { campaigns: any[] }) {
   const { t } = await createTranslation();
   const user = await getAuthSession();
 
@@ -22,12 +18,8 @@ export async function ActiveCampaign({
         (await getCampaignGoalsByCampaignId(campaign.id || 1)).data || [];
 
       const affiliateCampaignGoals =
-        (
-          await getAffiliateCampaignGoalsByCampaignId(
-            campaign.id,
-            user.user.id
-          )
-        ).data || [];
+        (await getAffiliateCampaignGoalsByCampaignId(campaign.id, user.user.id))
+          .data || [];
 
       const finalGoals = campaignGoals
         .filter((goal) => goal.status === "active")
@@ -59,7 +51,7 @@ export async function ActiveCampaign({
     <Card className="mb-6 bg-white border border-gray-200 rounded-xl shadow-sm">
       <CardHeader className="border-b border-gray-100">
         <h2 className="text-lg font-semibold text-gray-900">
-          {t("campaign.activeCampaign")}
+          {t("campaign.activeCampaigns")}
         </h2>
       </CardHeader>
       <CardContent className="p-6 space-y-6">
@@ -76,4 +68,3 @@ export async function ActiveCampaign({
     </Card>
   );
 }
-

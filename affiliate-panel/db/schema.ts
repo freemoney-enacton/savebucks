@@ -89,7 +89,12 @@ export const campaignGoals = mysqlTable("campaign_goals", {
     precision: 10,
     scale: 2,
   }).notNull(),
-  qualificationAmount: decimal("qualification_amount", { precision: 10, scale: 2 }).notNull().default("0"),
+  qualificationAmount: decimal("qualification_amount", {
+    precision: 10,
+    scale: 2,
+  })
+    .notNull()
+    .default("0"),
   trackingCode: char("tracking_code", { length: 10 }).notNull().unique(),
   status: mysqlEnum("status", statusEnum).notNull().default("active"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
@@ -106,7 +111,10 @@ export const affiliateCampaignGoals = mysqlTable("affiliate_campaign_goals", {
     precision: 5,
     scale: 2,
   }),
-  qualificationAmount: decimal("qualification_amount", { precision: 10, scale: 2 }).default("0"),
+  qualificationAmount: decimal("qualification_amount", {
+    precision: 10,
+    scale: 2,
+  }).default("0"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
@@ -116,7 +124,9 @@ export const affiliateCampaigns = mysqlTable("affiliate_campaigns", {
   id: serial("id").primaryKey(),
   affiliateId: bigint("affiliate_id", { mode: "number" }).notNull(),
   campaignId: bigint("campaign_id", { mode: "number" }).notNull(),
-  status: mysqlEnum("status", ["pending", "approved", "rejected"]).notNull().default("pending"),
+  status: mysqlEnum("status", ["pending", "approved", "rejected"])
+    .notNull()
+    .default("pending"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
@@ -243,10 +253,10 @@ export const affiliateConversionsSummary = mysqlTable(
     conversionId: int("conversion_id"),
     transactionId: varchar("transaction_id", { length: 255 }),
     clickCode: varchar("click_code", { length: 255 }),
-  conversionValue: decimal("conversion_value", { precision: 10, scale: 2 }),
-  commission: decimal("commission", { precision: 10, scale: 2 }),
-  userEarned: decimal("user_earned", { precision: 10, scale: 2 }),
-  conversionStatus: varchar("conversion_status", { length: 50 }),
+    conversionValue: decimal("conversion_value", { precision: 10, scale: 2 }),
+    commission: decimal("commission", { precision: 10, scale: 2 }),
+    userEarned: decimal("user_earned", { precision: 10, scale: 2 }),
+    conversionStatus: varchar("conversion_status", { length: 50 }),
     convertedAt: timestamp("converted_at"),
     conversionCreatedAt: timestamp("conversion_created_at"),
     conversionSub1: varchar("conversion_sub1", { length: 255 }),
