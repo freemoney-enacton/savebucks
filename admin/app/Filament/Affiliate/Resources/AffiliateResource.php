@@ -7,9 +7,13 @@ use App\Filament\Affiliate\Resources\AffiliateResource\RelationManagers;
 use App\Models\Affiliate\Affiliate;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Filament\Tables\Actions\BulkAction;
+use Filament\Tables\Actions\BulkActionGroup;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use ValentinMorice\FilamentJsonColumn\JsonColumn;
@@ -278,8 +282,78 @@ class AffiliateResource extends Resource
                 Tables\Actions\EditAction::make()->label("")->tooltip("Edit")->size("lg"),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
+                BulkActionGroup::make([
                     // Tables\Actions\DeleteBulkAction::make(),
+                    BulkAction::make('update_status')
+                        ->label('Update Status')
+                        ->icon('heroicon-o-pencil-square')
+                        ->form([
+                            Forms\Components\Select::make('status')
+                                ->required()
+                                ->options([
+                                    'pending'   => 'Pending',
+                                    'approved'  => 'Approved',
+                                    'rejected'  => 'Rejected',
+                                    'suspended' => 'Suspended',
+                                ])
+                                ->label('New Status'),
+                        ])
+                        ->action(function (Collection $records, array $data) {
+                            $records->each(fn ($record) => $record->update(['approval_status' => $data['status']]));
+                            Notification::make()
+                                ->title('Affiliate status updated')
+                                ->success()
+                                ->send();
+                        })
+                        ->deselectRecordsAfterCompletion(),
+
+                    BulkAction::make('assign_campaign')
+                        ->label('Assign Campaign')
+                        ->icon('heroicon-o-link')
+                        ->form([
+                            Forms\Components\Select::make('campaign_id')
+                                ->label('Campaign')
+                                ->options(\App\Models\Affiliate\Campaign::where('status', 'active')->pluck('name', 'id'))
+                                ->searchable()
+                                ->required(),
+                            Forms\Components\Select::make('campaign_goal_id')
+                                ->label('Campaign Goal')
+                                ->options(fn (callable $get) => $get('campaign_id') ? \App\Models\Affiliate\CampaignGoal::where('status', 'active')->where('campaign_id', $get('campaign_id'))->pluck('name', 'id') : [])
+                                ->searchable()
+                                ->required(),
+                            Forms\Components\TextInput::make('custom_commission_rate')
+                                ->label('Custom Commission')
+                                ->numeric()
+                                ->minValue(0)
+                                ->nullable(),
+                        ])
+                        ->action(function (Collection $records, array $data) {
+                            $created = 0;
+                            foreach ($records as $record) {
+                                $exists = \App\Models\Affiliate\AffiliateCampaignGoal::where([
+                                    'affiliate_id'      => $record->id,
+                                    'campaign_id'       => $data['campaign_id'],
+                                    'campaign_goal_id'  => $data['campaign_goal_id'],
+                                ])->exists();
+
+                                if (! $exists) {
+                                    \App\Models\Affiliate\AffiliateCampaignGoal::create([
+                                        'affiliate_id'            => $record->id,
+                                        'campaign_id'             => $data['campaign_id'],
+                                        'campaign_goal_id'        => $data['campaign_goal_id'],
+                                        'custom_commission_rate'  => $data['custom_commission_rate'] ?? 0,
+                                        'approval_status'         => 'approved',
+                                    ]);
+                                    $created++;
+                                }
+                            }
+
+                            Notification::make()
+                                ->title("Campaign assigned to {$created} affiliate(s)")
+                                ->success()
+                                ->send();
+                        })
+                        ->deselectRecordsAfterCompletion(),
                 ]),
 
                 BulkAction::make('change_status')
