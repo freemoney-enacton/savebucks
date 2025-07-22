@@ -26,111 +26,119 @@ class ConversionResource extends Resource
         return $form
             ->schema([
 
-                Forms\Components\Section::make('Affiliate & Campaign Information')
-                    ->description("Core conversion tracking details")
+                Forms\Components\Section::make('Basic Information')
+                    ->description("Basic Conversion Information")
                     ->columns(2)
                     ->schema([
 
-                        Forms\Components\Select::make('affiliate_id')
-                            ->label('Affiliate')
-                            ->relationship('affiliate', 'name')
-                            ->preload()
-                            ->searchable()
-                            ->required(),
+                    Forms\Components\Select::make('campaign_id')
+                        ->label('Campaign')
+                        ->relationship('campaign', 'name')
+                        ->preload()
+                        ->searchable()
+                        ->reactive()
+                        ->afterStateUpdated(fn (callable $set) => $set('campaign_goal_id', null))
+                        ->required(),
 
-                        Forms\Components\Select::make('campaign_id')
-                            ->label('Campaign')
-                            ->relationship('campaign', 'name')
-                            ->preload()
-                            ->searchable()
-                            ->required(),
-                     
-                        Forms\Components\Select::make('campaign_goal_id')
-                            ->relationship('campaignGoal', 'name')
-                            ->label('Campaign Goal')
-                            ->preload()
-                            ->searchable(),
+                    Forms\Components\Select::make('postback_log_id')
+                        ->label('Postback Log')
+                        ->relationship('postbackLog', 'id')
+                        ->preload()
+                        ->searchable()
+                        ->required(),                  
 
-                        Forms\Components\TextInput::make('click_code')
-                            ->required()
-                            ->maxLength(255)
-                            ->label('Click Code'),
+                    Forms\Components\TextInput::make('click_code')
+                        ->required()
+                        ->maxLength(255),
 
-                        Forms\Components\DateTimePicker::make('converted_at')
-                            ->label('Converted At')
-                            ->required()
-                            ->native(false)
-                            ->prefixIcon('heroicon-o-calendar-days'),
+                    Forms\Components\Select::make('campaign_goal_id')
+                        ->label('Campaign Goal')
+                        ->options(function (callable $get) {
+                            $campaignId = $get('campaign_id');
 
-                        Forms\Components\Radio::make('status')
-                            ->options([
-                                'pending'   => 'Pending',
-                                'approved'  => 'Approved',
-                                'declined'  => 'Declined',
-                                'paid'      => 'Paid',
-                            ])
-                            ->required()
-                            ->inline()
-                            ->inlineLabel(false)
-                            ->default('pending'),
-                    ]),
+                            if (!$campaignId) {
+                                return [];
+                            }
 
-                Forms\Components\Section::make('Financial Information')
-                    ->description("Transaction details and commission")
-                    ->columns(2)
-                    ->schema([
+                            return \App\Models\Affiliate\CampaignGoal::where('status', 'active')
+                                ->where('campaign_id', $campaignId)
+                                ->pluck('name', 'id');
+                        })
+                        ->preload()
+                        ->searchable()
+                        ->reactive()
+                        ->disabled(fn (callable $get) => !$get('campaign_id')),
 
-                        Forms\Components\TextInput::make('transaction_id')
-                            ->required()
-                            ->maxLength(255)
-                            ->label('Transaction ID'),
+                    Forms\Components\Select::make('affiliate_id')
+                        ->label('affiliate')
+                        ->relationship('affiliate', 'name')
+                        ->preload()
+                        ->searchable()
+                        ->required()                            
+                        ->label("Affiliate"),
 
-                        Forms\Components\Select::make('payout_id')
-                            ->label('Payout')
-                            ->relationship('payout', 'id')
-                            ->preload()
-                            ->searchable(),
+                    Forms\Components\TextInput::make('transaction_id')
+                        ->required()
+                        ->maxLength(255)
+                        ->label("Transaction Id"),
 
-                        Forms\Components\TextInput::make('conversion_value')
-                            ->required()
-                            ->numeric()
-                            ->label('Conversion Value'),
+                    Forms\Components\TextInput::make('conversion_value')
+                        ->required()
+                        ->numeric()
+                        ->label("Conversion Value"),
 
-                        Forms\Components\TextInput::make('commission')
-                            ->required()
-                            ->numeric()
-                            ->label('Commission'),
-                    ]),
+                    Forms\Components\TextInput::make('commission')
+                        ->required()
+                        ->numeric()
+                        ->label("Commission"),
 
-                Forms\Components\Section::make('Additional Information')
-                    ->description("Tracking parameters and notes")
-                    ->columns(2)
-                    ->schema([
+                    Forms\Components\TextInput::make('user_earned')
+                        ->numeric()
+                        ->label('User Earned')
+                        ->default(0),
 
-                        Forms\Components\Select::make('postback_log_id')
-                            ->label('Postback Log')
-                            ->relationship('postbackLog', 'id')
-                            ->preload()
-                            ->searchable()
-                            ->required(),
+                    Forms\Components\TextInput::make('sub1')
+                        ->maxLength(255)
+                        ->label("Sub 1"),
 
-                        Forms\Components\TextInput::make('sub1')
-                            ->maxLength(255)
-                            ->label('Sub 1'),
+                    Forms\Components\TextInput::make('sub2')
+                        ->maxLength(255),
 
-                        Forms\Components\TextInput::make('sub2')
-                            ->maxLength(255)
-                            ->label('Sub 2'),
+                    Forms\Components\TextInput::make('sub3')
+                        ->maxLength(255),
 
-                        Forms\Components\TextInput::make('sub3')
-                            ->maxLength(255)
-                            ->label('Sub 3'),
+                    Forms\Components\Radio::make('status')
+                        ->options([
+                            'pending'   => 'Pending',
+                            'approved'  => 'Approved',
+                            'declined'  => 'Declined',
+                            'paid'      => 'Paid',
+                            'untracked' => 'Untracked',
+                        ])
+                        ->required()
+                        ->inline()
+                        ->inlineLabel(false)
+                        ->default('pending'),            
 
-                        Forms\Components\TextInput::make('admin_notes')
-                            ->label('Admin Notes')
-                            ->maxLength(500)
-                            ->columnSpanFull(),
-                    ])
+                    Forms\Components\Select::make('payout_id')
+                        ->label('Payout Id')
+                        ->relationship('payout', 'id')
+                        ->preload()
+                        ->searchable()
+                        ->required(),                 
+
+                    Forms\Components\TextInput::make('admin_notes')
+                        ->label("Admin Notes")
+                        ->maxLength(500),
+                        
+                    Forms\Components\DateTimePicker::make('converted_at')
+                        ->label("Converted At")
+                        ->required()
+                        ->native(false)
+                        ->prefixIcon('heroicon-o-calendar-days'),
+                   
+
+                ])
 
             ]);
     }
@@ -140,28 +148,32 @@ class ConversionResource extends Resource
         return $table
             ->columns([
 
+                Tables\Columns\TextColumn::make('campaign.name')
+                    ->label('Campaign')
+                    ->searchable()
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('click_code')
+                    ->label('Click Code')
+                    ->searchable(),
+
                 Tables\Columns\TextColumn::make('affiliate.name')
                     ->label('Affiliate')
                     ->searchable()
                     ->sortable(),
 
-
-                Tables\Columns\TextColumn::make('campaign.name')
-                    ->label('Campaign')
-                    ->numeric()
-                    ->sortable(),
-
-                // Tables\Columns\TextColumn::make('click_code')
-                //     ->label('Click Code')
-                //     ->searchable(),
-            
                 Tables\Columns\TextColumn::make('transaction_id')
                     ->label("Transaction Id")
                     ->searchable(),
 
-                Tables\Columns\TextColumn::make('commission')   
+                Tables\Columns\TextColumn::make('commission')
                     ->numeric()
                     ->searchable()
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('user_earned')
+                    ->numeric()
+                    ->label('User Earned')
                     ->sortable(),
 
                 // Tables\Columns\TextColumn::make('status')
@@ -178,23 +190,22 @@ class ConversionResource extends Resource
 
                 Tables\Columns\SelectColumn::make('status')
                     ->searchable()
-                    ->selectablePlaceholder(false)
                     ->options([
                         'pending'   => 'Pending',
                         'approved'  => 'Approved',
                         'declined'  => 'Declined',
                         'paid'      => 'Paid',
+                        'untracked' => 'Untracked',
                     ]),
 
-                // Tables\Columns\TextColumn::make('payout_id')
-                //     ->label("Payout Id")
-                //     ->numeric()
-                //     ->sortable(),
+                Tables\Columns\TextColumn::make('payout_id')
+                    ->label("Payout Id")
+                    ->numeric()
+                    ->sortable(),
 
                 Tables\Columns\TextColumn::make('converted_at')
                     ->label("Converted At")
-                    ->tooltip(fn($state)=> $state)
-                    ->date()
+                    ->dateTime()
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('created_at')
@@ -214,8 +225,9 @@ class ConversionResource extends Resource
                         'pending'   => 'Pending',
                         'approved'  => 'Approved',
                         'declined'  => 'Declined',
-                        'paid'      => 'Paid',           
-                    ])  
+                        'paid'      => 'Paid',
+                        'untracked' => 'Untracked',
+                    ])
                     ->preload()
                     ->searchable()
                     ->label('Status'),
@@ -239,7 +251,7 @@ class ConversionResource extends Resource
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    // Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ]);
     }

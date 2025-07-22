@@ -65,13 +65,13 @@ class AffiliatePanelProvider extends PanelProvider
                 Authenticate::class,
             ])
             ->navigationItems([
-            NavigationItem::make('Campaigns')
-                ->url( fn (): string => CampaignResource::getUrl('view', ['record' => 1]) , shouldOpenInNewTab: false)
-                ->icon('heroicon-o-presentation-chart-line')
-                ->group('Campaigns')
-                // ->isActiveWhen(fn () => request()->routeIs('filament.resources.campaigns.view'))
-                ->isActiveWhen(fn () => request()->routeIs('filament.affiliate.resources.campaigns.view'))
-                ->sort(1),
+            // NavigationItem::make('Campaigns')
+            //     ->url( fn (): string => CampaignResource::getUrl('view', ['record' => 1]) , shouldOpenInNewTab: false)
+            //     ->icon('heroicon-o-presentation-chart-line')
+            //     ->group('Campaigns')
+            //     // ->isActiveWhen(fn () => request()->routeIs('filament.resources.campaigns.view'))
+            //     ->isActiveWhen(fn () => request()->routeIs('filament.affiliate.resources.campaigns.view'))
+            //     ->sort(1),
             ]);
     }
 }

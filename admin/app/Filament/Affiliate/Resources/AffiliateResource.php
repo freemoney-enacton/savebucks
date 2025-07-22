@@ -23,6 +23,9 @@ use App\Filament\Affiliate\Resources\AffiliateResource\RelationManagers\ClicksRe
 use App\Filament\Affiliate\Resources\AffiliateResource\RelationManagers\PostbacksRelationManager;
 use App\Filament\Affiliate\Resources\AffiliateResource\RelationManagers\ConversionsRelationManager;
 use App\Models\Country;
+use Filament\Tables\Actions\BulkAction;
+use Illuminate\Database\Eloquent\Collection;
+
 
 class AffiliateResource extends Resource
 {
@@ -278,6 +281,29 @@ class AffiliateResource extends Resource
                 Tables\Actions\BulkActionGroup::make([
                     // Tables\Actions\DeleteBulkAction::make(),
                 ]),
+
+                BulkAction::make('change_status')
+                    ->label('Bulk Status Change')
+                    ->icon('heroicon-o-check-circle')
+                    ->modalWidth('lg')
+                    ->form([
+                        Forms\Components\Select::make('approval_status')
+                        ->options([
+                            'pending'   => "Pending",
+                            'approved'  => "Approved",
+                            'rejected'  => "Rejected",
+                            'suspended' => "Suspended",
+                        ]) 
+                        ->preload()
+                        ->searchable(),               
+                    ])
+                    ->action(function(Collection $records, array $data) {
+                                               
+                        Affiliate::whereIn('id', $records->pluck('id'))
+                        ->update(['approval_status' => $data['approval_status']]);
+                    })
+                    ->deselectRecordsAfterCompletion()
+                    ->button(),
             ]);
     }
 

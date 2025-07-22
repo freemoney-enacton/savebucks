@@ -59,19 +59,59 @@ class GoalsRelationManager extends RelationManager
                     ->numeric()
                     ->minValue(0),
 
-                Forms\Components\TextInput::make('tracking_code')
+                // Forms\Components\TextInput::make('tracking_code')
+                //     ->label('Tracking Code')
+                //     ->disabledOn("edit")
+                //     ->required()
+                //     ->validationMessages([
+                //         'unique' => 'The tracking code must be unique.',
+                //         'max' => 'The tracking code must not exceed 50 characters.',
+                //         'min' => 'The tracking code must be at least 2 characters.',
+                //     ])
+                //     ->maxLength(50)
+                //     ->minLength(2)
+                //     ->unique(ignoreRecord: true)
+                //     ->infotip('Unique tracking code for goal (up to 50 characters)'),
+
+               
+                Forms\Components\Select::make('tracking_code')
                     ->label('Tracking Code')
+                    ->preload()
+                    ->searchable()
                     ->disabledOn("edit")
+                    ->options(function (RelationManager $livewire, ?Model $record = null) {
+                        // Get the parent campaign record
+                        $campaign = $livewire->getOwnerRecord();
+                        
+                        // All possible tracking codes
+                        $allCodes = [
+                            'app_install'   => 'app_install',
+                            'registration'  => 'registration', 
+                            'transaction'   => 'transaction',
+                        ];
+                        
+                        if (!$campaign) {
+                            return $allCodes;
+                        }
+                        
+                        // Get existing goals for this campaign
+                        $existingGoals = $campaign->goals();
+                        
+                        // If we're editing, exclude the current record from the check
+                        if ($record && $record->exists) {
+                            $existingGoals = $existingGoals->where('id', '!=', $record->id);
+                        }
+                        
+                        // Get used tracking codes
+                        $usedCodes = $existingGoals->pluck('tracking_code')->toArray();
+                        
+                        // Return only available codes
+                        return array_filter($allCodes, function($label, $code) use ($usedCodes) {
+                            return !in_array($code, $usedCodes);
+                        }, ARRAY_FILTER_USE_BOTH);
+                    })
                     ->required()
-                    ->validationMessages([
-                        'unique' => 'The tracking code must be unique.',
-                        'max' => 'The tracking code must not exceed 50 characters.',
-                        'min' => 'The tracking code must be at least 2 characters.',
-                    ])
-                    ->maxLength(50)
-                    ->minLength(2)
-                    ->unique(ignoreRecord: true)
-                    ->infotip('Unique tracking code for goal (up to 50 characters)'),
+                    ->infotip('Select unique tracking code for goal'),
 
                 Forms\Components\Radio::make('status')
                     ->required()

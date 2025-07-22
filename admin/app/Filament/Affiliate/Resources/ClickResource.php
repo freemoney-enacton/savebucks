@@ -12,6 +12,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use ValentinMorice\FilamentJsonColumn\JsonColumn;
 
 class ClickResource extends Resource
 {
@@ -111,6 +112,9 @@ class ClickResource extends Resource
                             ->maxLength(1000)
                             ->label('User Agent')
                             ->columnSpanFull(),
+
+                        JsonColumn::make('campaign_goals')->viewerOnly(),
+                        
                     ])->columnSpan(2),
 
             ])->columns(2);

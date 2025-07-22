@@ -138,9 +138,8 @@ class CampaignResource extends Resource
                     })
                     ->searchable(),
 
-                Tables\Columns\IconColumn::make('is_default')
-                    ->label('Default')
-                    ->boolean(),
+                Tables\Columns\ToggleColumn::make('is_default')
+                    ->label('Default'),
 
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
