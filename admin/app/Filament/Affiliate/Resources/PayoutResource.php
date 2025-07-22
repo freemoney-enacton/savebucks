@@ -17,6 +17,8 @@ use Filament\Navigation\NavigationItem;
 use Illuminate\Database\Eloquent\Collection;
 use App\Filament\Actions\AffPaypalPayoutAction;
 use Filament\Notifications\Notification;
+use Filament\Tables\Actions\BulkAction;
+use Filament\Tables\Actions\BulkActionGroup;
 use App\Filament\Affiliate\Resources\AffiliateResource;
 use App\Models\Affiliate\Affiliate;
 use App\Filament\Affiliate\Resources\PayoutResource\RelationManagers\PaymentLogsRelationManager;
@@ -228,7 +230,7 @@ class PayoutResource extends Resource
                 Tables\Actions\EditAction::make()->label("")->tooltip("Edit")->size("lg"),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
+                BulkActionGroup::make([
 
                     Tables\Actions\DeleteBulkAction::make(),
 
@@ -270,6 +272,26 @@ class PayoutResource extends Resource
                                 ->send();
                     })
                     ->deselectRecordsAfterCompletion(),
+
+                    BulkAction::make('update_status')
+                        ->label('Update Status')
+                        ->icon('heroicon-o-pencil-square')
+                        ->form([
+                            Forms\Components\Select::make('status')
+                                ->options([
+                                    'pending'    => 'Pending',
+                                    'processing' => 'Processing',
+                                    'paid'       => 'Paid',
+                                    'rejected'   => 'Rejected',
+                                ])
+                                ->required()
+                                ->label('New Status'),
+                        ])
+                        ->action(function (Collection $records, array $data) {
+                            $records->each(fn ($record) => $record->update(['status' => $data['status']]));
+                            Notification::make()->title('Payout status updated')->success()->send();
+                        })
+                        ->deselectRecordsAfterCompletion(),
                     ]),
             ]);
     }

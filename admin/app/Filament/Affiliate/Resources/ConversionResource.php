@@ -7,9 +7,13 @@ use App\Filament\Affiliate\Resources\ConversionResource\RelationManagers;
 use App\Models\Affiliate\Conversion;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Filament\Tables\Actions\BulkAction;
+use Filament\Tables\Actions\BulkActionGroup;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Str;
@@ -237,8 +241,27 @@ class ConversionResource extends Resource
                 // Tables\Actions\EditAction::make()->label("")->tooltip("Edit")->size("lg"),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
+                BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
+                    BulkAction::make('update_status')
+                        ->label('Update Status')
+                        ->icon('heroicon-o-pencil-square')
+                        ->form([
+                            Forms\Components\Select::make('status')
+                                ->options([
+                                    'pending'   => 'Pending',
+                                    'approved'  => 'Approved',
+                                    'declined'  => 'Declined',
+                                    'paid'      => 'Paid',
+                                ])
+                                ->required()
+                                ->label('New Status'),
+                        ])
+                        ->action(function (Collection $records, array $data) {
+                            $records->each(fn ($record) => $record->update(['status' => $data['status']]));
+                            Notification::make()->title('Conversion status updated')->success()->send();
+                        })
+                        ->deselectRecordsAfterCompletion(),
                 ]),
             ]);
     }
