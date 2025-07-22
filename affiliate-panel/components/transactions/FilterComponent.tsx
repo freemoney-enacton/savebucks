@@ -30,16 +30,20 @@ const getDateFromParams = (param: string): Date | undefined => {
   return isNaN(date.getTime()) ? undefined : date;
 };
 
-export default function FilterComponent({ campaigns = [] }: { campaigns?: any[] }) {
+export default function FilterComponent({
+  campaigns = [],
+}: {
+  campaigns?: any[];
+}) {
   const { t } = useTranslation();
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [campaignFilter, setCampaignFilter] = useState(
-    searchParams.get("campaignId") || "all"
-  );
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
   const searchParams = new URLSearchParams(params);
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [campaignFilter, setCampaignFilter] = useState(
+    searchParams.get("campaignId") || "all"
+  );
 
   const fromParam = searchParams.get("from");
   const toParam = searchParams.get("to");
@@ -72,7 +76,9 @@ export default function FilterComponent({ campaigns = [] }: { campaigns?: any[] 
   };
 
   const hasActiveFilters =
-    statusFilter !== "all" || campaignFilter !== "all" || (date?.from && date?.to);
+    statusFilter !== "all" ||
+    campaignFilter !== "all" ||
+    (date?.from && date?.to);
 
   const clearFilters = () => {
     setStatusFilter("all");
@@ -129,9 +135,13 @@ export default function FilterComponent({ campaigns = [] }: { campaigns?: any[] 
                   <SelectValue placeholder={t("filters.campaign.all")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">{t("filters.campaign.all")}</SelectItem>
+                  <SelectItem value="all">
+                    {t("filters.campaign.all")}
+                  </SelectItem>
                   {campaigns.map((c) => (
-                    <SelectItem key={c.id} value={`${c.id}`}>{c.name}</SelectItem>
+                    <SelectItem key={c.id} value={`${c.id}`}>
+                      {c.name}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
