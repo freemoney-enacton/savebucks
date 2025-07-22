@@ -76,10 +76,7 @@ export const updateConversion = async (id: number, updateData: any) => {
   }
 };
 
-export const incrementUserEarned = async (
-  id: number,
-  amount: number
-) => {
+export const incrementUserEarned = async (id: number, amount: number) => {
   try {
     await db.transaction(async (tx) => {
       const current = await tx
@@ -87,8 +84,9 @@ export const incrementUserEarned = async (
         .from(conversions)
         .where(eq(conversions.id, id));
 
-      const newAmount =
-        (current[0]?.ue ? Number(current[0].ue) : 0) + Number(amount);
+      const newAmount = (
+        (current[0]?.ue ? Number(current[0].ue) : 0) + Number(amount)
+      ).toFixed(2);
 
       await tx
         .update(conversions)
@@ -99,7 +97,11 @@ export const incrementUserEarned = async (
 
     return { data: true, status: "success", message: "User earned updated" };
   } catch (error: any) {
-    return { data: null, status: "error", message: error.message || "An error occurred" };
+    return {
+      data: null,
+      status: "error",
+      message: error.message || "An error occurred",
+    };
   }
 };
 

@@ -49,26 +49,31 @@ export async function POST(request: NextRequest) {
       updatedAt: new Date(),
     };
 
-  const newAffiliate = await insertAffiliate(newUser);
-  if (newAffiliate.status === "error") {
-    return commonResponse({
-      data: newAffiliate,
-      status: "error",
-      message: t("auth.signUp.errorCreatingUser"),
-    });
-  }
+    const newAffiliate = await insertAffiliate(newUser);
+    if (newAffiliate.status === "error") {
+      return commonResponse({
+        data: newAffiliate,
+        status: "error",
+        message: t("auth.signUp.errorCreatingUser"),
+      });
+    }
 
-  const defaultCampaigns = await getDefaultCampaigns();
-  if (defaultCampaigns.status === "success" && defaultCampaigns.data.length > 0) {
-    const records = defaultCampaigns.data.map((c: any) => ({
-      affiliateId: newAffiliate.data.id,
-      campaignId: c.id,
-      status: "approved",
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    }));
-    await insertAffiliateCampaigns(records);
-  }
+    const defaultCampaigns = await getDefaultCampaigns();
+
+    if (
+      defaultCampaigns?.status === "success" &&
+      defaultCampaigns?.data &&
+      defaultCampaigns?.data?.length > 0
+    ) {
+      const records = defaultCampaigns.data.map((c: any) => ({
+        affiliateId: newAffiliate.data.id,
+        campaignId: c.id,
+        status: "approved",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }));
+      await insertAffiliateCampaigns(records);
+    }
 
     const verificationLink = `${Config.env.app.app_url}/verify-email/${token}?userId=${newAffiliate.data.id}`;
 

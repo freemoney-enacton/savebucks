@@ -10,7 +10,7 @@ async function handleRequest(
     tracking_code?: string;
     click_code?: string;
     transaction_id?: string;
-    status?: string;
+    status?: any;
   },
   request: NextRequest
 ) {
