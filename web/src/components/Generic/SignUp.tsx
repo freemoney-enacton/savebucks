@@ -22,8 +22,10 @@ import Checkbox from '../Core/Checkbox';
 import Input from '../Core/Input';
 import { Toast } from '../Core/Toast';
 import ButtonComponent from './ButtonComponent';
+import { config } from '@/config';
+import Cookies from 'js-cookie';
 
-export default function SignUp({ onModalClose, referralCode, id, registerPage = false }: any) {
+export default function SignUp({ onModalClose, id, registerPage = false }: any) {
   const navigate = usePathname();
   // const settings: any = useRecoilValue(objectAtomFamily(atomKey.settings));
   // const loading = useRecoilValue(booleanDefaultFalseAtomFamily(atomKey.settings_loading));
@@ -36,6 +38,8 @@ export default function SignUp({ onModalClose, referralCode, id, registerPage = 
   const replacedText = translatedText.replace('{{privacyPolicy}}', '<PRIVACY>');
   const parts = replacedText.split(/(<PRIVACY>)/);
   const { handleSocialSignin } = useUtils();
+  const referralCode = Cookies.get(config.REFERRAL_PARAM);
+  const click_code = Cookies.get(config.CLICK_CODE_COOKIE);
 
   const initialValues = {
     name: '',
@@ -66,16 +70,18 @@ export default function SignUp({ onModalClose, referralCode, id, registerPage = 
     (async () => {
       const recaptcha = await reCaptchaRef.current.executeAsync();
       try {
+        const body: any = {
+          name: values.name,
+          email: values.email,
+          password: values.password,
+          referral: values.referral,
+          newsletter: values.newsLatter,
+          recaptcha: recaptcha,
+          ...(click_code ? { click_code } : {}),
+        };
         const user: any = await public_post_api({
           path: 'auth/register',
-          body: {
-            name: values.name,
-            email: values.email,
-            password: values.password,
-            referral: values.referral,
-            newsletter: values.newsLatter,
-            recaptcha: recaptcha,
-          },
+          body,
         });
 
         if (user.success && user.data.token) {
@@ -92,6 +98,16 @@ export default function SignUp({ onModalClose, referralCode, id, registerPage = 
                   },
                 })
               );
+              if (click_code) {
+                window.ReactNativeWebView.postMessage(
+                  JSON.stringify({
+                    type: 'REMOVE_AFFILIATE_DATA',
+                  })
+                );
+              }
+            }
+            if (click_code) {
+              Cookies.remove(config.CLICK_CODE_COOKIE, { domain: `.${config.ROOT_DOMAIN}` });
             }
             Toast.success(t('registered_successfully'));
             import('react-facebook-pixel')

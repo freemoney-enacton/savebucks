@@ -79,7 +79,6 @@ export const conversionStatusEnum = pgEnum("conversion_status", [
   "approved",
   "declined",
   "paid",
-  "untracked",
 ]);
 
 export const payoutStatusEnum = pgEnum("payout_status", [
