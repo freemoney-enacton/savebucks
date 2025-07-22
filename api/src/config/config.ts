@@ -25,6 +25,7 @@ export const config = {
       onesignal_key: process.env.ONESIGNAL_KEY || "",
       otpExpiration: 10,
       domain_cookie: process.env.DOMAIN_COOKIE,
+      conversion_api_url: process.env.CONVERSION_API_URL,
     },
     database: {
       port: process.env.DATABASE_PORT,
@@ -61,12 +62,12 @@ export const config = {
       kyc_didit_client_secret: process.env.KYC_DIDIT_CLIENT_SECERT,
       kyc_didit_webhook_secret: process.env.KYC_DIDIT_WEBHOOK_SECERT,
     },
-    brevo:{
-      listUrl:process.env.BREVO_LIST_API_URL,
-      contactUrl:process.env.BREVO_CONTACT_API_URL,
+    brevo: {
+      listUrl: process.env.BREVO_LIST_API_URL,
+      contactUrl: process.env.BREVO_CONTACT_API_URL,
     },
-    translate:{
-      google:process.env.GOOGLE_TRANSLATE_API_KEY,
+    translate: {
+      google: process.env.GOOGLE_TRANSLATE_API_KEY,
     },
   },
 };

@@ -20,6 +20,7 @@ import { getIpDetails } from "../../utils/getClientInfo";
 import { handleBonusAndNotifications } from "../../utils/bonusHandle";
 import app from "../../app";
 import { db } from "../../database/database";
+import { sendConversionRequest } from "../../utils/sendAffiliatePostback";
 const generateOtp = () => {
   return Math.floor(100000 + Math.random() * 900000);
 };
@@ -50,8 +51,8 @@ export const register = async (req: FastifyRequest, reply: FastifyReply) => {
     return reply.sendError(app.polyglot.t("error.auth.disposableEmail"), 409);
   }
 
-  const userBanned=await auth.check(email)
-  if(userBanned){
+  const userBanned = await auth.check(email);
+  if (userBanned) {
     return reply.sendError(app.polyglot.t("error.auth.userBanned"), 409);
   }
 
@@ -73,8 +74,10 @@ export const register = async (req: FastifyRequest, reply: FastifyReply) => {
   const hashPassword: string = await bcrypt.hash(password, 10);
   const referralCode = (Math.random() + 1).toString(36).substring(7);
   const device_id: any = req.cookies.device_id;
-  const country_code = req.headers["x-country"] ?? req.headers["cf-ipcountry"] ?? "unknown";
-  const client_ip = req.headers["x-client-ip"] ?? req.headers["cf-connecting-ip"];
+  const country_code =
+    req.headers["x-country"] ?? req.headers["cf-ipcountry"] ?? "unknown";
+  const client_ip =
+    req.headers["x-client-ip"] ?? req.headers["cf-connecting-ip"];
   const clientInfo = await getIpDetails(client_ip);
   // const lang = req.headers["x-language"]? req.headers["x-language"]  : "en";
   // console.log(req.headers["x-language"])
@@ -86,7 +89,7 @@ export const register = async (req: FastifyRequest, reply: FastifyReply) => {
     referrer: req.headers.referer,
     route: req.routeOptions.url,
   };
-  const register :any = await auth.register(
+  const register: any = await auth.register(
     name,
     email,
     hashPassword,
@@ -97,7 +100,7 @@ export const register = async (req: FastifyRequest, reply: FastifyReply) => {
     device_id,
     country_code,
     clientInfo.timezone ?? "unknown",
-    "email",
+    "email"
   );
 
   if (!register) {
@@ -121,19 +124,19 @@ export const register = async (req: FastifyRequest, reply: FastifyReply) => {
   );
 
   // Handle bonuses and notifications
-  let joinBonus = await bonusDetails("join_no_refer"); 
-  const joinWithRefer = await bonusDetails('join_with_refer'); 
+  let joinBonus = await bonusDetails("join_no_refer");
+  const joinWithRefer = await bonusDetails("join_with_refer");
   if (referredBy && joinWithRefer && joinWithRefer !== undefined) {
     joinBonus = joinWithRefer;
-  } 
- 
+  }
+
   await handleBonusAndNotifications(
     Number(register.insertId),
     joinBonus,
     referredBy
   );
-  let joinBonusAmount = joinBonus ? joinBonus.amount : 0; 
-  let userDetails =  { token: accessToken , join_bonus: joinBonusAmount};
+  let joinBonusAmount = joinBonus ? joinBonus.amount : 0;
+  let userDetails = { token: accessToken, join_bonus: joinBonusAmount };
   return reply.sendSuccess(
     userDetails,
     201,
@@ -175,8 +178,8 @@ export const login = async (req: FastifyRequest, reply: FastifyReply) => {
   if (!userData) {
     return reply.sendError(app.polyglot.t("error.auth.userNotFound"), 404);
   } else {
-    if(userData.provider_type ==="email" && userData.password===null){
-      return reply.sendError(app.polyglot.t("error.auth.resetPassword"),404)
+    if (userData.provider_type === "email" && userData.password === null) {
+      return reply.sendError(app.polyglot.t("error.auth.resetPassword"), 404);
     }
     if (userData.password === null) {
       return reply.sendError(app.polyglot.t("error.auth.loginSocial"), 401);
@@ -197,7 +200,8 @@ export const login = async (req: FastifyRequest, reply: FastifyReply) => {
           path: "/",
           domain: config.env.app.domain_cookie,
         });
-        const client_ip = req.headers["x-client-ip"] ?? req.headers["cf-connecting-ip"];
+        const client_ip =
+          req.headers["x-client-ip"] ?? req.headers["cf-connecting-ip"];
         await auth.insertAuthLogs(
           userData.id,
           client_ip,
@@ -253,10 +257,10 @@ export const verifyUser = async (
           email: email,
           otp: otp,
         });
-        dispatchEvent("subscribe_new_user",{
-          name:user?.name,
-          email:email
-        })
+        dispatchEvent("subscribe_new_user", {
+          name: user?.name,
+          email: email,
+        });
         const userInfo = await auth.login(email);
         let accessToken = await createJWTToken(
           {
@@ -270,6 +274,27 @@ export const verifyUser = async (
           path: "/",
           domain: config.env.app.domain_cookie,
         });
+        if (user) {
+          const userData = await db
+            .selectFrom("users")
+            .select(["affiliate_click_code"])
+            .where("id", "=", user.id)
+            .executeTakeFirst();
+
+          console.log("User Data from verify_email", userData);
+
+          if (userData && userData.affiliate_click_code) {
+            console.log(
+              "Firing Affiliate Conversion Request after verify_email",
+              "register"
+            );
+            const res = await sendConversionRequest({
+              tracking_code: "register",
+              click_code: userData?.affiliate_click_code,
+              transaction_id: user.id.toString(),
+            });
+          }
+        }
         return reply.sendSuccess(
           { ...userInfo, token: accessToken },
           200,
@@ -342,11 +367,13 @@ export const forgotPassword = async (
   }
   const user = await auth.login(email);
   console.log("forgotPassword");
-  console.log("user",user);
-  if (!user) { console.log("if not user",user);
+  console.log("user", user);
+  if (!user) {
+    console.log("if not user", user);
     return reply.sendError(app.polyglot.t("error.auth.userNotFound"), 404);
   } else {
-    if (user.provider_type === 'email') { console.log("if provider_type email");
+    if (user.provider_type === "email") {
+      console.log("if provider_type email");
       await auth.storeOtp(email, null, otp);
       dispatchEvent("send_email", {
         type: "forgot",
@@ -355,9 +382,11 @@ export const forgotPassword = async (
         otp: otp,
       });
       return reply.sendSuccess("", 200, "Otp sent to your email", null, null);
-    } else if (user.password == null) {  console.log("if provider_type not email");
+    } else if (user.password == null) {
+      console.log("if provider_type not email");
       return reply.sendError(app.polyglot.t("error.auth.loginSocial"), 401);
-    } else { console.log("if not registered");
+    } else {
+      console.log("if not registered");
       return reply.sendError(app.polyglot.t("error.auth.registerRequest"), 401);
     }
   }
@@ -469,9 +498,8 @@ export const logout = (req: FastifyRequest, reply: FastifyReply) => {
     req.session.delete();
     return reply.sendSuccess(null, 200, "Logout Successful", null, null);
   } catch (error: any) {
-    return reply.sendError(error?.message + 'From Server', 500);
+    return reply.sendError(error?.message + "From Server", 500);
   }
-  
 };
 
 export const sendOtp = async (req: FastifyRequest, reply: FastifyReply) => {
@@ -563,13 +591,16 @@ export const sendVerificationOtp = async (
     const userExist = await auth.findByPhone(phone_no);
     if (userExist) {
       return reply.sendError(
-          app.polyglot.t("error.auth.phoneNumberExist"),
-          409
-        );
+        app.polyglot.t("error.auth.phoneNumberExist"),
+        409
+      );
     } else {
-      
-      await db.updateTable("users").set({phone_no: phone_no,is_phone_no_verified:1}).where("id", "=", Number(req.userId)).execute();
-      
+      await db
+        .updateTable("users")
+        .set({ phone_no: phone_no, is_phone_no_verified: 1 })
+        .where("id", "=", Number(req.userId))
+        .execute();
+
       return reply.sendSuccess(
         null,
         200,

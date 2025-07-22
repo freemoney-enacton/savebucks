@@ -13,6 +13,8 @@ import { bonusDetails } from "../modules/user-bonuses/bonuses.model";
 import { handleBonusAndNotifications } from "./bonusHandle";
 import { downloadImage } from "./downloadImage";
 import { moveUploadedFile } from "./ImageUpload";
+import { db } from "../database/database";
+import { sendConversionRequest } from "./sendAffiliatePostback";
 fastifyPassport.use(
   new GoogleStrategy(
     {
@@ -21,41 +23,55 @@ fastifyPassport.use(
       callbackURL: config.env.passport.googleCallbackUrl,
       passReqToCallback: true,
     },
-    async (req,accessToken: any, refreshToken: any, profile: any, done: any) => {
+    async (
+      req,
+      accessToken: any,
+      refreshToken: any,
+      profile: any,
+      done: any
+    ) => {
       const email = profile.emails[0].value;
       const googleId = profile.id;
       const name = profile.displayName;
-      const googleProfilePicUrl = profile.photos && profile.photos.length > 0 
-        ? profile.photos[0].value 
-        : null;
-      console.log(googleProfilePicUrl)
+      const googleProfilePicUrl =
+        profile.photos && profile.photos.length > 0
+          ? profile.photos[0].value
+          : null;
+      console.log(googleProfilePicUrl);
       const referralCode = (Math.random() + 1).toString(36).substring(7);
+      const click_code = req.cookies.click_code;
       // const userExist = await auth.userExist("google", googleId);
       const userExist = await auth.login(email);
       if (userExist) {
         return done(null, { ...userExist, userID: Number(userExist.id) });
       }
-      const lang = req.headers["x-language"]? req.headers["x-language"][0]  : "en";
+      const lang = req.headers["x-language"]
+        ? req.headers["x-language"][0]
+        : "en";
 
-      let avatar=null
-      if(googleProfilePicUrl){
+      let avatar = null;
+      if (googleProfilePicUrl) {
         const localProfilePic = await downloadImage(googleProfilePicUrl);
         console.log("Downloaded profile pic:", localProfilePic);
-        
+
         // Move it to permanent location
-        const finalPath = await moveUploadedFile(localProfilePic.filePath, 'uploads/profiles'); 
-        
+        const finalPath = await moveUploadedFile(
+          localProfilePic.filePath,
+          "uploads/profiles"
+        );
+
         // Create avatar object
-         avatar = {
+        avatar = {
           filename: localProfilePic.fileName,
           path: finalPath,
-          url: `${config.env.app.appUrl}/${path.basename('uploads')}/profiles/${localProfilePic.fileName}`,
-          mimetype: 'image/jpeg', // Assuming it's a JPEG
-          size: fs.statSync(finalPath).size // Get the actual file size
+          url: `${config.env.app.appUrl}/${path.basename("uploads")}/profiles/${
+            localProfilePic.fileName
+          }`,
+          mimetype: "image/jpeg", // Assuming it's a JPEG
+          size: fs.statSync(finalPath).size, // Get the actual file size
         };
-        
-        console.log("avatar" ,avatar);
-  
+
+        console.log("avatar", avatar);
       }
 
       const result = await auth.registerSocial(
@@ -64,13 +80,14 @@ fastifyPassport.use(
         googleId,
         referralCode,
         "google",
-        lang
+        lang,
+        click_code || null
       );
 
       if (result) {
-        if(avatar){
-          const users=await user.findByEmail(email)
-  
+        if (avatar) {
+          const users = await user.findByEmail(email);
+
           await user.updateUser(
             users?.id!,
             email,
@@ -78,15 +95,29 @@ fastifyPassport.use(
             name,
             true,
             true,
-            avatar?.url)
+            avatar?.url
+          );
         }
-        
+
         const joinBonus = await bonusDetails("join_no_refer");
         await handleBonusAndNotifications(
           Number(result.insertId),
           joinBonus,
           null
         );
+        const userData = await db
+          .selectFrom("users")
+          .select(["affiliate_click_code"])
+          .where("id", "=", result.insertId)
+          .executeTakeFirst();
+
+        if (userData && userData.affiliate_click_code) {
+          const res = await sendConversionRequest({
+            tracking_code: "registration",
+            click_code: userData?.affiliate_click_code,
+            transaction_id: result.insertId.toString(),
+          });
+        }
         return done(null, { ...profile, userID: Number(result.insertId) });
       }
     }
@@ -99,7 +130,7 @@ fastifyPassport.use(
       clientID: config.env.passport.facebookClientID,
       clientSecret: config.env.passport.facebookClientSecret,
       callbackURL: config.env.passport.facebookCallbackUrl,
-      profileFields: ["id", "emails", "name","photos"],
+      profileFields: ["id", "emails", "name", "photos"],
       passReqToCallback: true,
     },
     async function (
@@ -112,14 +143,18 @@ fastifyPassport.use(
       const email = profile.emails[0].value ?? null;
       const facebookId = profile.id;
       const name = profile.displayName ?? profile._json.first_name;
-      const fbProfilePicUrl = profile.photos && profile.photos.length > 0 
-        ? profile.photos[0].value 
-        : null;
-      console.log(fbProfilePicUrl)
+      const fbProfilePicUrl =
+        profile.photos && profile.photos.length > 0
+          ? profile.photos[0].value
+          : null;
+      console.log(fbProfilePicUrl);
       const referralCode = (Math.random() + 1).toString(36).substring(7);
       const userExist = await auth.login(email);
-      const lang = req.headers["x-language"]? req.headers["x-language"][0]  : "en";
-      console.log("Facebook profile",profile)
+      const lang = req.headers["x-language"]
+        ? req.headers["x-language"][0]
+        : "en";
+      const click_code = req.cookies.click_code;
+      console.log("Facebook profile", profile);
       // const userExist = await auth.userExist("facebook", facebookId);
       //Join No Refer bonus_code
       const noReferBonus = await bonusDetails("join_no_refer");
@@ -127,26 +162,30 @@ fastifyPassport.use(
         if (userExist) {
           return cb(null, userExist);
         }
-        let avatar=null
-      if(fbProfilePicUrl){
-        const localProfilePic = await downloadImage(fbProfilePicUrl);
-        console.log("Downloaded profile pic:", localProfilePic);
-        
-        // Move it to permanent location
-        const finalPath = await moveUploadedFile(localProfilePic.filePath, 'uploads/profiles'); 
-        
-        // Create avatar object
-         avatar = {
-          filename: localProfilePic.fileName,
-          path: finalPath,
-          url: `${config.env.app.appUrl}/${path.basename('uploads')}/profiles/${localProfilePic.fileName}`,
-          mimetype: 'image/jpeg', // Assuming it's a JPEG
-          size: fs.statSync(finalPath).size // Get the actual file size
-        };
-        
-        console.log("avatar" ,avatar);
-  
-      }
+        let avatar = null;
+        if (fbProfilePicUrl) {
+          const localProfilePic = await downloadImage(fbProfilePicUrl);
+          console.log("Downloaded profile pic:", localProfilePic);
+
+          // Move it to permanent location
+          const finalPath = await moveUploadedFile(
+            localProfilePic.filePath,
+            "uploads/profiles"
+          );
+
+          // Create avatar object
+          avatar = {
+            filename: localProfilePic.fileName,
+            path: finalPath,
+            url: `${config.env.app.appUrl}/${path.basename(
+              "uploads"
+            )}/profiles/${localProfilePic.fileName}`,
+            mimetype: "image/jpeg", // Assuming it's a JPEG
+            size: fs.statSync(finalPath).size, // Get the actual file size
+          };
+
+          console.log("avatar", avatar);
+        }
 
         const result = await auth.registerSocial(
           name,
@@ -154,13 +193,14 @@ fastifyPassport.use(
           facebookId,
           referralCode,
           "facebook",
-          lang
+          lang,
+          click_code || null
         );
-        
+
         if (result) {
-          if(avatar){
-            const users=await user.findByEmail(email)
-    
+          if (avatar) {
+            const users = await user.findByEmail(email);
+
             await user.updateUser(
               users?.id!,
               email,
@@ -168,7 +208,8 @@ fastifyPassport.use(
               name,
               true,
               true,
-              avatar?.url)
+              avatar?.url
+            );
           }
           const joinBonus = await bonusDetails("join_no_refer");
           await handleBonusAndNotifications(
@@ -176,31 +217,48 @@ fastifyPassport.use(
             joinBonus,
             null
           );
+          const userData = await db
+            .selectFrom("users")
+            .select(["affiliate_click_code"])
+            .where("id", "=", result.insertId)
+            .executeTakeFirst();
+
+          if (userData && userData.affiliate_click_code) {
+            const res = await sendConversionRequest({
+              tracking_code: "registration",
+              click_code: userData?.affiliate_click_code,
+              transaction_id: result.insertId.toString(),
+            });
+          }
           return cb(null, profile);
         }
       } else {
         if (userExist) {
           return cb(null, userExist);
         }
-        let avatar=null
-        if(fbProfilePicUrl){
+        let avatar = null;
+        if (fbProfilePicUrl) {
           const localProfilePic = await downloadImage(fbProfilePicUrl);
           console.log("Downloaded profile pic:", localProfilePic);
-          
+
           // Move it to permanent location
-          const finalPath = await moveUploadedFile(localProfilePic.filePath, 'uploads/profiles'); 
-          
+          const finalPath = await moveUploadedFile(
+            localProfilePic.filePath,
+            "uploads/profiles"
+          );
+
           // Create avatar object
-           avatar = {
+          avatar = {
             filename: localProfilePic.fileName,
             path: finalPath,
-            url: `${config.env.app.appUrl}/${path.basename('uploads')}/profiles/${localProfilePic.fileName}`,
-            mimetype: 'image/jpeg', // Assuming it's a JPEG
-            size: fs.statSync(finalPath).size // Get the actual file size
+            url: `${config.env.app.appUrl}/${path.basename(
+              "uploads"
+            )}/profiles/${localProfilePic.fileName}`,
+            mimetype: "image/jpeg", // Assuming it's a JPEG
+            size: fs.statSync(finalPath).size, // Get the actual file size
           };
-          
-          console.log("avatar" ,avatar);
-    
+
+          console.log("avatar", avatar);
         }
 
         const result = await auth.registerSocial(
@@ -209,13 +267,14 @@ fastifyPassport.use(
           facebookId,
           referralCode,
           "facebook",
-          lang
+          lang,
+          click_code || null
         );
 
         if (result) {
-          if(avatar){
-            const users=await user.findByEmail(email)
-    
+          if (avatar) {
+            const users = await user.findByEmail(email);
+
             await user.updateUser(
               users?.id!,
               email,
@@ -223,7 +282,8 @@ fastifyPassport.use(
               name,
               true,
               true,
-              avatar?.url)
+              avatar?.url
+            );
           }
           const joinBonus = await bonusDetails("join_no_refer");
           await handleBonusAndNotifications(
@@ -231,6 +291,19 @@ fastifyPassport.use(
             joinBonus,
             null
           );
+          const userData = await db
+            .selectFrom("users")
+            .select(["affiliate_click_code"])
+            .where("id", "=", result.insertId)
+            .executeTakeFirst();
+
+          if (userData && userData.affiliate_click_code) {
+            const res = await sendConversionRequest({
+              tracking_code: "registration",
+              click_code: userData?.affiliate_click_code,
+              transaction_id: result.insertId.toString(),
+            });
+          }
           return cb(null, profile);
         }
       }
@@ -238,12 +311,9 @@ fastifyPassport.use(
   )
 );
 
-const appleKeyName = config.env.passport.appleKeyName
+const appleKeyName = config.env.passport.appleKeyName;
 
-const privateKey = fs.readFileSync(
-  path.join(__dirname, appleKeyName),
-  "utf8"
-);
+const privateKey = fs.readFileSync(path.join(__dirname, appleKeyName), "utf8");
 fastifyPassport.use(
   new AppleStrategy(
     {
@@ -263,10 +333,13 @@ fastifyPassport.use(
       const match = decodedToken?.email.match(/^[a-zA-Z]+/);
       const name = match ? match[0] : "";
       const referralCode = (Math.random() + 1).toString(36).substring(7);
+      const click_code = req.cookies.click_code;
       const userExist = await auth.login(email);
-      const lang = req.headers["x-language"]? req.headers["x-language"][0]  : "en";
+      const lang = req.headers["x-language"]
+        ? req.headers["x-language"][0]
+        : "en";
 
-      console.log("Facebook profile",decodedToken)
+      console.log("Facebook profile", decodedToken);
 
       if (
         email &&
@@ -274,7 +347,7 @@ fastifyPassport.use(
           email.endsWith("@icloud.com"))
       ) {
         if (userExist) {
-          userExist['metadata'] = null;
+          userExist["metadata"] = null;
           return cb(null, userExist);
         }
         //Join No Refer bonus_code
@@ -285,7 +358,8 @@ fastifyPassport.use(
           subId,
           referralCode,
           "apple",
-          lang
+          lang,
+          click_code || null
         );
         if (result) {
           const joinBonus = await bonusDetails("join_no_refer");
@@ -294,11 +368,24 @@ fastifyPassport.use(
             joinBonus,
             null
           );
+          const userData = await db
+            .selectFrom("users")
+            .select(["affiliate_click_code"])
+            .where("id", "=", result.insertId)
+            .executeTakeFirst();
+
+          if (userData && userData.affiliate_click_code) {
+            const res = await sendConversionRequest({
+              tracking_code: "registration",
+              click_code: userData?.affiliate_click_code,
+              transaction_id: result.insertId.toString(),
+            });
+          }
           return cb(null, decodedToken);
         }
       } else {
         if (userExist) {
-          userExist['metadata'] = null;
+          userExist["metadata"] = null;
           return cb(null, userExist);
         }
         const result = await auth.registerSocial(
@@ -307,7 +394,8 @@ fastifyPassport.use(
           subId,
           referralCode,
           "apple",
-          lang
+          lang,
+          click_code || null
         );
         if (result) {
           return cb(null, decodedToken);
