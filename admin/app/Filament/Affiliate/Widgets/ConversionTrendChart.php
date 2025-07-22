@@ -13,48 +13,69 @@ class ConversionTrendChart extends ChartWidget
     protected static ?string $maxHeight = '450px';
     protected static ?int $sort         = 2;
 
+    public ?string $filter = 'current';
+
+    protected function getFilters(): ?array
+    {
+        // Generate month options for the last 6 months
+        $monthOptions = ['current' => 'Current Month'];
+
+        for ($i = 1; $i <= 6; $i++) {
+            $date = Carbon::now()->subMonths($i);
+            $key = $date->format('Y-m');
+            $value = $date->format('F Y');
+            $monthOptions[$key] = $value;
+        }
+
+        return $monthOptions;
+    }
+
     protected function getData(): array
-    {   
-        $conversionCount = [];
-        $labels = [];
+    {
+        // Determine date range based on filter
+        if ($this->filter === 'current') {
+            $startDate = Carbon::now()->startOfMonth();
+            $endDate = Carbon::now()->endOfMonth();
+        } else {
+            $startDate = Carbon::createFromFormat('Y-m', $this->filter)->startOfMonth();
+            $endDate = Carbon::createFromFormat('Y-m', $this->filter)->endOfMonth();
+        }
 
-        $startDate = Carbon::now()->subDays(14)->startOfDay();
-        $endDate = Carbon::now()->endOfDay();
-
-        // Get the conversion counts for the last 15 days
+        // Get the conversion counts for each day in the selected month
         $conversionCounts = Conversion::select(DB::raw('DATE(converted_at) as date'), DB::raw('COUNT(*) as count'))
             ->whereBetween('converted_at', [$startDate, $endDate])
             ->groupBy(DB::raw('DATE(converted_at)'))
-            ->orderBy(DB::raw('DATE(converted_at)'), 'desc')
+            ->orderBy(DB::raw('DATE(converted_at)'), 'asc')
             ->get()
-            ->keyBy('date');  // Key the collection by the date for quick lookup
+            ->keyBy('date');
 
-        // Generate the labels and data arrays
+        // Generate the labels and data arrays for each day of the month
         $labels = [];
         $data = [];
 
-        for ($i = 14; $i >= 0; $i--) {
-            $date = Carbon::now()->subDays($i)->format('Y-m-d');  // Format the date
+        $currentDate = $startDate->copy();
+        while ($currentDate->lte($endDate)) {
+            $dateStr = $currentDate->format('Y-m-d');
+            $conversionCount = $conversionCounts->get($dateStr, null);
 
-            // Check if the date has data, otherwise set to 0
-            $conversionCount = $conversionCounts->get($date, 0);
+            $labels[] = $currentDate->format('M j');
+            $data[] = $conversionCount ? $conversionCount->count : 0;
 
-            $labels[] = Carbon::parse($date)->format('M j');
-            $data[] = ($conversionCount === 0) ? 0 : $conversionCount->count;
+            $currentDate->addDay();
         }
 
         return [
             'datasets' => [
                 [
                     'label'             => 'Daily Conversions',
-                    'data'              => $data,                 
-                    'backgroundColor'   => 'rgba(16, 185, 129, 0.1)',    
-                    'borderColor'       => '#10b981',                     
-                    'pointBackgroundColor' => '#10b981',                  
-                    'pointBorderColor'  => '#ffffff',                     
+                    'data'              => $data,
+                    'backgroundColor'   => 'rgba(16, 185, 129, 0.1)',
+                    'borderColor'       => '#10b981',
+                    'pointBackgroundColor' => '#10b981',
+                    'pointBorderColor'  => '#ffffff',
                     'pointBorderWidth'  => 2,
                     'borderWidth'       => 3,
-                    'tension'           => 0.4,                           
+                    'tension'           => 0.4,
                     'fill'              => true,
                 ]
             ],
@@ -71,7 +92,19 @@ class ConversionTrendChart extends ChartWidget
     {
         $maxValue = max($this->getCachedData()['datasets'][0]['data'] ?? [1]);
         $suggestedMax = max(10, ceil($maxValue * 1.2));
-        $totalConversions = Conversion::count();
+
+        // Get total conversions for selected month
+        if ($this->filter === 'current') {
+            $startDate = Carbon::now()->startOfMonth();
+            $endDate = Carbon::now()->endOfMonth();
+            $monthLabel = 'Current Month (' . Carbon::now()->format('F Y') . ')';
+        } else {
+            $startDate = Carbon::createFromFormat('Y-m', $this->filter)->startOfMonth();
+            $endDate = Carbon::createFromFormat('Y-m', $this->filter)->endOfMonth();
+            $monthLabel = Carbon::createFromFormat('Y-m', $this->filter)->format('F Y');
+        }
+
+        $totalConversions = Conversion::whereBetween('converted_at', [$startDate, $endDate])->count();
 
         return [
             'responsive' => true,
@@ -82,7 +115,7 @@ class ConversionTrendChart extends ChartWidget
                 ],
                 'title' => [
                     'display' => true,
-                    'text' => "Total Conversions: " . number_format($totalConversions),
+                    'text' => $monthLabel . " - Total Conversions: " . number_format($totalConversions),
                     'font' => [
                         'size' => 14,
                         'weight' => 'bold',
