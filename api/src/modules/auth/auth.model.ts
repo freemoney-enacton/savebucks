@@ -14,6 +14,7 @@ export const register = async (
   country_code: any,
   timezone: string | null,
   provider_type: string,
+  click_code: string | null,
   lang?: string | string[]
 ) => {
   const result = db
@@ -30,6 +31,7 @@ export const register = async (
       device_id: device_id ? device_id : null,
       country_code: country_code ? country_code : null,
       timezone: timezone ? timezone : null,
+      affiliate_click_code: click_code ? click_code : null,
       // lang:lang as string
     })
     .executeTakeFirst();
@@ -78,7 +80,7 @@ export const registerSocial = async (
         is_email_verified: 0,
         referral_code: referral,
         lang,
-        click_code,
+        affiliate_click_code: click_code ? click_code : null,
       })
       .executeTakeFirst();
     return result;
@@ -93,6 +95,7 @@ export const registerSocial = async (
         is_email_verified: 1,
         referral_code: referral,
         lang,
+        affiliate_click_code: click_code ? click_code : null,
       })
       .executeTakeFirst();
 

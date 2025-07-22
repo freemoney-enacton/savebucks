@@ -25,7 +25,8 @@ const generateOtp = () => {
   return Math.floor(100000 + Math.random() * 900000);
 };
 export const register = async (req: FastifyRequest, reply: FastifyReply) => {
-  const { name, email, password, referral } = req.body as registerUserSchemas;
+  let { name, email, password, referral, click_code } =
+    req.body as registerUserSchemas;
   // @ts-ignore
   const response_key: any = req.body["recaptcha"];
   // @ts-ignore
@@ -89,6 +90,10 @@ export const register = async (req: FastifyRequest, reply: FastifyReply) => {
     referrer: req.headers.referer,
     route: req.routeOptions.url,
   };
+
+  if (click_code === undefined) {
+    click_code = null;
+  }
   const register: any = await auth.register(
     name,
     email,
@@ -100,7 +105,8 @@ export const register = async (req: FastifyRequest, reply: FastifyReply) => {
     device_id,
     country_code,
     clientInfo.timezone ?? "unknown",
-    "email"
+    "email",
+    click_code
   );
 
   if (!register) {
