@@ -5,6 +5,7 @@ import {
   count,
   desc,
   eq,
+  ne,
   gte,
   InferSelectModel,
   lte,
@@ -75,6 +76,33 @@ export const updateConversion = async (id: number, updateData: any) => {
   }
 };
 
+export const incrementUserEarned = async (
+  id: number,
+  amount: number
+) => {
+  try {
+    await db.transaction(async (tx) => {
+      const current = await tx
+        .select({ ue: conversions.userEarned })
+        .from(conversions)
+        .where(eq(conversions.id, id));
+
+      const newAmount =
+        (current[0]?.ue ? Number(current[0].ue) : 0) + Number(amount);
+
+      await tx
+        .update(conversions)
+        .set({ userEarned: newAmount, updatedAt: new Date() })
+        .where(eq(conversions.id, id))
+        .execute();
+    });
+
+    return { data: true, status: "success", message: "User earned updated" };
+  } catch (error: any) {
+    return { data: null, status: "error", message: error.message || "An error occurred" };
+  }
+};
+
 export const deleteConversion = async (id: number) => {
   try {
     await db.transaction(async (tx) => {
@@ -137,7 +165,7 @@ export const getConversionsByAffiliate = async (
   affiliateId: number,
   rows_per_page: number = 10,
   page: number = 1,
-  status?: "pending" | "approved" | "declined" | "paid",
+  status?: "pending" | "approved" | "declined" | "paid" | "untracked",
   from?: string,
   to?: string
 ) => {
@@ -157,6 +185,8 @@ export const getConversionsByAffiliate = async (
 
     if (status) {
       whereConditions.push(eq(conversions.status, status));
+    } else {
+      whereConditions.push(ne(conversions.status, "untracked"));
     }
 
     const offset = (page - 1) * rows_per_page;
@@ -261,7 +291,7 @@ export const getConversionByTransactionId = async (transactionId: string) => {
 
 export const updateConversionStatus = async (
   id: number,
-  status: "approved" | "declined" | "pending" | "paid"
+  status: "approved" | "declined" | "pending" | "paid" | "untracked"
 ) => {
   try {
     const result = await db.transaction(async (tx) => {
@@ -538,7 +568,7 @@ export const getAllAffiliateTransactions = async (
   affiliateId: number,
   rows_per_page: number = 10,
   page: number = 1,
-  status?: "pending" | "approved" | "declined" | "paid",
+  status?: "pending" | "approved" | "declined" | "paid" | "untracked",
   from?: string,
   to?: string,
   campaignId?: string
@@ -562,6 +592,10 @@ export const getAllAffiliateTransactions = async (
     if (status) {
       whereConditions.push(
         eq(affiliateConversionsSummary.conversionStatus, status)
+      );
+    } else {
+      whereConditions.push(
+        ne(affiliateConversionsSummary.conversionStatus, "untracked")
       );
     }
 

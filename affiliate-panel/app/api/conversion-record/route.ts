@@ -18,7 +18,9 @@ async function handleRequest(
   try {
     const { tracking_code, click_code, transaction_id, status } = params;
 
-    const validStatuses = Object.values(conversionStatusEnum)[1];
+    const validStatuses = Object.values(conversionStatusEnum).filter(
+      (s) => s !== "paid"
+    );
 
     if (
       !validStatuses.includes(status!) ||

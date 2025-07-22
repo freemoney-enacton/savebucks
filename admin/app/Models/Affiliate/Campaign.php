@@ -25,6 +25,7 @@ class Campaign extends Model implements ContractsAuditable
         'terms_and_conditions',
         'terms_and_condition_url',
         'min_payout_request',
+        'is_default',
     ];
 
     // Relationships
@@ -51,6 +52,11 @@ class Campaign extends Model implements ContractsAuditable
     public function affiliateCampaignGoals(): HasMany
     {
         return $this->hasMany(AffiliateCampaignGoal::class);
+    }
+
+    public function affiliateCampaigns(): HasMany
+    {
+        return $this->hasMany(AffiliateCampaign::class);
     }
 
     public function postbacks(): HasMany

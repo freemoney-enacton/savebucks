@@ -6,6 +6,8 @@ import {
   updateAffiliateLinkStats,
 } from "@/models/affiliate-link-model";
 import { insertClick } from "@/models/clicks-model";
+import { getCampaignGoalsByCampaignId } from "@/models/campaign-goal-model";
+import { getAffiliateCampaignGoalsByCampaignId } from "@/models/affiliate-campaign-goal-model";
 import { redirect } from "next/navigation";
 import AuthLayout from "@/components/layouts/AuthLayout";
 import Link from "next/link";
@@ -63,6 +65,29 @@ export default async function Page({
     );
   }
 
+  const campaignGoalsData = (
+    await getCampaignGoalsByCampaignId(affiliateLink.campaignId)
+  )?.data || [];
+  const affiliateGoalsData = (
+    await getAffiliateCampaignGoalsByCampaignId(
+      affiliateLink.campaignId,
+      affiliateLink.affiliateId
+    )
+  )?.data || [];
+
+  const goals = campaignGoalsData.map((goal: any) => {
+    const affiliateGoal = affiliateGoalsData.find(
+      (ag: any) => ag.campaignGoalId === goal.id
+    );
+    return {
+      id: goal.id,
+      commissionAmount:
+        affiliateGoal?.customCommissionRate ?? goal.commissionAmount,
+      qualificationAmount:
+        affiliateGoal?.qualificationAmount ?? goal.qualificationAmount,
+    };
+  });
+
   const data = {
     campaignId: affiliateLink.campaignId,
     affiliateId: affiliateLink.affiliateId,
@@ -74,6 +99,7 @@ export default async function Page({
     sub1: sub1 || affiliateLink.sub1 || "",
     sub2: sub2 || affiliateLink.sub2 || "",
     sub3: sub3 || affiliateLink.sub3 || "",
+    campaignGoals: goals,
     isConverted: false,
     clickedAt: new Date(),
   };

@@ -17,7 +17,9 @@ export default async function LinksPage({ searchParams }: any) {
   if (userStatus === "pending") {
     return redirect(AppRoutes.auth.pending);
   }
-  const campaignDetails = (await getAllCampaigns({}))?.data;
+  const campaignDetails = (
+    await getAllCampaigns({ affiliateId: Number(user.user.id) })
+  )?.data;
   const campaigns = campaignDetails ? campaignDetails?.result : null;
   const data =
     (

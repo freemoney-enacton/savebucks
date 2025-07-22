@@ -52,6 +52,13 @@ class GoalsRelationManager extends RelationManager
                     ->numeric()
                     ->minValue(0),
 
+                Forms\Components\TextInput::make('qualification_amount')
+                    ->required()
+                    ->prefix(config('freemoney.default.default_currency'))
+                    ->label('Qualification Amount')
+                    ->numeric()
+                    ->minValue(0),
+
                 Forms\Components\TextInput::make('tracking_code')
                     ->label('Tracking Code')
                     ->disabledOn("edit")
@@ -102,6 +109,11 @@ class GoalsRelationManager extends RelationManager
                     ->searchable()
                     ->money(config('freemoney.default.default_currency'))
                     ->label('Commission Amount'),
+
+                Tables\Columns\TextColumn::make('qualification_amount')
+                    ->searchable()
+                    ->money(config('freemoney.default.default_currency'))
+                    ->label('Qualification Amount'),
 
                 Tables\Columns\TextColumn::make('tracking_code')
                     ->searchable()

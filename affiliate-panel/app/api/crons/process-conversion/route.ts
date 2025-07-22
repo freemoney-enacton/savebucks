@@ -15,6 +15,7 @@ import {
   getConversionByTransactionId,
   insertConversion,
   updateConversionStatus,
+  incrementUserEarned,
 } from "@/models/conversions-model";
 import {
   getPendingPostbackLogs,
@@ -45,6 +46,9 @@ export async function POST(request: NextRequest) {
       try {
         const body: any = postbackLog.rawPostbackData;
         const { tracking_code, click_code, transaction_id, status } = body;
+        const userEarn = Number(
+          body?.metadata?.user_earned ?? body?.user_earned ?? 0
+        );
 
         console.log(
           `Processing postback log ID: ${postbackLog.id}, Transaction ID: ${transaction_id}`
@@ -123,6 +127,20 @@ export async function POST(request: NextRequest) {
           console.log(
             `Existing conversion found for postback log ID: ${postbackLog.id}, Transaction ID: ${transaction_id}`
           );
+
+          if (userEarn > 0) {
+            await incrementUserEarned(existingConversion.id, userEarn);
+            const clickGoals = (clickRecord as any).campaignGoals || [];
+            const goalFromClick = clickGoals.find(
+              (g: any) => g.id === Number(goal_code)
+            );
+            const qualification = Number(goalFromClick?.qualificationAmount || 0);
+            const totalEarned = Number(existingConversion.userEarned || 0) + userEarn;
+            if (totalEarned >= qualification) {
+              await updateConversionStatus(existingConversion.id, "approved");
+            }
+          }
+
           if (existingConversion.status === "pending") {
             const updateResult = await updateConversionStatus(
               existingConversion.id,
@@ -176,11 +194,20 @@ export async function POST(request: NextRequest) {
           let conversionValue = campaignGoal?.commissionAmount || "0";
           let commission = campaignGoal?.commissionAmount || "0";
 
-          if (affiliateCampaignGoal) {
+          const clickGoals = (clickRecord as any).campaignGoals || [];
+          const goalFromClick = clickGoals.find(
+            (g: any) => g.id === Number(goal_code)
+          );
+
+          if (goalFromClick) {
+            conversionValue = goalFromClick.commissionAmount;
+            commission = goalFromClick.commissionAmount;
+          } else if (affiliateCampaignGoal) {
             conversionValue = affiliateCampaignGoal.customCommissionRate || "0";
             commission = affiliateCampaignGoal.customCommissionRate || "0";
           }
 
+          const qualification = Number(goalFromClick?.qualificationAmount || 0);
           const newConversion = {
             campaignGoalId: goal_code ? Number(goal_code) : 1,
             campaignId: campaignId || null,
@@ -189,10 +216,15 @@ export async function POST(request: NextRequest) {
             transactionId: `${transaction_id}_${goal_code}`,
             conversionValue,
             commission,
+            userEarned: userEarn,
             sub1: clickRecord.sub1,
             sub2: clickRecord.sub2,
             sub3: clickRecord.sub3,
-            status: "approved",
+            status: goalFromClick
+              ? userEarn >= qualification
+                ? "approved"
+                : "pending"
+              : "untracked",
             postbackLogId: postbackLog.id,
             createdAt: new Date(),
             updatedAt: new Date(),

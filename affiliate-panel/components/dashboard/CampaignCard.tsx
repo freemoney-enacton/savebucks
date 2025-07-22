@@ -100,14 +100,20 @@ export function CampaignCard({ campaign }: { campaign: any }) {
                 <div key={goalIndex} className="flex items-center gap-2">
                   <CheckCircle className="shrink-0 h-4 w-4 text-green-500" />
                   <span className="text-sm text-gray-700">{goal.name}</span>
-                  <span className="text-sm font-semibold text-gray-900 ml-auto">
-                    {getCurrencySymbol() +
-                      t("campaign.earn").replace(
-                        "{amount}",
-                        String(goal.amount ?? 0)
-                      )}
-                  </span>
-                </div>
+              <span className="text-sm font-semibold text-gray-900 ml-auto">
+                {getCurrencySymbol() +
+                  t("campaign.earn").replace(
+                    "{amount}",
+                    String(goal.amount ?? 0)
+                  )}
+              </span>
+              <span className="text-sm text-gray-500 ml-2">
+                {t("campaign.qualify").replace(
+                  "{amount}",
+                  String(goal.qualificationAmount ?? 0)
+                )}
+              </span>
+            </div>
               ))}
             </div>
           </div>

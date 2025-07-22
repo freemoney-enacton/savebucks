@@ -64,6 +64,9 @@ class CampaignResource extends Resource
                         ->required()
                         ->default('active'),
 
+                    Forms\Components\Toggle::make('is_default')
+                        ->label('Default Campaign'),
+
                     Forms\Components\FileUpload::make('logo_url')
                         ->image()
                         ->label('Logo')
@@ -134,6 +137,10 @@ class CampaignResource extends Resource
                         default     => "gray",
                     })
                     ->searchable(),
+
+                Tables\Columns\IconColumn::make('is_default')
+                    ->label('Default')
+                    ->boolean(),
 
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()

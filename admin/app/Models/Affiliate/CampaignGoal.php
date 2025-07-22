@@ -22,12 +22,14 @@ class CampaignGoal extends Model
         'description', 
         'commission_type',
         'commission_amount',
+        'qualification_amount',
         'tracking_code',
         'status',
     ];
 
     protected $casts = [
         'payout_amount' => 'decimal:2',
+        'qualification_amount' => 'decimal:2',
     ];
 
     // Relationships

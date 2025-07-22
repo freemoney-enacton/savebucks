@@ -92,6 +92,11 @@ class ConversionResource extends Resource
                         ->numeric()
                         ->label("Commission"),
 
+                    Forms\Components\TextInput::make('user_earned')
+                        ->numeric()
+                        ->label('User Earned')
+                        ->default(0),
+
                     Forms\Components\TextInput::make('sub1')
                         ->maxLength(255)
                         ->label("Sub 1"),
@@ -108,6 +113,7 @@ class ConversionResource extends Resource
                             'approved'  => 'Approved',
                             'declined'  => 'Declined',
                             'paid'      => 'Paid',
+                            'untracked' => 'Untracked',
                         ])
                         ->required()
                         ->inline()
@@ -165,6 +171,11 @@ class ConversionResource extends Resource
                     ->searchable()
                     ->sortable(),
 
+                Tables\Columns\TextColumn::make('user_earned')
+                    ->numeric()
+                    ->label('User Earned')
+                    ->sortable(),
+
                 // Tables\Columns\TextColumn::make('status')
                 //     ->formatStateUsing(fn($state) => Str::ucfirst($state))
                 //     ->badge()
@@ -184,6 +195,7 @@ class ConversionResource extends Resource
                         'approved'  => 'Approved',
                         'declined'  => 'Declined',
                         'paid'      => 'Paid',
+                        'untracked' => 'Untracked',
                     ]),
 
                 Tables\Columns\TextColumn::make('payout_id')
@@ -213,8 +225,9 @@ class ConversionResource extends Resource
                         'pending'   => 'Pending',
                         'approved'  => 'Approved',
                         'declined'  => 'Declined',
-                        'paid'      => 'Paid',           
-                    ])  
+                        'paid'      => 'Paid',
+                        'untracked' => 'Untracked',
+                    ])
                     ->preload()
                     ->searchable()
                     ->label('Status'),

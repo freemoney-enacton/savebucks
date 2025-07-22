@@ -280,6 +280,7 @@
   "fallbackTitle": "Campaign Title",
   "fallbackDescription": "Campaign Description.",
   "earn": "{amount}",
+  "qualify": "Qualify {amount}",
   "termsAndConditions": "Terms & Conditions",
   "noActiveCampaigns": "No active campaigns found.",
   "selectCampaign": "Select Campaign",

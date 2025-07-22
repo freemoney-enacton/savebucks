@@ -74,6 +74,11 @@ class Affiliate extends Model
         return $this->hasMany(AffiliateCampaignGoal::class);
     }
 
+    public function affiliateCampaigns(): HasMany
+    {
+        return $this->hasMany(AffiliateCampaign::class);
+    }
+
     public function postbacks(): HasMany
     {
         return $this->hasMany(AffiliatePostback::class);
