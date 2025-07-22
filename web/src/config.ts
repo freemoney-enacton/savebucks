@@ -44,4 +44,8 @@ export const config = {
   ROOT_DOMAIN: process.env.NEXT_PUBLIC_ROOT_DOMAIN,
   PLAY_STORE_APP_ID: 'https://play.google.com/store/apps/details?id=com.app.savebucks',
   APPLE_APP_ID: 'https://apps.apple.com/de/app/savebucks-rewards/id6463894642?ign-itscg=30200',
+  COUNTRY_COOKIE: 'country_code',
+  SHOW_STORES: 'stores',
+  CLICK_CODE_COOKIE: 'click_code',
+  SOURCE_COOKIE: 'source',
 };

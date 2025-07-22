@@ -19,6 +19,8 @@ export default auth(async (req: NextRequest): Promise<any> => {
   const platform = isMobileAppFromCookie ? isMobileAppFromCookie : isAndroid ? 'android' : isIOS ? 'ios' : '';
   const settings = (await public_get_api({ path: 'settings' }))?.data || {};
   const offer_default_filter = settings?.default?.offer_default_filter || 'popular';
+  const isClickCode = req.nextUrl.searchParams.get(Config.CLICK_CODE_COOKIE) || '';
+  const isSource = req.nextUrl.searchParams.get(Config.SOURCE_COOKIE) || '';
 
   // Detect locale from IP using headers
   // const ip = req.headers.get('cf-connecting-ip') || req.headers.get('x-forwarded-for')?.split(',')[0] || req.ip || '::1';
@@ -26,6 +28,13 @@ export default auth(async (req: NextRequest): Promise<any> => {
   let userLocale = FALLBACK_LOCALE;
   const existingLocale = req.cookies.get(LANGUAGE_COOKIE)?.value;
   const countryCode = req.headers.get('cf-ipcountry') || '';
+  const countryCookie = req.cookies.get(Config.COUNTRY_COOKIE)?.value;
+  if (countryCode && countryCookie !== countryCode) {
+    response.cookies.set(Config.COUNTRY_COOKIE, countryCode, {
+      path: '/',
+      maxAge: 60 * 60 * 24 * 7,
+    });
+  }
 
   if (!existingLocale) {
     const langCode = countryToLanguageMap[countryCode] || FALLBACK_LOCALE;
@@ -56,6 +65,26 @@ export default auth(async (req: NextRequest): Promise<any> => {
     const redirectResponse = NextResponse.redirect(updatedUrl.toString());
     redirectResponse.cookies.set(Config.REFERRAL_PARAM, isReferralParam, {
       path: '/',
+      domain: `.${Config.ROOT_DOMAIN}`,
+    });
+
+    return redirectResponse;
+  }
+
+  if (isClickCode && isSource == 'affiliate') {
+    response.cookies.set(Config.CLICK_CODE_COOKIE, isClickCode, {
+      path: '/',
+      maxAge: 60 * 60 * 24 * 7,
+      domain: `.${Config.ROOT_DOMAIN}`,
+    });
+
+    const updatedUrl = new URL(req.url);
+    updatedUrl.searchParams.delete(Config.CLICK_CODE_COOKIE);
+    updatedUrl.searchParams.delete(Config.SOURCE_COOKIE);
+    const redirectResponse = NextResponse.redirect(updatedUrl.toString());
+    redirectResponse.cookies.set(Config.CLICK_CODE_COOKIE, isClickCode, {
+      path: '/',
+      maxAge: 60 * 60 * 24 * 7,
       domain: `.${Config.ROOT_DOMAIN}`,
     });
 

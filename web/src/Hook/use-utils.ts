@@ -20,6 +20,9 @@ export const useUtils = () => {
   const userAgent = typeof navigator !== 'undefined' && navigator.userAgent;
   const isMobileBrowser = /Mobi|Android|iPhone|iPad|iPod/i.test(userAgent || '');
   const isMobileApp = Cookies.get(config.IS_MOBILE_COOKIE) ? true : false;
+  const isIosApp = Cookies.get(config.IS_MOBILE_COOKIE) === 'ios' && settings?.default?.disable_ios_offers;
+  const click_code = Cookies.get(config.CLICK_CODE_COOKIE);
+  const referralCode = Cookies.get(config.REFERRAL_PARAM);
 
   useEffect(() => {
     Cookies.set(config.CURRENCY_SHOW_COOKIE, showCurrencyInPoint ? 'true' : 'false', { path: '/' });
@@ -30,7 +33,7 @@ export const useUtils = () => {
     let lang;
     if (typeof key == 'object') {
       let local = Cookies.get(LANGUAGE_COOKIE) || FALLBACK_LOCALE;
-      lang = key ? key?.[local] : '';
+      lang = key ? (key?.[local] ? key?.[local] : key?.[FALLBACK_LOCALE]) : '';
     } else {
       lang = key;
     }
@@ -165,18 +168,30 @@ export const useUtils = () => {
     });
   }
   const handleSocialSignin = (type) => {
+    const queryParams = new URLSearchParams();
+
+    const referralCodeFromCookie = Cookies.get(config.REFERRAL_PARAM) || referralCode;
+    if (referralCodeFromCookie) {
+      queryParams.append('referrer_code', referralCodeFromCookie);
+      Cookies.remove(config.REFERRAL_PARAM);
+    }
+
+    if (click_code) {
+      queryParams.append(config.CLICK_CODE_COOKIE, click_code);
+    }
+
+    const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
+    const socialLoginUrl = `${config.API_END_POINT}auth/${type}${queryString}`;
+
     if (isMobileApp && typeof window !== 'undefined' && window.ReactNativeWebView) {
-      if (type === 'google') {
-        window.ReactNativeWebView.postMessage('GOOGLE_SIGNIN');
-      }
-      if (type === 'facebook') {
-        window.ReactNativeWebView.postMessage('FACEBOOK_SIGNIN');
-      }
-      if (type === 'apple') {
-        window.ReactNativeWebView.postMessage('APPLE_SIGNIN');
-      }
+      window.ReactNativeWebView.postMessage(
+        JSON.stringify({
+          type: `${type.toUpperCase()}_SIGNIN`,
+          url: socialLoginUrl,
+        })
+      );
     } else {
-      window.open(`${config.API_END_POINT}auth/${type}`, '_self');
+      window.open(socialLoginUrl, '_self');
     }
   };
   return {
@@ -195,5 +210,6 @@ export const useUtils = () => {
     isMobileApp,
     getTranslatedValue,
     handleSocialSignin,
+    isIosApp,
   };
 };
