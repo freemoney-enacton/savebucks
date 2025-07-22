@@ -14,7 +14,7 @@ export const register = async (
   country_code: any,
   timezone: string | null,
   provider_type: string,
-  lang?:string|string []
+  lang?: string | string[]
 ) => {
   const result = db
     .insertInto("users")
@@ -64,7 +64,8 @@ export const registerSocial = async (
   providerId: string | null,
   referral: string,
   provider_type: string,
-  lang:string
+  lang: string,
+  click_code: string | null
 ) => {
   if (email == null) {
     const result = db
@@ -76,7 +77,8 @@ export const registerSocial = async (
         provider_id: providerId,
         is_email_verified: 0,
         referral_code: referral,
-        lang
+        lang,
+        click_code,
       })
       .executeTakeFirst();
     return result;
@@ -90,7 +92,7 @@ export const registerSocial = async (
         provider_id: providerId,
         is_email_verified: 1,
         referral_code: referral,
-        lang
+        lang,
       })
       .executeTakeFirst();
 
@@ -238,8 +240,8 @@ export const verifyOtp = async (
     .orderBy("id", "desc")
     .executeTakeFirst();
 
-  if(result?.otp == otp) return result;
-  else  return false;
+  if (result?.otp == otp) return result;
+  else return false;
 
   return result;
 };

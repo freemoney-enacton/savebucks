@@ -11,12 +11,14 @@ async function handleRequest(
     click_code?: string;
     transaction_id?: string;
     status?: any;
+    user_earning?: string;
   },
   request: NextRequest
 ) {
   const { t } = await createTranslation();
   try {
-    const { tracking_code, click_code, transaction_id, status } = params;
+    const { tracking_code, click_code, transaction_id, status, user_earning } =
+      params;
 
     const validStatuses = Object.values(conversionStatusEnum).filter(
       (s) => s !== "paid"
@@ -98,6 +100,7 @@ export async function GET(request: NextRequest) {
     click_code: searchParams.get("click_code") || undefined,
     transaction_id: searchParams.get("transaction_id") || undefined,
     status: searchParams.get("status") || undefined,
+    user_earning: searchParams.get("user_earning") || undefined,
   };
   return handleRequest(params, request);
 }
@@ -109,6 +112,7 @@ export async function POST(request: NextRequest) {
     click_code: searchParams.get("click_code") || undefined,
     transaction_id: searchParams.get("transaction_id") || undefined,
     status: searchParams.get("status") || undefined,
+    user_earning: searchParams.get("user_earning") || undefined,
   };
   return handleRequest(params, request);
 }

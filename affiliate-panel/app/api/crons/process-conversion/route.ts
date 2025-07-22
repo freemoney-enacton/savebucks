@@ -45,10 +45,14 @@ export async function POST(request: NextRequest) {
     for (const postbackLog of pendingPostbackLogs.data) {
       try {
         const body: any = postbackLog.rawPostbackData;
-        const { tracking_code, click_code, transaction_id, status } = body;
-        const userEarn = Number(
-          body?.metadata?.user_earned ?? body?.user_earned ?? 0
-        );
+        const {
+          tracking_code,
+          click_code,
+          transaction_id,
+          status,
+          user_earning,
+        } = body;
+        const userEarn = Number(body?.user_earning ?? 0);
 
         console.log(
           `Processing postback log ID: ${postbackLog.id}, Transaction ID: ${transaction_id}`
@@ -86,8 +90,11 @@ export async function POST(request: NextRequest) {
           ? Number(body.campaign_id)
           : clickRecord.campaignId;
 
-        let campaign = campaignId ? (await getCampaignById(campaignId))?.data : null;
-        let campaignGoal = (await getCampaignGoalByTrackingCode(tracking_code))?.data;
+        let campaign = campaignId
+          ? (await getCampaignById(campaignId))?.data
+          : null;
+        let campaignGoal = (await getCampaignGoalByTrackingCode(tracking_code))
+          ?.data;
         let affiliateCampaignGoal = null;
 
         console.log(
@@ -134,8 +141,11 @@ export async function POST(request: NextRequest) {
             const goalFromClick = clickGoals.find(
               (g: any) => g.id === Number(goal_code)
             );
-            const qualification = Number(goalFromClick?.qualificationAmount || 0);
-            const totalEarned = Number(existingConversion.userEarned || 0) + userEarn;
+            const qualification = Number(
+              goalFromClick?.qualificationAmount || 0
+            );
+            const totalEarned =
+              Number(existingConversion.userEarned || 0) + userEarn;
             if (totalEarned >= qualification) {
               await updateConversionStatus(existingConversion.id, "approved");
             }

@@ -2,37 +2,42 @@ import { sql } from "kysely";
 import app from "../../app";
 import { db } from "../../database/database";
 import { OfferwallPostbackLogs, UserOfferwallSales } from "../../database/db";
+import { sendConversionRequest } from "../../utils/sendAffiliatePostback";
 
 export const processLevelCheck = async (saleData: any) => {
-  const tokensPerLevel = await db.selectFrom("settings")
+  const tokensPerLevel = await db
+    .selectFrom("settings")
     .select("val")
-    .where("name","=","tokens_per_level")
+    .where("name", "=", "tokens_per_level")
     .executeTakeFirst();
 
-  const user = await db.selectFrom("users")
-    .select([
-      "current_level",
-      "current_level_tokens",
-      "total_tokens",
-    ])
-    .where("id","=",saleData.user_id)
+  const user = await db
+    .selectFrom("users")
+    .select(["current_level", "current_level_tokens", "total_tokens"])
+    .where("id", "=", saleData.user_id)
     .executeTakeFirst();
 
-  const userTotalToken = Number(user?.total_tokens) + (Number(saleData.amount) * Number(tokensPerLevel?.val));
+  const userTotalToken =
+    Number(user?.total_tokens) +
+    Number(saleData.amount) * Number(tokensPerLevel?.val);
   const userNewLevel = Math.floor(userTotalToken / Number(tokensPerLevel?.val));
-  const userRemainingTokens = userTotalToken % Number(tokensPerLevel?.val)
+  const userRemainingTokens = userTotalToken % Number(tokensPerLevel?.val);
 
-  await db.updateTable("users")
+  await db
+    .updateTable("users")
     .set({
       total_tokens: userTotalToken,
       current_level: userNewLevel,
       current_level_tokens: userRemainingTokens,
     })
-    .where("id","=",saleData.user_id)
-    .execute()
-}
+    .where("id", "=", saleData.user_id)
+    .execute();
+};
 
-export const getNetworkDetails = async (type: "tasks" | "surveys", name: string) => {
+export const getNetworkDetails = async (
+  type: "tasks" | "surveys",
+  name: string
+) => {
   const result = db
     .selectFrom("offerwall_networks")
     .selectAll()
@@ -43,82 +48,92 @@ export const getNetworkDetails = async (type: "tasks" | "surveys", name: string)
 };
 
 export const updateOrCreateUserSale = async (saledata: any) => {
+  const userData = await db
+    .selectFrom("users")
+    .select(["affiliate_click_code"])
+    .where("id", "=", saledata.user_id)
+    .executeTakeFirst();
+
   const existingUserSale = await db
     .selectFrom("user_offerwall_sales")
     .selectAll()
-    .where("user_id","=",parseInt(saledata.user_id))
-    .where("network","=",saledata.network)
-    .where("offer_id","=",saledata.offer_id)
-    .where("transaction_id","=",saledata.transaction_id)
+    .where("user_id", "=", parseInt(saledata.user_id))
+    .where("network", "=", saledata.network)
+    .where("offer_id", "=", saledata.offer_id)
+    .where("transaction_id", "=", saledata.transaction_id)
     .executeTakeFirst();
 
-  if(existingUserSale) {
-    if(Number(saledata.amount)<0){
+  if (existingUserSale) {
+    if (Number(saledata.amount) < 0) {
       await db
-      .updateTable("user_offerwall_sales")
-      .set({
-        amount: saledata.amount,
-        payout: saledata.payout,
-        status: "declined",
-        is_chargeback:1,
-        mail_sent:0
-      })
-      .where("user_id","=",parseInt(saledata.user_id))
-      .where("network","=",saledata.network)
-      .where("offer_id","=",saledata.offer_id)
-      .where("transaction_id","=",saledata.transaction_id)
-      .execute();
-    }
-    else{
+        .updateTable("user_offerwall_sales")
+        .set({
+          amount: saledata.amount,
+          payout: saledata.payout,
+          status: "declined",
+          is_chargeback: 1,
+          mail_sent: 0,
+        })
+        .where("user_id", "=", parseInt(saledata.user_id))
+        .where("network", "=", saledata.network)
+        .where("offer_id", "=", saledata.offer_id)
+        .where("transaction_id", "=", saledata.transaction_id)
+        .execute();
+    } else {
       await db
-      .updateTable("user_offerwall_sales")
-      .set({
-        amount: saledata.amount,
-        payout: saledata.payout,
-        status: saledata.status,
-        mail_sent : 0
-      })
-      .where("user_id","=",parseInt(saledata.user_id))
-      .where("network","=",saledata.network)
-      .where("offer_id","=",saledata.offer_id)
-      .where("transaction_id","=",saledata.transaction_id)
-      .execute();
-
+        .updateTable("user_offerwall_sales")
+        .set({
+          amount: saledata.amount,
+          payout: saledata.payout,
+          status: saledata.status,
+          mail_sent: 0,
+        })
+        .where("user_id", "=", parseInt(saledata.user_id))
+        .where("network", "=", saledata.network)
+        .where("offer_id", "=", saledata.offer_id)
+        .where("transaction_id", "=", saledata.transaction_id)
+        .execute();
     }
-    
   } else {
-    if(Number(saledata.amount)<0){
+    if (Number(saledata.amount) < 0) {
       await db
-      .insertInto("user_offerwall_sales")
-      .values({
-        ...saledata,
-        is_chargeback:1,
-        mail_sent:0
-      })
-      .execute();
-    }
-    else{
+        .insertInto("user_offerwall_sales")
+        .values({
+          ...saledata,
+          is_chargeback: 1,
+          mail_sent: 0,
+        })
+        .execute();
+    } else {
       await db
-    .insertInto("user_offerwall_sales")
-    .values({
-      ...saledata,
-      created_at: sql`NOW()`,
-      updated_at: sql`NOW()`,
-      mail_sent:0
-    })
-    .executeTakeFirst();
+        .insertInto("user_offerwall_sales")
+        .values({
+          ...saledata,
+          created_at: sql`NOW()`,
+          updated_at: sql`NOW()`,
+          mail_sent: 0,
+        })
+        .executeTakeFirst();
 
+      if (userData && userData.affiliate_click_code) {
+        console.log("Firing Affiliate Conversion Request", "user_transaction");
+        const res = await sendConversionRequest({
+          tracking_code: "user_transaction",
+          click_code: userData?.affiliate_click_code,
+          transaction_id: saledata.user_id,
+          user_earning: saledata?.amount,
+        });
+      }
     }
-    
   }
 
   const userSaleData = await db
     .selectFrom("user_offerwall_sales")
     .selectAll()
-    .where("user_id","=",parseInt(saledata.user_id))
-    .where("network","=",saledata.network)
-    .where("offer_id","=",saledata.offer_id)
-    .where("transaction_id","=",saledata.transaction_id)
+    .where("user_id", "=", parseInt(saledata.user_id))
+    .where("network", "=", saledata.network)
+    .where("offer_id", "=", saledata.offer_id)
+    .where("transaction_id", "=", saledata.transaction_id)
     .executeTakeFirst();
 
   return userSaleData;
@@ -138,25 +153,40 @@ export const updateOrCreateUserSale = async (saledata: any) => {
   //   .executeTakeFirst();
 };
 
-export const getUserSale = async ({user_id, network, offer_id, transaction_id}:{user_id: string, network: string, offer_id: string, transaction_id: string}) => {
+export const getUserSale = async ({
+  user_id,
+  network,
+  offer_id,
+  transaction_id,
+}: {
+  user_id: string;
+  network: string;
+  offer_id: string;
+  transaction_id: string;
+}) => {
   return await db
     .selectFrom("user_offerwall_sales")
     .selectAll()
-    .where("user_id","=",parseInt(user_id))
-    .where("network","=",network)
-    .where("offer_id","=",offer_id)
-    .where("transaction_id","=",transaction_id)
+    .where("user_id", "=", parseInt(user_id))
+    .where("network", "=", network)
+    .where("offer_id", "=", offer_id)
+    .where("transaction_id", "=", transaction_id)
     .executeTakeFirst();
-}
+};
 
 export const processReferral = async (userSale: UserOfferwallSales) => {
   // Get current user & referral user details
-  const currentUserDetails = await db.selectFrom("users").selectAll().where("id","=",userSale.user_id).executeTakeFirst();
-  if(!currentUserDetails) return null;
-  
+  const currentUserDetails = await db
+    .selectFrom("users")
+    .selectAll()
+    .where("id", "=", userSale.user_id)
+    .executeTakeFirst();
+  if (!currentUserDetails) return null;
+
   // @ts-ignore
-  const referralUser = await db.selectFrom("users")
-    .innerJoin("tiers","tiers.tier","users.current_tier")
+  const referralUser = await db
+    .selectFrom("users")
+    .innerJoin("tiers", "tiers.tier", "users.current_tier")
     .select([
       "users.id as user_id",
       "users.name as name",
@@ -166,13 +196,16 @@ export const processReferral = async (userSale: UserOfferwallSales) => {
       "tiers.affiliate_commission as tier_commission",
       "tiers.required_affiliate_earnings as tier_required_affiliate_earning",
     ])
-    .where("referral_code","=",currentUserDetails.referrer_code)
+    .where("referral_code", "=", currentUserDetails.referrer_code)
     .executeTakeFirst();
-  if(!referralUser) return null;
-  console.log(referralUser)
+  if (!referralUser) return null;
+  console.log(referralUser);
 
   // Referral Earning Processing
-  const referralEarningAsPerCurrentTierCommission = parseFloat(userSale.amount.toString()) * parseFloat(referralUser.tier_commission) * 0.01;
+  const referralEarningAsPerCurrentTierCommission =
+    parseFloat(userSale.amount.toString()) *
+    parseFloat(referralUser.tier_commission) *
+    0.01;
   await db
     .insertInto("user_referral_earnings")
     .onDuplicateKeyUpdate({
@@ -192,76 +225,77 @@ export const processReferral = async (userSale: UserOfferwallSales) => {
 
       user_id: referralUser.user_id,
       referee_id: userSale.user_id,
-      
+
       amount: Number(userSale.amount),
       payout: Number(userSale.payout),
       transaction_time: sql`now()`,
       referral_amount: referralEarningAsPerCurrentTierCommission,
-      
+
       // @ts-ignore
       status: userSale.status,
     })
     .execute();
-  const referralEarning = await db.selectFrom("user_referral_earnings")
+  const referralEarning = await db
+    .selectFrom("user_referral_earnings")
     .selectAll()
-    .where("user_id","=",referralUser.user_id)
-    .where("transaction_id","=",userSale.transaction_id)
+    .where("user_id", "=", referralUser.user_id)
+    .where("transaction_id", "=", userSale.transaction_id)
     .executeTakeFirst();
 
   // Tier Processing
-  const referrerReferralEarnings = await db.selectFrom("user_referral_earnings")
+  const referrerReferralEarnings = await db
+    .selectFrom("user_referral_earnings")
     .select(({ fn }) => [
       "user_id",
-      fn.sum<number>("referral_amount").as("referral_earnings")
+      fn.sum<number>("referral_amount").as("referral_earnings"),
     ])
-    .where("user_id","=",referralUser.user_id)
-    .where("status","=","confirmed")
+    .where("user_id", "=", referralUser.user_id)
+    .where("status", "=", "confirmed")
     .groupBy("user_id")
-    .executeTakeFirst()
+    .executeTakeFirst();
 
-  const totalReferralEarnings: any = (referrerReferralEarnings ? Number(referrerReferralEarnings.referral_earnings) : 0);
+  const totalReferralEarnings: any = referrerReferralEarnings
+    ? Number(referrerReferralEarnings.referral_earnings)
+    : 0;
   const newQualifingTier = await db
     .selectFrom("tiers")
-    .select([
-      "tier",
-      "affiliate_commission",
-      "required_affiliate_earnings"
-    ])
+    .select(["tier", "affiliate_commission", "required_affiliate_earnings"])
     .where("required_affiliate_earnings", "<=", totalReferralEarnings)
     .where("enabled", "=", 1)
     .orderBy("required_affiliate_earnings", "desc")
     .executeTakeFirst();
 
-  
   let referralUpdateInfo: any = {
-    affiliate_earnings: totalReferralEarnings
-  }
-  if(Number(newQualifingTier?.tier) !== Number(referralUser.user_tier)) {
+    affiliate_earnings: totalReferralEarnings,
+  };
+  if (Number(newQualifingTier?.tier) !== Number(referralUser.user_tier)) {
     referralUpdateInfo = {
       ...referralUpdateInfo,
       current_tier: newQualifingTier?.tier,
-      affiliate_commission: newQualifingTier?.affiliate_commission
-    }
+      affiliate_commission: newQualifingTier?.affiliate_commission,
+    };
   }
 
-  await db.updateTable("users")
+  await db
+    .updateTable("users")
     .set(referralUpdateInfo)
-    .where("id","=",referralUser.user_id)
+    .where("id", "=", referralUser.user_id)
     .execute();
 
   return {
     currentUserDetails,
     referralEarning,
-    referralUser
+    referralUser,
   };
-}
+};
 
 export const getUserDetails = async (user_id: any) => {
-  return await db.selectFrom("users")
+  return await db
+    .selectFrom("users")
     .selectAll()
-    .where("id","=",user_id)
+    .where("id", "=", user_id)
     .executeTakeFirst();
-}
+};
 
 export const insertTicker = async (
   userId: any,
@@ -280,7 +314,10 @@ export const insertTicker = async (
   return result;
 };
 
-export const increaseRedemptionTask = async (network: string, campaign_id: string) => {
+export const increaseRedemptionTask = async (
+  network: string,
+  campaign_id: string
+) => {
   const result = await db
     .updateTable("offerwall_tasks")
     .set({ redemptions: sql`redemptions + 1` })
@@ -291,16 +328,17 @@ export const increaseRedemptionTask = async (network: string, campaign_id: strin
 };
 
 type PostbackLogData = {
-  network: string | null,
-  transaction_id: string | null,
-  status: "error" | "pending" | "processed",
-  message: string | null,
-  data: string | null,
-  payload: string | null,
-}
+  network: string | null;
+  transaction_id: string | null;
+  status: "error" | "pending" | "processed";
+  message: string | null;
+  data: string | null;
+  payload: string | null;
+};
 
 export const insertPostbackLog = async (postbackData: PostbackLogData) => {
-  await db.insertInto("offerwall_postback_logs")
+  await db
+    .insertInto("offerwall_postback_logs")
     .values({
       created_at: sql`now()`,
       data: postbackData.data,
@@ -311,5 +349,5 @@ export const insertPostbackLog = async (postbackData: PostbackLogData) => {
       transaction_id: postbackData.transaction_id,
       updated_at: sql`now()`,
     })
-    .execute()
-}
+    .execute();
+};

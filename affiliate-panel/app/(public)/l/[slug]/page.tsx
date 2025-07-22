@@ -65,22 +65,22 @@ export default async function Page({
     );
   }
 
-  const campaignGoalsData = (
-    await getCampaignGoalsByCampaignId(affiliateLink.campaignId)
-  )?.data || [];
-  const affiliateGoalsData = (
-    await getAffiliateCampaignGoalsByCampaignId(
-      affiliateLink.campaignId,
-      affiliateLink.affiliateId
-    )
-  )?.data || [];
+  const campaignGoalsData =
+    (await getCampaignGoalsByCampaignId(affiliateLink.campaignId))?.data || [];
+  const affiliateGoalsData =
+    (
+      await getAffiliateCampaignGoalsByCampaignId(
+        affiliateLink.campaignId,
+        affiliateLink.affiliateId
+      )
+    )?.data || [];
 
   const goals = campaignGoalsData.map((goal: any) => {
     const affiliateGoal = affiliateGoalsData.find(
       (ag: any) => ag.campaignGoalId === goal.id
     );
     return {
-      id: goal.id,
+      ...goal,
       commissionAmount:
         affiliateGoal?.customCommissionRate ?? goal.commissionAmount,
       qualificationAmount:
@@ -117,7 +117,7 @@ export default async function Page({
     );
   } else {
     redirect(
-      `https://my.savebucks.app/?click_code=${clickCode}&source=affiliate`
+      `https://dev.savebucks.app/?click_code=${clickCode}&source=affiliate`
     );
   }
 
