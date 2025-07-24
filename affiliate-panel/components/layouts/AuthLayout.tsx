@@ -10,18 +10,12 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
   return (
     <div className="min-h-screen bg-white relative">
       {/* Gradient Background - Top half of screen */}
-      <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-br from-[#4B39BF] via-[#7A45A2] to-[#C2556A] rounded-b-3xl">
+      <div className="w-full min-h-[350px] pt-40 pb-24 bg-gradient-to-br from-[#4B39BF] via-[#7A45A2] to-[#C2556A] rounded-b-3xl">
         {/* Welcome Text */}
-        <div className="flex items-center justify-center h-full pt-24">
-          <h1 className="text-white text-3xl font-semibold text-center">
+        <div className="flex items-center justify-center h-full px-4">
+          <h1 className="text-white text-2xl sm:text-3xl font-semibold text-center mb-2">
             Welcome to Your Affiliate Portal
           </h1>
-        </div>
-
-        {/* Background Decorative Elements */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-40 -right-40 w-80 h-80 bg-white/10 rounded-full blur-3xl"></div>
-          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-white/10 rounded-full blur-3xl"></div>
         </div>
       </div>
 
@@ -41,8 +35,8 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
       </div>
 
       {/* Auth Form Container - Positioned below welcome text and on top of everything */}
-      <div className="absolute top-2/3 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-md px-4 z-30">
-        <div className="bg-white rounded-3xl shadow-2xl p-8">
+      <div className="px-4">
+        <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-[480px] mx-auto -my-28 mb-10">
           {children}
         </div>
       </div>

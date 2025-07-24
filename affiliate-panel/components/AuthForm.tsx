@@ -122,7 +122,7 @@ export default function AuthForm({ type, onSubmit }: AuthFormProps) {
             </div>
           )}
           {type === "signin" && (
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-0.5">
               <div className="flex items-center">
                 <Input
                   type="checkbox"
