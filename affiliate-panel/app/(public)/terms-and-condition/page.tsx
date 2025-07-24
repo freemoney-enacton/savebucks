@@ -13,7 +13,7 @@ export default async function page() {
 
   return (
     <AuthLayout>
-      <div className="flex flex-col items-start justify-center min-h-screen w-full p-4 space-y-5 overflow-clip">
+      <div className="flex flex-col items-start justify-center w-full p-4 space-y-5 overflow-clip">
         <Link
           href={AppRoutes.dashboard}
           className=" h-14 w-fit flex items-start mx-auto"

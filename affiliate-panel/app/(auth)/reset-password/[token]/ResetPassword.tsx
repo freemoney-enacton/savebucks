@@ -72,8 +72,8 @@ export default function ResetPasswordPage({ id }: { id: string }) {
   if (success) {
     return (
       <AuthLayout>
-        <div className="flex flex-col place-items-center gap-6 p-8">
-          <Link
+        <div>
+          {/* <Link
             href={AppRoutes.dashboard}
             className="lg:hidden h-14 w-fit flex items-start mx-auto"
           >
@@ -84,11 +84,11 @@ export default function ResetPasswordPage({ id }: { id: string }) {
               width={100}
               className="max-h-12 w-auto"
             />
-          </Link>
+          </Link> */}
 
           <div className="flex-1 flex items-center justify-center">
-            <Card className="w-full p-4 sm:p-8 shadow-md">
-              <CardHeader>
+            <Card className="border-0 shadow-none">
+              <CardHeader className="!p-0">
                 <div className="flex items-center justify-center mb-4">
                   <KeyRound className="h-12 w-12 text-green-500" />
                 </div>
@@ -96,7 +96,7 @@ export default function ResetPasswordPage({ id }: { id: string }) {
                   {t("password.toast.successMessage")}
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="!p-0">
                 <p className="text-center text-muted-foreground">
                   {t("password.change_success_description")}
                 </p>
@@ -117,8 +117,8 @@ export default function ResetPasswordPage({ id }: { id: string }) {
 
   return (
     <AuthLayout>
-      <div className="flex flex-col place-items-center gap-6 p-8">
-        <Link
+      <div>
+        {/* <Link
           href={AppRoutes.dashboard}
           className="absolute top-6 left-1/2 transform -translate-x-1/2"
         >
@@ -129,11 +129,11 @@ export default function ResetPasswordPage({ id }: { id: string }) {
             width={100}
             className="max-h-12 w-auto"
           />
-        </Link>
+        </Link> */}
 
         <div className="flex-1 flex items-center justify-center">
-          <Card className="w-full p-4 sm:p-8 shadow-md">
-            <CardHeader>
+          <Card className="border-0 shadow-none">
+            <CardHeader className="!p-0">
               <div className="flex items-center justify-center mb-4">
                 <KeyRound className="h-12 w-12 text-brand-500" />
               </div>
@@ -141,7 +141,7 @@ export default function ResetPasswordPage({ id }: { id: string }) {
                 {t("password.reset_password")}
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="!p-0">
               <p className="text-center text-muted-foreground mb-6">
                 {t("password.reset_password_description")}
               </p>

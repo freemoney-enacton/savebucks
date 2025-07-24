@@ -52,8 +52,8 @@ export default async function page({
       <AuthLayout>
         <div className="space-y-6">
           <div>
-            <Card className="w-full shadow-lg border-0">
-              <CardHeader>
+            <Card>
+              <CardHeader className="!p-0">
                 <div className="flex items-center justify-center mb-4">
                   <CheckCircle className="h-12 w-12 text-green-500" />
                 </div>
@@ -61,7 +61,7 @@ export default async function page({
                   {t("auth.verify_email.title")}
                 </CardTitle>
               </CardHeader>
-              <CardContent className="text-center">
+              <CardContent className="text-center !p-0">
                 <p className="text-gray-600">
                   {t("auth.verify_email.description")}
                 </p>
