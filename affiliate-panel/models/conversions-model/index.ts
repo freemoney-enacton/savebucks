@@ -681,11 +681,15 @@ export const getAffiliateDailyReport = async (
     campaignId,
     month,
     year,
+    from,
+    to,
   }: {
     status?: "pending" | "approved" | "declined" | "paid" | "untracked";
     campaignId?: string;
     month?: string;
     year?: string;
+    from?: string;
+    to?: string;
   }
 ) => {
   try {
@@ -693,8 +697,12 @@ export const getAffiliateDailyReport = async (
     const monthNum = month ? parseInt(month) : now.getMonth() + 1;
     const yearNum = year ? parseInt(year) : now.getFullYear();
 
-    const startDate = new Date(yearNum, monthNum - 1, 1);
-    const endDate = new Date(yearNum, monthNum, 0, 23, 59, 59, 999);
+    const startDate = from
+      ? new Date(from)
+      : new Date(yearNum, monthNum - 1, 1);
+    const endDate = to
+      ? new Date(to)
+      : new Date(yearNum, monthNum, 0, 23, 59, 59, 999);
 
     let whereConditions: any[] = [
       eq(affiliateConversionsSummary.affiliateId, affiliateId),
@@ -731,7 +739,11 @@ export const getAffiliateDailyReport = async (
 
     return { data: result, status: "success", message: "ok" };
   } catch (error: any) {
-    return { data: [], status: "error", message: error.message || "An error occurred" };
+    return {
+      data: [],
+      status: "error",
+      message: error.message || "An error occurred",
+    };
   }
 };
 
@@ -789,13 +801,15 @@ export const getAffiliateMonthlyReport = async (
 
     return { data: result, status: "success", message: "ok" };
   } catch (error: any) {
-    return { data: [], status: "error", message: error.message || "An error occurred" };
+    return {
+      data: [],
+      status: "error",
+      message: error.message || "An error occurred",
+    };
   }
 };
 
-export const getAffiliateAvailableMonths = async (
-  affiliateId: number
-) => {
+export const getAffiliateAvailableMonths = async (affiliateId: number) => {
   try {
     const result = await db
       .select({
@@ -813,12 +827,20 @@ export const getAffiliateAvailableMonths = async (
         sql`EXTRACT(MONTH FROM ${affiliateConversionsSummary.conversionCreatedAt}), EXTRACT(YEAR FROM ${affiliateConversionsSummary.conversionCreatedAt})`
       )
       .orderBy(
-        desc(sql`EXTRACT(YEAR FROM ${affiliateConversionsSummary.conversionCreatedAt})`),
-        desc(sql`EXTRACT(MONTH FROM ${affiliateConversionsSummary.conversionCreatedAt})`)
+        desc(
+          sql`EXTRACT(YEAR FROM ${affiliateConversionsSummary.conversionCreatedAt})`
+        ),
+        desc(
+          sql`EXTRACT(MONTH FROM ${affiliateConversionsSummary.conversionCreatedAt})`
+        )
       );
 
     return { data: result, status: "success", message: "ok" };
   } catch (error: any) {
-    return { data: [], status: "error", message: error.message || "An error occurred" };
+    return {
+      data: [],
+      status: "error",
+      message: error.message || "An error occurred",
+    };
   }
 };

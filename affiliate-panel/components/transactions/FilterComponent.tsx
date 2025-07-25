@@ -58,7 +58,9 @@ export default function FilterComponent({
       ? `${searchParams.get("month")}-${searchParams.get("year")}`
       : "all"
   );
-  const [yearFilter, setYearFilter] = useState(searchParams.get("year") || "all");
+  const [yearFilter, setYearFilter] = useState(
+    searchParams.get("year") || "all"
+  );
 
   const fromParam = searchParams.get("from");
   const toParam = searchParams.get("to");
@@ -120,7 +122,10 @@ export default function FilterComponent({
               "grid gap-4",
               (() => {
                 const cols =
-                  2 + (showMonth ? 1 : 0) + (showYear ? 1 : 0) + (showDateRange ? 1 : 0);
+                  2 +
+                  (showMonth ? 1 : 0) +
+                  (showYear ? 1 : 0) +
+                  (showDateRange ? 1 : 0);
                 return `md:grid-cols-${Math.min(cols, 4)}`;
               })()
             )}
@@ -206,7 +211,9 @@ export default function FilterComponent({
                         key={`${m.month}-${m.year}`}
                         value={`${m.month}-${m.year}`}
                       >
-                        {moment(`${m.year}-${String(m.month).padStart(2, "0")}-01`).format("MMMM - YYYY")}
+                        {moment(
+                          `${m.year}-${String(m.month).padStart(2, "0")}-01`
+                        ).format("MMMM - YYYY")}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -228,9 +235,7 @@ export default function FilterComponent({
                     <SelectValue placeholder={t("filters.year.all")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">
-                      {t("filters.year.all")}
-                    </SelectItem>
+                    <SelectItem value="all">{t("filters.year.all")}</SelectItem>
                     {Array.from({ length: 5 }, (_, i) => {
                       const year = new Date().getFullYear() - i;
                       return (

@@ -14,7 +14,7 @@ import { AppRoutes } from "@/utils/routes";
 import { redirect } from "next/navigation";
 
 export default async function ReportsPage({ searchParams }: any) {
-  const { month, year, status, campaignId } = searchParams;
+  const { month, year, status, campaignId, from, to } = searchParams;
   const user = await getAuthSession();
   const userStatus = user?.user?.status;
 
@@ -23,15 +23,30 @@ export default async function ReportsPage({ searchParams }: any) {
   }
 
   const { t } = await createTranslation();
-  const campaigns = (await getAllCampaigns({ affiliateId: Number(user.user.id) }))?.data?.result || [];
+  const campaigns =
+    (await getAllCampaigns({ affiliateId: Number(user.user.id) }))?.data
+      ?.result || [];
   const months = (await getAffiliateAvailableMonths(user.user.id))?.data || [];
 
-  const dailyData = (
-    await getAffiliateDailyReport(user.user.id, { status, campaignId, month, year })
-  )?.data || [];
-  const monthlyData = (
-    await getAffiliateMonthlyReport(user.user.id, { status, campaignId, year })
-  )?.data || [];
+  const dailyData =
+    (
+      await getAffiliateDailyReport(user.user.id, {
+        status,
+        campaignId,
+        month,
+        year,
+        from,
+        to,
+      })
+    )?.data || [];
+  const monthlyData =
+    (
+      await getAffiliateMonthlyReport(user.user.id, {
+        status,
+        campaignId,
+        year,
+      })
+    )?.data || [];
 
   return (
     <DashboardLayout>
@@ -48,8 +63,15 @@ export default async function ReportsPage({ searchParams }: any) {
           <ReportsTable data={dailyData} dateLabel={t("reports.table.date")} />
         </TabsContent>
         <TabsContent value="monthly">
-          <FilterComponent campaigns={campaigns} showYear showDateRange={false} />
-          <ReportsTable data={monthlyData} dateLabel={t("reports.table.month")} />
+          <FilterComponent
+            campaigns={campaigns}
+            showYear
+            showDateRange={false}
+          />
+          <ReportsTable
+            data={monthlyData}
+            dateLabel={t("reports.table.month")}
+          />
         </TabsContent>
       </Tabs>
     </DashboardLayout>
