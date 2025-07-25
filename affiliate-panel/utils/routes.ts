@@ -11,5 +11,6 @@ export const AppRoutes = {
   links: "/links",
   payouts: "/payouts",
   transactions: "/transactions",
+  reports: "/reports",
   settings: "/settings",
 };

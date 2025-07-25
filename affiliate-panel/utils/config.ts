@@ -1,6 +1,7 @@
 import {
   CreditCard,
   FileText,
+  BarChart2,
   LayoutDashboard,
   LinkIcon,
   Settings,
@@ -43,6 +44,11 @@ export const Config = {
           name: "All Transactions",
           href: "/transactions",
           icon: FileText,
+        },
+        {
+          name: "Reports",
+          href: AppRoutes.reports,
+          icon: BarChart2,
         },
         {
           name: "Settings",
