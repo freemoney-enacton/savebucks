@@ -147,6 +147,18 @@
   "noData": "No recent transactions found.",
   "viewAll": "View all transactions"
 },
+"reports": {
+  "title": "Reports",
+  "daily": "Daily",
+  "monthly": "Monthly",
+  "table": {
+    "date": "Date",
+    "month": "Month",
+    "transactions": "No. of Transactions",
+    "earning": "Earning",
+    "empty": "No data found."
+  }
+},
 "payments": {
   "paypalUpdated": "PayPal ID updated successfully",
   "errorUpdatingPaypal": "An error occurred while updating your PayPal ID",
@@ -337,6 +349,14 @@
   "campaign": {
     "label": "Campaign",
     "all": "All campaigns"
+  },
+  "month": {
+    "label": "Month",
+    "all": "All months"
+  },
+  "year": {
+    "label": "Year",
+    "all": "All years"
   },
   "dateRange": "Date Range",
   "placeholder": "Pick a date",

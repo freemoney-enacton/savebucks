@@ -673,3 +673,174 @@ export const getAffiliateConversionsSummaryByTrackingCode = async (
     };
   }
 };
+
+export const getAffiliateDailyReport = async (
+  affiliateId: number,
+  {
+    status,
+    campaignId,
+    month,
+    year,
+    from,
+    to,
+  }: {
+    status?: "pending" | "approved" | "declined" | "paid" | "untracked";
+    campaignId?: string;
+    month?: string;
+    year?: string;
+    from?: string;
+    to?: string;
+  }
+) => {
+  try {
+    const now = new Date();
+    const monthNum = month ? parseInt(month) : now.getMonth() + 1;
+    const yearNum = year ? parseInt(year) : now.getFullYear();
+
+    const startDate = from
+      ? new Date(from)
+      : new Date(yearNum, monthNum - 1, 1);
+    const endDate = to
+      ? new Date(to)
+      : new Date(yearNum, monthNum, 0, 23, 59, 59, 999);
+
+    let whereConditions: any[] = [
+      eq(affiliateConversionsSummary.affiliateId, affiliateId),
+      gte(affiliateConversionsSummary.conversionCreatedAt, startDate),
+      lte(affiliateConversionsSummary.conversionCreatedAt, endDate),
+    ];
+
+    if (status) {
+      whereConditions.push(
+        eq(affiliateConversionsSummary.conversionStatus, status)
+      );
+    } else {
+      whereConditions.push(
+        ne(affiliateConversionsSummary.conversionStatus, "untracked")
+      );
+    }
+
+    if (campaignId) {
+      whereConditions.push(
+        eq(affiliateConversionsSummary.campaignId, parseInt(campaignId))
+      );
+    }
+
+    const result = await db
+      .select({
+        date: sql<string>`DATE(${affiliateConversionsSummary.conversionCreatedAt})`,
+        transactions: count(),
+        earning: sql<string>`COALESCE(SUM(${affiliateConversionsSummary.commission}),0)`,
+      })
+      .from(affiliateConversionsSummary)
+      .where(and(...whereConditions))
+      .groupBy(sql`DATE(${affiliateConversionsSummary.conversionCreatedAt})`)
+      .orderBy(sql`DATE(${affiliateConversionsSummary.conversionCreatedAt})`);
+
+    return { data: result, status: "success", message: "ok" };
+  } catch (error: any) {
+    return {
+      data: [],
+      status: "error",
+      message: error.message || "An error occurred",
+    };
+  }
+};
+
+export const getAffiliateMonthlyReport = async (
+  affiliateId: number,
+  {
+    status,
+    campaignId,
+    year,
+  }: {
+    status?: "pending" | "approved" | "declined" | "paid" | "untracked";
+    campaignId?: string;
+    year?: string;
+  }
+) => {
+  try {
+    const now = new Date();
+    const yearNum = year ? parseInt(year) : now.getFullYear();
+
+    const startDate = new Date(yearNum, 0, 1);
+    const endDate = new Date(yearNum, 11, 31, 23, 59, 59, 999);
+
+    let whereConditions: any[] = [
+      eq(affiliateConversionsSummary.affiliateId, affiliateId),
+      gte(affiliateConversionsSummary.conversionCreatedAt, startDate),
+      lte(affiliateConversionsSummary.conversionCreatedAt, endDate),
+    ];
+
+    if (status) {
+      whereConditions.push(
+        eq(affiliateConversionsSummary.conversionStatus, status)
+      );
+    } else {
+      whereConditions.push(
+        ne(affiliateConversionsSummary.conversionStatus, "untracked")
+      );
+    }
+
+    if (campaignId) {
+      whereConditions.push(
+        eq(affiliateConversionsSummary.campaignId, parseInt(campaignId))
+      );
+    }
+
+    const result = await db
+      .select({
+        month: sql<number>`MONTH(${affiliateConversionsSummary.conversionCreatedAt})`,
+        transactions: count(),
+        earning: sql<string>`COALESCE(SUM(${affiliateConversionsSummary.commission}),0)`,
+      })
+      .from(affiliateConversionsSummary)
+      .where(and(...whereConditions))
+      .groupBy(sql`MONTH(${affiliateConversionsSummary.conversionCreatedAt})`)
+      .orderBy(sql`MONTH(${affiliateConversionsSummary.conversionCreatedAt})`);
+
+    return { data: result, status: "success", message: "ok" };
+  } catch (error: any) {
+    return {
+      data: [],
+      status: "error",
+      message: error.message || "An error occurred",
+    };
+  }
+};
+
+export const getAffiliateAvailableMonths = async (affiliateId: number) => {
+  try {
+    const result = await db
+      .select({
+        month: sql<number>`EXTRACT(MONTH FROM ${affiliateConversionsSummary.conversionCreatedAt})`,
+        year: sql<number>`EXTRACT(YEAR FROM ${affiliateConversionsSummary.conversionCreatedAt})`,
+      })
+      .from(affiliateConversionsSummary)
+      .where(
+        and(
+          eq(affiliateConversionsSummary.affiliateId, affiliateId),
+          ne(affiliateConversionsSummary.conversionStatus, "untracked")
+        )
+      )
+      .groupBy(
+        sql`EXTRACT(MONTH FROM ${affiliateConversionsSummary.conversionCreatedAt}), EXTRACT(YEAR FROM ${affiliateConversionsSummary.conversionCreatedAt})`
+      )
+      .orderBy(
+        desc(
+          sql`EXTRACT(YEAR FROM ${affiliateConversionsSummary.conversionCreatedAt})`
+        ),
+        desc(
+          sql`EXTRACT(MONTH FROM ${affiliateConversionsSummary.conversionCreatedAt})`
+        )
+      );
+
+    return { data: result, status: "success", message: "ok" };
+  } catch (error: any) {
+    return {
+      data: [],
+      status: "error",
+      message: error.message || "An error occurred",
+    };
+  }
+};

@@ -32,8 +32,16 @@ const getDateFromParams = (param: string): Date | undefined => {
 
 export default function FilterComponent({
   campaigns = [],
+  showMonth = false,
+  showYear = false,
+  months = [],
+  showDateRange = true,
 }: {
   campaigns?: any[];
+  showMonth?: boolean;
+  showYear?: boolean;
+  months?: { month: number; year: number }[];
+  showDateRange?: boolean;
 }) {
   const { t } = useTranslation();
   const router = useRouter();
@@ -43,6 +51,15 @@ export default function FilterComponent({
   const [statusFilter, setStatusFilter] = useState("all");
   const [campaignFilter, setCampaignFilter] = useState(
     searchParams.get("campaignId") || "all"
+  );
+
+  const [monthFilter, setMonthFilter] = useState(
+    searchParams.get("month") && searchParams.get("year")
+      ? `${searchParams.get("month")}-${searchParams.get("year")}`
+      : "all"
+  );
+  const [yearFilter, setYearFilter] = useState(
+    searchParams.get("year") || "all"
   );
 
   const fromParam = searchParams.get("from");
@@ -59,9 +76,11 @@ export default function FilterComponent({
   });
 
   useEffect(() => {
-    searchParams.set("from", moment(defaultFromDate).format("YYYY-MM-DD"));
-    searchParams.set("to", moment(currentDate).format("YYYY-MM-DD"));
-    router.push(`${pathname}?${searchParams.toString()}`);
+    if (showDateRange) {
+      searchParams.set("from", moment(defaultFromDate).format("YYYY-MM-DD"));
+      searchParams.set("to", moment(currentDate).format("YYYY-MM-DD"));
+      router.push(`${pathname}?${searchParams.toString()}`);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -78,12 +97,16 @@ export default function FilterComponent({
   const hasActiveFilters =
     statusFilter !== "all" ||
     campaignFilter !== "all" ||
-    (date?.from && date?.to);
+    (showDateRange && date?.from && date?.to) ||
+    (showMonth && monthFilter !== "all") ||
+    (showYear && yearFilter !== "all");
 
   const clearFilters = () => {
     setStatusFilter("all");
     setCampaignFilter("all");
     setDate(undefined);
+    setMonthFilter("all");
+    setYearFilter("all");
     router.push(pathname);
   };
 
@@ -94,7 +117,19 @@ export default function FilterComponent({
       </CardHeader>
       <CardContent>
         <div className="space-y-4 sm:space-y-6">
-          <div className="grid md:grid-cols-3 gap-4">
+          <div
+            className={cn(
+              "grid gap-4",
+              (() => {
+                const cols =
+                  2 +
+                  (showMonth ? 1 : 0) +
+                  (showYear ? 1 : 0) +
+                  (showDateRange ? 1 : 0);
+                return `md:grid-cols-${Math.min(cols, 4)}`;
+              })()
+            )}
+          >
             <div className="space-y-2">
               <Label>{t("filters.status.label")}</Label>
               <Select
@@ -147,58 +182,127 @@ export default function FilterComponent({
               </Select>
             </div>
 
-            <div className="space-y-2">
-              <Label>{t("filters.dateRange")}</Label>
-              <div className={cn("grid gap-2")}>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      id="date"
-                      variant={"outline"}
-                      className={cn(
-                        "h-11 w-full justify-start text-left font-normal",
-                        !date && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {date?.from ? (
-                        date.to ? (
-                          <>
-                            {format(date.from, "LLL dd, y")} -{" "}
-                            {format(date.to, "LLL dd, y")}
-                          </>
-                        ) : (
-                          format(date.from, "LLL dd, y")
-                        )
-                      ) : (
-                        <span>{t("filters.placeholder")}</span>
-                      )}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      initialFocus
-                      mode="range"
-                      defaultMonth={date?.from}
-                      selected={date}
-                      onSelect={(e) => {
-                        setDate(e);
-                        searchParams.set(
-                          "from",
-                          moment(e?.from).format("YYYY-MM-DD")
-                        );
-                        searchParams.set(
-                          "to",
-                          moment(e?.to).format("YYYY-MM-DD")
-                        );
-                        router.push(`${pathname}?${searchParams.toString()}`);
-                      }}
-                      numberOfMonths={2}
-                    />
-                  </PopoverContent>
-                </Popover>
+            {showMonth && (
+              <div className="space-y-2">
+                <Label>{t("filters.month.label")}</Label>
+                <Select
+                  value={monthFilter}
+                  onValueChange={(value) => {
+                    setMonthFilter(value);
+                    if (value === "all") {
+                      updateSearchParams("month", "");
+                      updateSearchParams("year", "");
+                    } else {
+                      const [m, y] = value.split("-");
+                      updateSearchParams("month", m);
+                      updateSearchParams("year", y);
+                    }
+                  }}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder={t("filters.month.all")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">
+                      {t("filters.month.all")}
+                    </SelectItem>
+                    {months.map((m) => (
+                      <SelectItem
+                        key={`${m.month}-${m.year}`}
+                        value={`${m.month}-${m.year}`}
+                      >
+                        {moment(
+                          `${m.year}-${String(m.month).padStart(2, "0")}-01`
+                        ).format("MMMM - YYYY")}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-            </div>
+            )}
+
+            {showYear && (
+              <div className="space-y-2">
+                <Label>{t("filters.year.label")}</Label>
+                <Select
+                  value={yearFilter}
+                  onValueChange={(value) => {
+                    setYearFilter(value);
+                    updateSearchParams("year", value);
+                  }}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder={t("filters.year.all")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">{t("filters.year.all")}</SelectItem>
+                    {Array.from({ length: 5 }, (_, i) => {
+                      const year = new Date().getFullYear() - i;
+                      return (
+                        <SelectItem key={year} value={`${year}`}>
+                          {year}
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {showDateRange && (
+              <div className="space-y-2">
+                <Label>{t("filters.dateRange")}</Label>
+                <div className={cn("grid gap-2")}>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        id="date"
+                        variant={"outline"}
+                        className={cn(
+                          "h-11 w-full justify-start text-left font-normal",
+                          !date && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {date?.from ? (
+                          date.to ? (
+                            <>
+                              {format(date.from, "LLL dd, y")} -{" "}
+                              {format(date.to, "LLL dd, y")}
+                            </>
+                          ) : (
+                            format(date.from, "LLL dd, y")
+                          )
+                        ) : (
+                          <span>{t("filters.placeholder")}</span>
+                        )}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        initialFocus
+                        mode="range"
+                        defaultMonth={date?.from}
+                        selected={date}
+                        onSelect={(e) => {
+                          setDate(e);
+                          searchParams.set(
+                            "from",
+                            moment(e?.from).format("YYYY-MM-DD")
+                          );
+                          searchParams.set(
+                            "to",
+                            moment(e?.to).format("YYYY-MM-DD")
+                          );
+                          router.push(`${pathname}?${searchParams.toString()}`);
+                        }}
+                        numberOfMonths={2}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              </div>
+            )}
           </div>
 
           {hasActiveFilters && (
