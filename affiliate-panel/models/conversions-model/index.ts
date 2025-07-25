@@ -792,3 +792,33 @@ export const getAffiliateMonthlyReport = async (
     return { data: [], status: "error", message: error.message || "An error occurred" };
   }
 };
+
+export const getAffiliateAvailableMonths = async (
+  affiliateId: number
+) => {
+  try {
+    const result = await db
+      .select({
+        month: sql<number>`EXTRACT(MONTH FROM ${affiliateConversionsSummary.conversionCreatedAt})`,
+        year: sql<number>`EXTRACT(YEAR FROM ${affiliateConversionsSummary.conversionCreatedAt})`,
+      })
+      .from(affiliateConversionsSummary)
+      .where(
+        and(
+          eq(affiliateConversionsSummary.affiliateId, affiliateId),
+          ne(affiliateConversionsSummary.conversionStatus, "untracked")
+        )
+      )
+      .groupBy(
+        sql`EXTRACT(MONTH FROM ${affiliateConversionsSummary.conversionCreatedAt}), EXTRACT(YEAR FROM ${affiliateConversionsSummary.conversionCreatedAt})`
+      )
+      .orderBy(
+        desc(sql`EXTRACT(YEAR FROM ${affiliateConversionsSummary.conversionCreatedAt})`),
+        desc(sql`EXTRACT(MONTH FROM ${affiliateConversionsSummary.conversionCreatedAt})`)
+      );
+
+    return { data: result, status: "success", message: "ok" };
+  } catch (error: any) {
+    return { data: [], status: "error", message: error.message || "An error occurred" };
+  }
+};
