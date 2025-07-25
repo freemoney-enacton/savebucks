@@ -32,8 +32,12 @@ const getDateFromParams = (param: string): Date | undefined => {
 
 export default function FilterComponent({
   campaigns = [],
+  showMonth = false,
+  showYear = false,
 }: {
   campaigns?: any[];
+  showMonth?: boolean;
+  showYear?: boolean;
 }) {
   const { t } = useTranslation();
   const router = useRouter();
@@ -44,6 +48,11 @@ export default function FilterComponent({
   const [campaignFilter, setCampaignFilter] = useState(
     searchParams.get("campaignId") || "all"
   );
+
+  const [monthFilter, setMonthFilter] = useState(
+    searchParams.get("month") || "all"
+  );
+  const [yearFilter, setYearFilter] = useState(searchParams.get("year") || "all");
 
   const fromParam = searchParams.get("from");
   const toParam = searchParams.get("to");
@@ -78,12 +87,16 @@ export default function FilterComponent({
   const hasActiveFilters =
     statusFilter !== "all" ||
     campaignFilter !== "all" ||
-    (date?.from && date?.to);
+    (date?.from && date?.to) ||
+    (showMonth && monthFilter !== "all") ||
+    (showYear && yearFilter !== "all");
 
   const clearFilters = () => {
     setStatusFilter("all");
     setCampaignFilter("all");
     setDate(undefined);
+    setMonthFilter("all");
+    setYearFilter("all");
     router.push(pathname);
   };
 
@@ -94,7 +107,12 @@ export default function FilterComponent({
       </CardHeader>
       <CardContent>
         <div className="space-y-4 sm:space-y-6">
-          <div className="grid md:grid-cols-3 gap-4">
+          <div
+            className={cn(
+              "grid gap-4",
+              showMonth || showYear ? "md:grid-cols-4" : "md:grid-cols-3"
+            )}
+          >
             <div className="space-y-2">
               <Label>{t("filters.status.label")}</Label>
               <Select
@@ -146,6 +164,63 @@ export default function FilterComponent({
                 </SelectContent>
               </Select>
             </div>
+
+            {showMonth && (
+              <div className="space-y-2">
+                <Label>{t("filters.month.label")}</Label>
+                <Select
+                  value={monthFilter}
+                  onValueChange={(value) => {
+                    setMonthFilter(value);
+                    updateSearchParams("month", value);
+                  }}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder={t("filters.month.all")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">
+                      {t("filters.month.all")}
+                    </SelectItem>
+                    {Array.from({ length: 12 }, (_, i) => (
+                      <SelectItem key={i + 1} value={`${i + 1}`}>{
+                        i + 1
+                      }</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {showYear && (
+              <div className="space-y-2">
+                <Label>{t("filters.year.label")}</Label>
+                <Select
+                  value={yearFilter}
+                  onValueChange={(value) => {
+                    setYearFilter(value);
+                    updateSearchParams("year", value);
+                  }}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder={t("filters.year.all")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">
+                      {t("filters.year.all")}
+                    </SelectItem>
+                    {Array.from({ length: 5 }, (_, i) => {
+                      const year = new Date().getFullYear() - i;
+                      return (
+                        <SelectItem key={year} value={`${year}`}>
+                          {year}
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             <div className="space-y-2">
               <Label>{t("filters.dateRange")}</Label>
