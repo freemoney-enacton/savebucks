@@ -6,9 +6,14 @@ import Image from "next/image";
 import Link from "next/link";
 import React from "react";
 
-export default async function page() {
+export default async function page({
+  params
+}: {
+  params: { id: string; };
+}) {
   const { t } = await createTranslation();
-  const campaignDetails = (await getCampaignById(1))?.data;
+  const campaignId = Number(params.id);
+  const campaignDetails = (await getCampaignById(campaignId ?? 1))?.data;
   const termsAndConditions = campaignDetails?.termsAndConditions;
 
   return (
@@ -34,7 +39,7 @@ export default async function page() {
         <div
           className="text-md text-gray-500 overflow-clip break-all"
           dangerouslySetInnerHTML={{
-            __html: termsAndConditions || t("campaign.fallbackDescription"),
+            __html: termsAndConditions || t("campaign.termsFallbackDescription"),
           }}
         ></div>
       </div>
