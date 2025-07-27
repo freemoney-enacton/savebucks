@@ -282,6 +282,7 @@
   "earn": "{amount}",
   "qualify": "Qualify {amount}",
   "termsAndConditions": "Terms & Conditions",
+  "termsFallbackDescription": "Terms & Conditions not available.",
   "noActiveCampaigns": "No active campaigns found.",
   "selectCampaign": "Select Campaign",
   "selectPlaceholder": "Choose campaign"
