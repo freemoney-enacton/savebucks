@@ -16,6 +16,9 @@ use Illuminate\Support\Str;
 use App\Filament\Affiliate\Resources\CampaignResource\RelationManagers\GoalsRelationManager;
 use Tapp\FilamentAuditing\RelationManagers\AuditsRelationManager;
 use Filament\Forms\Components\RichEditor;
+use Filament\Notifications\Notification;
+use Illuminate\Database\Eloquent\Collection;
+use Filament\Tables\Actions\BulkAction;
 
 
 class CampaignResource extends Resource
@@ -164,6 +167,13 @@ class CampaignResource extends Resource
                     ->searchable()
                     ->label('Status'),
 
+                Tables\Filters\TernaryFilter::make('is_default')
+                    ->label("Is Campaign Default")
+                    ->truelabel("Default")
+                    ->falselabel("Not Default")
+                    ->placeholder("all"),
+
+
             ])
             ->actions([
                 Tables\Actions\ViewAction::make()->label("")->tooltip("View")->size("lg"),
@@ -171,7 +181,31 @@ class CampaignResource extends Resource
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    // Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\DeleteBulkAction::make(),
+
+                    BulkAction::make('update_status')
+                        ->label('Update Status')
+                        ->icon('heroicon-o-pencil-square')
+                        ->form([
+                            Forms\Components\Select::make('status')
+                                ->required()
+                                ->preload()
+                                ->searchable()
+                                ->options([
+                                    'active' => 'Active',
+                                    'paused' => 'Paused',
+                                    'ended'  => 'Ended',
+                                ])
+                                ->label('New Status'),
+                        ])
+                        ->action(function (Collection $records, array $data) {
+                            $records->each(fn ($record) => $record->update(['approval_status' => $data['status']]));
+                            Notification::make()
+                                ->title('Affiliate status updated')
+                                ->success()
+                                ->send();
+                        })
+                        ->deselectRecordsAfterCompletion(),
                 ]),
             ]);
     }

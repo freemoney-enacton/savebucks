@@ -27,9 +27,7 @@ use App\Filament\Affiliate\Resources\AffiliateResource\RelationManagers\ClicksRe
 use App\Filament\Affiliate\Resources\AffiliateResource\RelationManagers\PostbacksRelationManager;
 use App\Filament\Affiliate\Resources\AffiliateResource\RelationManagers\ConversionsRelationManager;
 use App\Models\Country;
-use Filament\Tables\Actions\BulkAction;
-use Illuminate\Database\Eloquent\Collection;
-
+use Carbon\Carbon;
 
 class AffiliateResource extends Resource
 {
@@ -274,7 +272,32 @@ class AffiliateResource extends Resource
 
                 Tables\Filters\TernaryFilter::make('is_email_verified')
                     ->label("Email Verified Status")
+                    ->truelabel("Verified")
+                    ->falselabel("Not Verified")
                     ->placeholder("all"),
+
+               Tables\Filters\Filter::make('created_at')
+                    ->label('Filter By Date')
+                    ->form([
+                        Forms\Components\DatePicker::make('created_from')
+                            ->label('Joined Date From')
+                            ->native(false),
+                        Forms\Components\DatePicker::make('created_to')
+                            ->label('Joined Date To')
+                            ->native(false),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['created_from'],
+                                fn (Builder $q) => $q->where('created_at', '>=', Carbon::parse($data['created_from'])->startOfDay())
+                            )
+                            ->when(
+                                $data['created_to'],
+                                fn (Builder $q) => $q->where('created_at', '<=', Carbon::parse($data['created_to'])->endOfDay())
+                            );
+                    })
+
 
             ])
             ->actions([
@@ -282,14 +305,17 @@ class AffiliateResource extends Resource
                 Tables\Actions\EditAction::make()->label("")->tooltip("Edit")->size("lg"),
             ])
             ->bulkActions([
+
                 BulkActionGroup::make([
-                    // Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\DeleteBulkAction::make(),
                     BulkAction::make('update_status')
                         ->label('Update Status')
-                        ->icon('heroicon-o-pencil-square')
+                        ->icon('heroicon-o-pencil-square')                   
                         ->form([
                             Forms\Components\Select::make('status')
                                 ->required()
+                                ->preload()
+                                ->searchable()
                                 ->options([
                                     'pending'   => 'Pending',
                                     'approved'  => 'Approved',
@@ -309,75 +335,117 @@ class AffiliateResource extends Resource
 
                     BulkAction::make('assign_campaign')
                         ->label('Assign Campaign')
-                        ->icon('heroicon-o-link')
+                        ->icon('heroicon-o-clipboard-document')
                         ->form([
+
                             Forms\Components\Select::make('campaign_id')
                                 ->label('Campaign')
+                                ->multiple()
                                 ->options(\App\Models\Affiliate\Campaign::where('status', 'active')->pluck('name', 'id'))
                                 ->searchable()
+                                ->preload()
                                 ->required(),
-                            Forms\Components\Select::make('campaign_goal_id')
-                                ->label('Campaign Goal')
-                                ->options(fn (callable $get) => $get('campaign_id') ? \App\Models\Affiliate\CampaignGoal::where('status', 'active')->where('campaign_id', $get('campaign_id'))->pluck('name', 'id') : [])
-                                ->searchable()
+
+                            Forms\Components\Select::make('status')
+                                ->label('Assignment Status')
+                                ->options([
+                                    'pending'   => 'Pending',
+                                    'approved'  => 'Approved',
+                                    'rejected'  => 'Rejected',
+                                ])
+                                ->default('pending')
                                 ->required(),
-                            Forms\Components\TextInput::make('custom_commission_rate')
-                                ->label('Custom Commission')
-                                ->numeric()
-                                ->minValue(0)
-                                ->nullable(),
                         ])
                         ->action(function (Collection $records, array $data) {
                             $created = 0;
+                            $campaignIds = (array) $data['campaign_id']; // Ensure it's an array
+                            
                             foreach ($records as $record) {
-                                $exists = \App\Models\Affiliate\AffiliateCampaignGoal::where([
-                                    'affiliate_id'      => $record->id,
-                                    'campaign_id'       => $data['campaign_id'],
-                                    'campaign_goal_id'  => $data['campaign_goal_id'],
-                                ])->exists();
+                                foreach ($campaignIds as $campaignId) {
+                                    $exists = \App\Models\Affiliate\AffiliateCampaign::where([
+                                        'affiliate_id' => $record->id,
+                                        'campaign_id'  => $campaignId,
+                                    ])->exists();
 
-                                if (! $exists) {
-                                    \App\Models\Affiliate\AffiliateCampaignGoal::create([
-                                        'affiliate_id'            => $record->id,
-                                        'campaign_id'             => $data['campaign_id'],
-                                        'campaign_goal_id'        => $data['campaign_goal_id'],
-                                        'custom_commission_rate'  => $data['custom_commission_rate'] ?? 0,
-                                        'approval_status'         => 'approved',
-                                    ]);
-                                    $created++;
+                                    if (!$exists) {
+                                        \App\Models\Affiliate\AffiliateCampaign::create([
+                                            'affiliate_id' => $record->id,
+                                            'campaign_id'  => $campaignId,
+                                            'status'       => $data['status'],
+                                        ]);
+                                        $created++;
+                                    }
                                 }
                             }
 
                             Notification::make()
-                                ->title("Campaign assigned to {$created} affiliate(s)")
+                                ->title("Campaigns assigned to {$created} affiliates")
                                 ->success()
                                 ->send();
                         })
                         ->deselectRecordsAfterCompletion(),
+
+
+                    // BulkAction::make('assign_campaign_goal')
+                    //     ->label('Assign Campaign Goal')
+                    //     ->icon('heroicon-o-link')
+                    //     ->form([
+                    //         Forms\Components\Select::make('campaign_id')
+                    //             ->label('Campaign')
+                    //             ->options(\App\Models\Affiliate\Campaign::where('status', 'active')->pluck('name', 'id'))
+                    //             ->searchable()
+                    //             ->reactive()
+                    //             ->required(),
+                    //         Forms\Components\Select::make('campaign_goal_id')
+                    //             ->label('Campaign Goal')
+                    //             ->options(fn (callable $get) => $get('campaign_id') ? \App\Models\Affiliate\CampaignGoal::where('status', 'active')->where('campaign_id', $get('campaign_id'))->pluck('name', 'id') : [])
+                    //             ->searchable()
+                    //             ->required(),
+                    //         Forms\Components\TextInput::make('custom_commission_rate')
+                    //             ->label('Custom Commission Rate')
+                    //             ->prefix(config('freemoney.default.default_currency'))
+                    //             ->numeric()
+                    //             ->minValue(0)
+                    //             ->required()
+                    //             ->default(0),
+                    //         Forms\Components\TextInput::make('qualification_amount')
+                    //             ->label('Qualification Amount')
+                    //             ->prefix(config('freemoney.default.default_currency'))
+                    //             ->numeric()
+                    //             ->minValue(0)
+                    //             ->required()
+                    //             ->default(0),
+                    //     ])
+                    //     ->action(function (Collection $records, array $data) {
+                    //         $created = 0;
+                    //         foreach ($records as $record) {
+                    //             $exists = \App\Models\Affiliate\AffiliateCampaignGoal::where([
+                    //                 'affiliate_id'      => $record->id,
+                    //                 'campaign_id'       => $data['campaign_id'],
+                    //                 'campaign_goal_id'  => $data['campaign_goal_id'],
+                    //             ])->exists();
+
+                    //             if (!$exists) {
+                    //                 \App\Models\Affiliate\AffiliateCampaignGoal::create([
+                    //                     'affiliate_id'            => $record->id,
+                    //                     'campaign_id'             => $data['campaign_id'],
+                    //                     'campaign_goal_id'        => $data['campaign_goal_id'],
+                    //                     'custom_commission_rate'  => $data['custom_commission_rate'] ?? 0,
+                    //                     'qualification_amount'    => $data['qualification_amount'] ?? 0,
+                    //                 ]);
+                    //                 $created++;
+                    //             }
+                    //         }
+
+                    //         Notification::make()
+                    //             ->title("Campaign goal assigned to {$created} affiliate(s)")
+                    //             ->success()
+                    //             ->send();
+                    //     })
+                    //     ->deselectRecordsAfterCompletion(),
                 ]),
 
-                BulkAction::make('change_status')
-                    ->label('Bulk Status Change')
-                    ->icon('heroicon-o-check-circle')
-                    ->modalWidth('lg')
-                    ->form([
-                        Forms\Components\Select::make('approval_status')
-                        ->options([
-                            'pending'   => "Pending",
-                            'approved'  => "Approved",
-                            'rejected'  => "Rejected",
-                            'suspended' => "Suspended",
-                        ]) 
-                        ->preload()
-                        ->searchable(),               
-                    ])
-                    ->action(function(Collection $records, array $data) {
-                                               
-                        Affiliate::whereIn('id', $records->pluck('id'))
-                        ->update(['approval_status' => $data['approval_status']]);
-                    })
-                    ->deselectRecordsAfterCompletion()
-                    ->button(),
+               
             ]);
     }
 

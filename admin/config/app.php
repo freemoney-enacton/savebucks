@@ -65,6 +65,7 @@ return [
 
     'api_url' => env('API_URL'),
     'api_admin_token' => env('API_ADMIN_TOKEN'),    
+    'affilaite_url' => env('AFFILIATE_URL'),    
 
 
     /*

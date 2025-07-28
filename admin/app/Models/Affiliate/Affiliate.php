@@ -11,7 +11,10 @@ use Spatie\Permission\Traits\HasRoles;
 use OwenIt\Auditing\Contracts\Auditable;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\SendMailToUser;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
+use App\Observers\AffiliateObserver;
 
+#[ObservedBy([AffiliateObserver::class])]
 // Affiliate Model
 class Affiliate extends Model
 {

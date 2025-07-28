@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('description');
             $table->enum('commission_type', ['fixed', 'percent']);
             $table->decimal('commission_amount', 10, 2);
-            $table->char('tracking_code',10)->unique();
+            $table->char('tracking_code',10);
             $table->enum('status', ['active', 'inactive'])->default('active');
             $table->timestamps();
             

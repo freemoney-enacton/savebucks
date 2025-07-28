@@ -28,7 +28,7 @@ class AffiliateCampaignsRelationManager extends RelationManager
                 ->preload()
                 ->searchable()
                 ->options([
-                    'pending' => 'Pending',
+                    'pending'  => 'Pending',
                     'approved' => 'Approved',
                     'rejected' => 'Rejected',
                 ])

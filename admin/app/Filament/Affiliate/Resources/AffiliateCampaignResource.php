@@ -10,6 +10,9 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Filament\Notifications\Notification;
+use Illuminate\Database\Eloquent\Collection;
+use Filament\Tables\Actions\BulkAction;
 
 class AffiliateCampaignResource extends Resource
 {
@@ -85,12 +88,52 @@ class AffiliateCampaignResource extends Resource
                     'approved'  => 'Approved',
                     'rejected'  => 'Rejected',
                 ]),
+
+            Tables\Filters\SelectFilter::make('affiliate_id')
+                    ->relationship('affiliate', 'email')
+                    ->preload()
+                    ->searchable()
+                    ->label('Filter By Affiliate'),
+
+            Tables\Filters\SelectFilter::make('campaign_id')
+                    ->relationship('campaign', 'name')
+                    ->preload()
+                    ->searchable()
+                    ->label('Filter By Campaign'),
         ])
         ->actions([
             Tables\Actions\EditAction::make()->label("")->tooltip("Edit")->size("lg"),
             Tables\Actions\ViewAction::make()->label("")->tooltip("View")->size("lg"),
             // Tables\Actions\DeleteAction::make()->label("")->tooltip("Delete")->size("lg"),
-        ]);
+        ])->bulkActions([
+                Tables\Actions\BulkActionGroup::make([
+                    // Tables\Actions\DeleteBulkAction::make(),
+
+                    BulkAction::make('update_status')
+                        ->label('Update Status')
+                        ->icon('heroicon-o-pencil-square')
+                        ->form([
+                            Forms\Components\Select::make('status')
+                                ->required()
+                                ->preload()
+                                ->searchable()
+                                ->options([
+                                    'pending'   => 'Pending',
+                                    'approved'  => 'Approved',
+                                    'rejected'  => 'Rejected',
+                                ])
+                                ->label('New Status'),
+                        ])
+                        ->action(function (Collection $records, array $data) {
+                            $records->each(fn ($record) => $record->update(['approval_status' => $data['status']]));
+                            Notification::make()
+                                ->title('Affiliate status updated')
+                                ->success()
+                                ->send();
+                        })
+                        ->deselectRecordsAfterCompletion(),
+                ]),
+            ]);
     }
 
     public static function getPages(): array

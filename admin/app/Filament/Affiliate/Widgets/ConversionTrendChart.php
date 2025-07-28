@@ -2,173 +2,287 @@
 
 namespace App\Filament\Affiliate\Widgets;
 
-use Filament\Widgets\ChartWidget;
-use Carbon\Carbon;
+use Leandrocfe\FilamentApexCharts\Widgets\ApexChartWidget;
 use App\Models\Affiliate\Conversion;
-use Illuminate\Support\Facades\DB;
+use App\Models\Affiliate\ViewConversion;
+use Carbon\Carbon;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Grid;
 
-class ConversionTrendChart extends ChartWidget
+class ConversionTrendChart extends ApexChartWidget
 {
-    protected static ?string $heading   = 'Conversions Trend Chart';
-    protected static ?string $maxHeight = '450px';
-    protected static ?int $sort         = 2;
+    protected static ?string $chartId = 'conversionTrendChart';
+    protected static ?string $heading = 'Conversions Trend Chart';
+    protected int | string | array $columnSpan = 'half';
+    protected static ?int $sort = 2;
 
-    public ?string $filter = 'current';
+    // Filter property
+    public ?string $filter_status = null;
 
-    protected function getFilters(): ?array
+    protected function getFormSchema(): array
     {
-        // Generate month options for the last 6 months
-        $monthOptions = ['current' => 'Current Month'];
+        return [
+            Grid::make(1)
+                ->schema([
 
-        for ($i = 1; $i <= 6; $i++) {
-            $date = Carbon::now()->subMonths($i);
-            $key = $date->format('Y-m');
-            $value = $date->format('F Y');
-            $monthOptions[$key] = $value;
-        }
+                    Select::make('filter_status')
+                        ->label('Status')
+                        ->preload()
+                        ->searchable()
+                        ->options([
+                            '' => 'All Statuses',
+                            'pending' => 'Pending',
+                            'approved' => 'Approved',
+                            'declined' => 'Declined',
+                            'paid'      => 'Paid',
+                            'untracked' => 'Untracked',
+                        ])
+                        ->default('')
+                        ->live()
+                        ->afterStateUpdated(function () {
+                            $this->updateOptions();
+                        }),
 
-        return $monthOptions;
+                    DatePicker::make('filter_start_date')
+                        ->label('Start Date')
+                        ->default(Carbon::now()->subDays(15)->format('Y-m-d'))
+                        ->live()
+                        ->native(false)
+                        ->afterStateUpdated(function () {
+                            $this->updateOptions();
+                        }),
+
+                    DatePicker::make('filter_end_date')
+                        ->label('End Date')
+                        ->native(false)
+                        ->default(Carbon::now()->format('Y-m-d'))
+                        ->live()
+                        ->afterStateUpdated(function () {
+                            $this->updateOptions();
+                        }),
+                ])
+        ];
     }
 
-    protected function getData(): array
+    protected function getOptions(): array
     {
-        // Determine date range based on filter
-        if ($this->filter === 'current') {
-            $startDate = Carbon::now()->startOfMonth();
-            $endDate = Carbon::now()->endOfMonth();
+        $data = $this->getChartData();
+        $summary = $this->getSummaryData();
+
+        return [
+            'chart' => [
+                'type' => 'line',
+                'height' => 350,
+                'toolbar' => [
+                    'show' => false, // Remove download options
+                ],
+            ],
+            'series' => [
+                [
+                    'name' => 'Conversions Count',
+                    'data' => $data['counts'],
+                ],
+                [
+                    'name' => 'Commission (€)',
+                    'data' => $data['commissions'],
+                ],
+            ],
+            'xaxis' => [
+                'categories' => $data['labels'],
+                'labels' => [
+                    'rotate' => -45,
+                    'maxHeight' => 60,
+                    'style' => [
+                        'fontSize' => '11px',
+                    ],
+                ],
+            ],
+            'yaxis' => [
+                [
+                    'title' => [
+                        'text' => 'Conversions Count',
+                    ],
+                ],
+                [
+                    'opposite' => true,
+                    'title' => [
+                        'text' => 'Commission (€)',
+                    ],
+                ],
+            ],
+            'colors' => ['#008FFB', '#00E396'],
+            'stroke' => [
+                'width' => 2,
+            ],
+            'markers' => [
+                'size' => 4,
+            ],
+            'legend' => [
+                'show' => true,
+            ],
+            'title' => [
+                'text' => $this->getChartTitle($summary),
+            ],
+            'subtitle' => [
+                'text' => $this->getSubtitle($summary),
+            ],
+        ];
+    }
+
+    private function getChartData(): array
+    {
+        // Get filter values
+        $statusFilter = $this->filterFormData['filter_status'] ?? null;
+        $startDate = $this->filterFormData['filter_start_date'] ?? Carbon::now()->subDays(15)->format('Y-m-d');
+        $endDate = $this->filterFormData['filter_end_date'] ?? Carbon::now()->format('Y-m-d');
+
+        $startDate = Carbon::parse($startDate);
+        $endDate = Carbon::parse($endDate);
+
+        // Calculate days to determine grouping
+        $daysDiff = $startDate->diffInDays($endDate);
+
+        if ($daysDiff > 60) {
+            // Weekly grouping for more than 60 days
+            return $this->getWeeklyData($startDate, $endDate, $statusFilter);
         } else {
-            $startDate = Carbon::createFromFormat('Y-m', $this->filter)->startOfMonth();
-            $endDate = Carbon::createFromFormat('Y-m', $this->filter)->endOfMonth();
+            // Daily grouping for 60 days or less
+            return $this->getDailyData($startDate, $endDate, $statusFilter);
         }
+    }
 
-        // Get the conversion counts for each day in the selected month
-        $conversionCounts = Conversion::select(DB::raw('DATE(converted_at) as date'), DB::raw('COUNT(*) as count'))
-            ->whereBetween('converted_at', [$startDate, $endDate])
-            ->groupBy(DB::raw('DATE(converted_at)'))
-            ->orderBy(DB::raw('DATE(converted_at)'), 'asc')
-            ->get()
-            ->keyBy('date');
-
-        // Generate the labels and data arrays for each day of the month
+    private function getDailyData($startDate, $endDate, $statusFilter): array
+    {
         $labels = [];
-        $data = [];
+        $counts = [];
+        $commissions = [];
 
         $currentDate = $startDate->copy();
-        while ($currentDate->lte($endDate)) {
-            $dateStr = $currentDate->format('Y-m-d');
-            $conversionCount = $conversionCounts->get($dateStr, null);
-
+        while ($currentDate <= $endDate) {
             $labels[] = $currentDate->format('M j');
-            $data[] = $conversionCount ? $conversionCount->count : 0;
+
+            $query = ViewConversion::whereDate('converted_at', $currentDate->format('Y-m-d'));
+            if ($statusFilter) {
+                $query->where('conversion_status', $statusFilter);
+            }
+
+            $result = $query->selectRaw('COUNT(*) as count, COALESCE(SUM(commission), 0) as total_commission')->first();
+            $counts[] = (int)($result->count ?? 0);
+            $commissions[] = (float)($result->total_commission ?? 0);
 
             $currentDate->addDay();
         }
 
         return [
-            'datasets' => [
-                [
-                    'label'             => 'Daily Conversions',
-                    'data'              => $data,
-                    'backgroundColor'   => 'rgba(16, 185, 129, 0.1)',
-                    'borderColor'       => '#10b981',
-                    'pointBackgroundColor' => '#10b981',
-                    'pointBorderColor'  => '#ffffff',
-                    'pointBorderWidth'  => 2,
-                    'borderWidth'       => 3,
-                    'tension'           => 0.4,
-                    'fill'              => true,
-                ]
-            ],
             'labels' => $labels,
+            'counts' => $counts,
+            'commissions' => $commissions,
         ];
     }
 
-    protected function getType(): string
+    private function getWeeklyData($startDate, $endDate, $statusFilter): array
     {
-        return 'line';
-    }
+        $labels = [];
+        $counts = [];
+        $commissions = [];
 
-    protected function getOptions(): array
-    {
-        $maxValue = max($this->getCachedData()['datasets'][0]['data'] ?? [1]);
-        $suggestedMax = max(10, ceil($maxValue * 1.2));
+        $currentDate = $startDate->copy()->startOfWeek();
+        while ($currentDate <= $endDate) {
+            $weekEnd = $currentDate->copy()->endOfWeek();
+            if ($weekEnd > $endDate) {
+                $weekEnd = $endDate->copy();
+            }
 
-        // Get total conversions for selected month
-        if ($this->filter === 'current') {
-            $startDate = Carbon::now()->startOfMonth();
-            $endDate = Carbon::now()->endOfMonth();
-            $monthLabel = 'Current Month (' . Carbon::now()->format('F Y') . ')';
-        } else {
-            $startDate = Carbon::createFromFormat('Y-m', $this->filter)->startOfMonth();
-            $endDate = Carbon::createFromFormat('Y-m', $this->filter)->endOfMonth();
-            $monthLabel = Carbon::createFromFormat('Y-m', $this->filter)->format('F Y');
+            $labels[] = $currentDate->format('M j');
+
+            $query = ViewConversion::whereBetween('converted_at', [
+                $currentDate->format('Y-m-d 00:00:00'),
+                $weekEnd->format('Y-m-d 23:59:59')
+            ]);
+            if ($statusFilter) {
+                $query->where('conversion_status', $statusFilter);
+            }
+
+            $result = $query->selectRaw('COUNT(*) as count, COALESCE(SUM(commission), 0) as total_commission')->first();
+            $counts[] = (int)($result->count ?? 0);
+            $commissions[] = (float)($result->total_commission ?? 0);
+
+            $currentDate->addWeek();
         }
 
-        $totalConversions = Conversion::whereBetween('converted_at', [$startDate, $endDate])->count();
+        return [
+            'labels' => $labels,
+            'counts' => $counts,
+            'commissions' => $commissions,
+        ];
+    }
+
+    private function getSummaryData(): array
+    {
+        // Get filter values
+        $statusFilter = $this->filterFormData['filter_status'] ?? null;
+        $startDate = $this->filterFormData['filter_start_date'] ?? Carbon::now()->subDays(7)->format('Y-m-d');
+        $endDate = $this->filterFormData['filter_end_date'] ?? Carbon::now()->format('Y-m-d');
+
+        // Convert to Carbon objects
+        $startDate = Carbon::parse($startDate);
+        $endDate = Carbon::parse($endDate);
+
+        $query = ViewConversion::whereBetween('converted_at', [
+            $startDate->format('Y-m-d 00:00:00'),
+            $endDate->format('Y-m-d 23:59:59')
+        ]);
+
+        // Apply status filter if set
+        if ($statusFilter) {
+            $query->where('conversion_status', $statusFilter);
+        }
+
+        $summary = $query->selectRaw('
+            COUNT(*) as total_conversions,
+            COALESCE(SUM(commission), 0) as total_commission
+        ')->first();
+
+        // Fallback to Conversion model if needed
+        if ($summary->total_conversions == 0) {
+            $query = Conversion::whereBetween('converted_at', [
+                $startDate->format('Y-m-d 00:00:00'),
+                $endDate->format('Y-m-d 23:59:59')
+            ]);
+
+            if ($statusFilter) {
+                $query->where('status', $statusFilter);
+            }
+
+            $summary = $query->selectRaw('
+                COUNT(*) as total_conversions,
+                COALESCE(SUM(commission), 0) as total_commission
+            ')->first();
+        }
 
         return [
-            'responsive' => true,
-            'maintainAspectRatio' => false,
-            'plugins' => [
-                'legend' => [
-                    'display' => false,
-                ],
-                'title' => [
-                    'display' => true,
-                    'text' => $monthLabel . " - Total Conversions: " . number_format($totalConversions),
-                    'font' => [
-                        'size' => 14,
-                        'weight' => 'bold',
-                    ],
-                    'padding' => [
-                        'top' => 10,
-                        'bottom' => 10,
-                    ],
-                    'color' => '#374151',
-                ],
-            ],
-            'scales' => [
-                'y' => [
-                    'beginAtZero' => true,
-                    'suggestedMax' => $suggestedMax,
-                    'ticks' => [
-                        'stepSize' => 1,
-                        'color' => '#6b7280',
-                    ],
-                    'grid' => [
-                        'color' => 'rgba(156, 163, 175, 0.1)',
-                        'borderColor' => 'rgba(156, 163, 175, 0.3)',
-                    ],
-                    'title' => [
-                        'display' => true,
-                        'text' => 'Daily Conversions',
-                        'color' => '#374151',
-                        'font' => [
-                            'size' => 12,
-                            'weight' => 'bold',
-                        ],
-                    ],
-                ],
-                'x' => [
-                    'ticks' => [
-                        'color' => '#6b7280',
-                        'maxRotation' => 45,
-                        'minRotation' => 30,
-                    ],
-                    'grid' => [
-                        'display' => false,
-                    ],
-                    'title' => [
-                        'display' => true,
-                        'text' => 'Date',
-                        'color' => '#374151',
-                        'font' => [
-                            'size' => 12,
-                            'weight' => 'bold',
-                        ],
-                    ],
-                ],
-            ],
+            'total_conversions' => (int)($summary->total_conversions ?? 0),
+            'total_commission' => (float)($summary->total_commission ?? 0),
         ];
+    }
+
+    private function getChartTitle(array $summary): string
+    {
+        $statusFilter = $this->filterFormData['filter_status'] ?? null;
+        $statusText = $statusFilter ? ucfirst($statusFilter) . ' ' : '';
+
+        return "{$statusText}Conversions: {$summary['total_conversions']} | Total Earnings: €" . number_format($summary['total_commission'], 2);
+    }
+
+    private function getSubtitle(array $summary): string
+    {
+        $startDate = $this->filterFormData['filter_start_date'] ?? Carbon::now()->subDays(7)->format('Y-m-d');
+        $endDate = $this->filterFormData['filter_end_date'] ?? Carbon::now()->format('Y-m-d');
+
+        $startDate = Carbon::parse($startDate)->format('M j, Y');
+        $endDate = Carbon::parse($endDate)->format('M j, Y');
+
+        return "Period: {$startDate} - {$endDate} | Total Commission: €" . number_format($summary['total_commission'], 2);
     }
 }

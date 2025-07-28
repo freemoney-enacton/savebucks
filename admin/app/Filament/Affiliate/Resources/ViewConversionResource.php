@@ -14,6 +14,11 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
+use Filament\Tables\Actions\BulkAction;
+use Filament\Tables\Actions\BulkActionGroup;
+use Illuminate\Database\Eloquent\Collection;
+use Filament\Notifications\Notification;
+use App\Models\Affiliate\Conversion; 
 
 class ViewConversionResource extends Resource
 {
@@ -533,7 +538,7 @@ class ViewConversionResource extends Resource
                             ->when(
                                 !empty($data['converted_at']),
                                 fn (Builder $q) => $q->where('converted_at', '>=',
-                                    Carbon::parse($data['end_from'])->startOfDay()
+                                    Carbon::parse($data['converted_at'])->startOfDay()
                                 )
                             )
                             ->when(
@@ -549,8 +554,59 @@ class ViewConversionResource extends Resource
                 // Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    // Tables\Actions\DeleteBulkAction::make(),/
+                BulkActionGroup::make([
+                    // Tables\Actions\DeleteBulkAction::make(),
+
+                    // BulkAction::make('update_status')
+                    //     ->label('Update Status')
+                    //     ->icon('heroicon-o-pencil-square')
+                    //     ->form([
+                    //         Forms\Components\Select::make('status')
+                    //             ->options([
+                    //                 'pending'   => 'Pending',
+                    //                 'approved'  => 'Approved',
+                    //                 'declined'  => 'Declined',
+                    //                 'paid'      => 'Paid',
+                    //                 'untracked' => 'Untracked',
+                    //             ])
+                    //             ->required()
+                    //             ->label('New Status'),
+                    //     ])
+                    //     ->action(function (Collection $records, array $data) {
+                    //         $records->each(fn ($record) => $record->update(['status' => $data['status']]));
+                    //         Notification::make()->title('Conversion status updated')->success()->send();
+                    //     })
+                    //     ->deselectRecordsAfterCompletion(),
+
+
+                    BulkAction::make('update_status')
+                        ->label('Update Status')
+                        ->form([
+                            Forms\Components\Select::make('status')
+                            ->options([
+                                'pending'   => 'Pending',
+                                'approved'  => 'Approved',
+                                'declined'  => 'Declined',
+                                'paid'      => 'Paid',
+                                'untracked' => 'Untracked',
+                            ])
+                            ->required()
+                            ->label('New Status'),
+                        ])
+                        ->action(function (Collection $records, array $data) {
+                            // 1) extract the real conversion IDs
+                            $ids = $records->pluck('conversion_id')->all();
+
+                            // 2) mass-update the underlying table/model
+                            Conversion::whereIn('id', $ids)
+                            ->update(['status' => $data['status']]);
+
+                            Notification::make()
+                            ->title('Conversion status updated')
+                            ->success()
+                            ->send();
+                        })
+                        ->deselectRecordsAfterCompletion(),
                 ]),
             ]);
     }

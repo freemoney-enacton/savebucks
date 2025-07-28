@@ -19,6 +19,7 @@ use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Filament\Navigation\NavigationItem;
 use App\Filament\Affiliate\Resources\CampaignResource;
+use Leandrocfe\FilamentApexCharts\FilamentApexChartsPlugin;
 
 class AffiliatePanelProvider extends PanelProvider
 {
@@ -46,6 +47,9 @@ class AffiliatePanelProvider extends PanelProvider
             ->discoverPages(in: app_path('Filament/Affiliate/Pages'), for: 'App\\Filament\\Affiliate\\Pages')
             ->pages([
                 Pages\Dashboard::class,
+            ])
+             ->plugins([
+                FilamentApexChartsPlugin::make()
             ])
             ->discoverWidgets(in: app_path('Filament/Affiliate/Widgets'), for: 'App\\Filament\\Affiliate\\Widgets')
             ->middleware([
