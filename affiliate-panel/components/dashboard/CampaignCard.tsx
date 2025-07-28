@@ -47,7 +47,7 @@ export function CampaignCard({ campaign }: { campaign: any }) {
                 <div>
                   <Link
                     href={
-                      campaign.termsAndConditionsUrl || "/terms-and-condition"
+                      campaign.termsAndConditionsUrl || `/terms-and-condition/${campaign.id}`
                     }
                     target="_blank"
                   >

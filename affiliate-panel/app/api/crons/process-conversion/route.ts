@@ -5,7 +5,7 @@ import {
   updateAffiliateLinkStats,
 } from "@/models/affiliate-link-model";
 import { getAffiliatePostbackByCampaignAndGoal } from "@/models/affiliate-postback-model";
-import { getCampaignGoalByTrackingCode } from "@/models/campaign-goal-model";
+import { getCampaignGoalByTrackingCode, getCampaignGoalByTrackingCodeAndCampaignId } from "@/models/campaign-goal-model";
 import { getCampaignById } from "@/models/campaigns-model";
 import {
   getClickByClickCode,
@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
           status,
           user_earning,
         } = body;
-        const userEarn = Number(body?.user_earning ?? 0);
+        const userEarn = Number(body?.user_earning ?? user_earning ?? 0);
 
         console.log(
           `Processing postback log ID: ${postbackLog.id}, Transaction ID: ${transaction_id}`
@@ -93,9 +93,11 @@ export async function POST(request: NextRequest) {
         let campaign = campaignId
           ? (await getCampaignById(campaignId))?.data
           : null;
-        let campaignGoal = (await getCampaignGoalByTrackingCode(tracking_code))
-          ?.data;
-        let affiliateCampaignGoal = null;
+let campaignGoal = (Array.isArray(clickRecord?.campaignGoals) 
+  ? clickRecord.campaignGoals.find((goal) => goal.trackingCode === tracking_code)
+  : null) ?? (await getCampaignGoalByTrackingCodeAndCampaignId(tracking_code, campaignId))?.data;
+
+  let affiliateCampaignGoal =null;
 
         console.log(
           `Campaign and campaign goal found for postback log ID: ${postbackLog.id}, Transaction ID: ${transaction_id}`,
@@ -127,13 +129,20 @@ export async function POST(request: NextRequest) {
         )?.data;
 
         const existingConversion = (
-          await getConversionByTransactionId(transaction_id)
+          await getConversionByTransactionId(`${transaction_id}_${goal_code}`)
         )?.data;
+
+        console.log("Existing Conversion", existingConversion);
 
         if (existingConversion) {
           console.log(
-            `Existing conversion found for postback log ID: ${postbackLog.id}, Transaction ID: ${transaction_id}`
+            `Existing conversion found for postback log ID: ${postbackLog.id}, Transaction ID: ${transaction_id}_${goal_code}`
           );
+
+          console.log("Existing User Earning:", existingConversion.userEarned ?? "0");
+          console.log("User Earning for Postback", userEarn);
+
+          let shouldUpdateConversion = false;
 
           if (userEarn > 0) {
             await incrementUserEarned(existingConversion.id, userEarn);
@@ -144,18 +153,34 @@ export async function POST(request: NextRequest) {
             const qualification = Number(
               goalFromClick?.qualificationAmount || 0
             );
+
+            console.log("Qualification Amount for Goal", goalFromClick, "=", qualification);
             const totalEarned =
               Number(existingConversion.userEarned || 0) + userEarn;
+            console.log("Total User Earning Now", totalEarned);
+
             if (totalEarned >= qualification) {
+              console.log("User has now earned more than qualification");
+              shouldUpdateConversion = true;
               await updateConversionStatus(existingConversion.id, "approved");
             }
           }
 
-          if (existingConversion.status === "pending") {
-            const updateResult = await updateConversionStatus(
-              existingConversion.id,
-              status
-            );
+          if (existingConversion.status === "pending" || existingConversion.status === "untracked") {
+
+            let updateResult;
+            if(shouldUpdateConversion){
+              updateResult = await updateConversionStatus(
+                existingConversion.id,
+                "approved"
+              );
+            } else{
+              updateResult = await updateConversionStatus(
+                existingConversion.id,
+                status
+              );
+            }
+
 
             if (updateResult.status === "error") {
               console.log(
@@ -233,8 +258,8 @@ export async function POST(request: NextRequest) {
             status: goalFromClick
               ? userEarn >= qualification
                 ? "approved"
-                : "pending"
-              : "untracked",
+                : "untracked"
+              : "pending",
             postbackLogId: postbackLog.id,
             createdAt: new Date(),
             updatedAt: new Date(),

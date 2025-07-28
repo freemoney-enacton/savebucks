@@ -4,6 +4,7 @@
 "cancel": "Cancel",
 "delete": "Delete",
 "deleting": "Deleting...",
+"welcome_title":"Welcome to the Savebucks Affiliate Dashboard",
 "somethingWentWrong": "Something went wrong. Please try again.",
 "passwordChanged": "Password updated successfully",
  "errorSendingEmail": "Error sending email",

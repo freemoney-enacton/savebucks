@@ -10,8 +10,8 @@ const programCronConfig = [
   {
     name: "Process Conversion",
     url: `${URL}/process-conversion`,
-    schedule: "*/1 * * * *", 
-    // schedule: "*/5 * * * *", 
+    // schedule: "*/1 * * * *", 
+    schedule: "*/5 * * * *", 
   },
 ];
 

@@ -84,7 +84,7 @@ fastifyPassport.use(
         click_code || null
       );
 
-      if (result) {
+      if (result && result.insertId) {
         if (avatar) {
           const users = await user.findByEmail(email);
 
@@ -108,14 +108,14 @@ fastifyPassport.use(
         const userData = await db
           .selectFrom("users")
           .select(["affiliate_click_code"])
-          .where("id", "=", result.insertId)
+          .where("id", "=", Number(result.insertId))
           .executeTakeFirst();
 
-        if (userData && userData.affiliate_click_code) {
+        if (userData && userData.affiliate_click_code && result.insertId) {
           const res = await sendConversionRequest({
             tracking_code: "registration",
             click_code: userData?.affiliate_click_code,
-            transaction_id: result.insertId.toString(),
+            transaction_id: result?.insertId?.toString(),
           });
         }
         return done(null, { ...profile, userID: Number(result.insertId) });
@@ -197,7 +197,7 @@ fastifyPassport.use(
           click_code || null
         );
 
-        if (result) {
+        if (result && result.insertId) {
           if (avatar) {
             const users = await user.findByEmail(email);
 
@@ -220,14 +220,14 @@ fastifyPassport.use(
           const userData = await db
             .selectFrom("users")
             .select(["affiliate_click_code"])
-            .where("id", "=", result.insertId)
+            .where("id", "=", Number(result.insertId))
             .executeTakeFirst();
 
-          if (userData && userData.affiliate_click_code) {
+          if (userData && userData.affiliate_click_code && result.insertId) {
             const res = await sendConversionRequest({
               tracking_code: "registration",
               click_code: userData?.affiliate_click_code,
-              transaction_id: result.insertId.toString(),
+              transaction_id: result?.insertId?.toString(),
             });
           }
           return cb(null, profile);
@@ -271,7 +271,7 @@ fastifyPassport.use(
           click_code || null
         );
 
-        if (result) {
+        if (result && result.insertId) {
           if (avatar) {
             const users = await user.findByEmail(email);
 
@@ -294,14 +294,14 @@ fastifyPassport.use(
           const userData = await db
             .selectFrom("users")
             .select(["affiliate_click_code"])
-            .where("id", "=", result.insertId)
+            .where("id", "=", Number(result.insertId))
             .executeTakeFirst();
 
-          if (userData && userData.affiliate_click_code) {
+          if (userData && userData.affiliate_click_code && result.insertId) {
             const res = await sendConversionRequest({
               tracking_code: "registration",
               click_code: userData?.affiliate_click_code,
-              transaction_id: result.insertId.toString(),
+              transaction_id: result?.insertId?.toString(),
             });
           }
           return cb(null, profile);
@@ -361,7 +361,7 @@ fastifyPassport.use(
           lang,
           click_code || null
         );
-        if (result) {
+        if (result && result.insertId) {
           const joinBonus = await bonusDetails("join_no_refer");
           await handleBonusAndNotifications(
             Number(result.insertId),
@@ -371,14 +371,14 @@ fastifyPassport.use(
           const userData = await db
             .selectFrom("users")
             .select(["affiliate_click_code"])
-            .where("id", "=", result.insertId)
+            .where("id", "=", Number(result.insertId))
             .executeTakeFirst();
 
-          if (userData && userData.affiliate_click_code) {
+          if (userData && userData.affiliate_click_code && result.insertId) {
             const res = await sendConversionRequest({
               tracking_code: "registration",
               click_code: userData?.affiliate_click_code,
-              transaction_id: result.insertId.toString(),
+              transaction_id: result?.insertId?.toString(),
             });
           }
           return cb(null, decodedToken);

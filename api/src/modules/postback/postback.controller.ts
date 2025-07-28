@@ -334,7 +334,7 @@ export const triggerPostback = async (req: FastifyRequest, reply: FastifyReply) 
     }
 
     // Update Ticker
-    if (postbackDataDB.status == "confirmed") {
+    if (postbackDataDB.status == "confirmed" && Number(postbackDataDB.amount) >0) {
       await postback.insertTicker(
         postbackData.uid,
         "Earnings",

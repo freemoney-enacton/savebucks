@@ -497,6 +497,29 @@ export interface FrequencyParameters {
 }
 
 export interface GiftcardBrands {
+  active: Generated<number>;
+  card_status: string;
+  countries: Json | null;
+  created: Date | null;
+  created_at: Date | null;
+  currency: string | null;
+  denomination: Json | null;
+  description: string | null;
+  extra_information: string | null;
+  id: Generated<number>;
+  image: string | null;
+  items: Json | null;
+  last_updated_at: Date | null;
+  name: string | null;
+  sku: string;
+  status: Generated<"draft" | "publish" | "trash">;
+  terms: string | null;
+  updated_at: Date | null;
+  vendor: string;
+}
+
+export interface GiftcardBrandsB {
+  active: Generated<number>;
   card_status: string;
   countries: Json | null;
   created: Date | null;
@@ -1058,6 +1081,7 @@ export interface PaypalLogs {
   error_message: string | null;
   id: Generated<number>;
   ip_address: string | null;
+  log_type: Generated<string | null>;
   payment_id: number;
   paypal_batch_id: string | null;
   request_payload: Json | null;
@@ -1703,6 +1727,7 @@ export interface UserReferrerSales {
 }
 
 export interface Users {
+  affiliate_click_code: string | null;
   affiliate_commission: Generated<Decimal>;
   affiliate_earnings: Generated<Decimal>;
   avatar: string | null;
@@ -2073,6 +2098,7 @@ export interface DB {
   footers: Footers;
   frequency_parameters: FrequencyParameters;
   giftcard_brands: GiftcardBrands;
+  giftcard_brands_b: GiftcardBrandsB;
   giftcard_brands_sandbox: GiftcardBrandsSandbox;
   iexceptions: Iexceptions;
   imports: Imports;

@@ -1,4 +1,3 @@
-import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
 import { createTranslation } from "@/i18n/server";
 import { getAffiliateById } from "@/models/affiliates-model";
@@ -13,11 +12,74 @@ import { Config } from "@/utils/config";
 import { sendEmailToAffiliate } from "@/services/email-service";
 import CryptoJS from "crypto-js";
 
-const ratelimit = new Ratelimit({
-  redis: Redis.fromEnv(),
-  limiter: Ratelimit.fixedWindow(1, "1 m"),
-  analytics: true,
-});
+const redis = Redis.fromEnv();
+
+async function checkRateLimit(
+  identifier: string,
+  maxRequests = 1,
+  windowSeconds = 60
+) {
+  const now = Math.floor(Date.now() / 1000);
+  const windowStart = Math.floor(now / windowSeconds) * windowSeconds;
+  const key = `rate_limit:${identifier}:${windowStart}`;
+
+  try {
+    const script = `
+      local key = KEYS[1]
+      local ttl = tonumber(ARGV[1])
+      local limit = tonumber(ARGV[2])
+      
+      local current = redis.call('GET', key)
+      if current == false then
+        current = 0
+      else
+        current = tonumber(current)
+      end
+      
+      if current >= limit then
+        local remaining_ttl = redis.call('TTL', key)
+        if remaining_ttl == -1 then
+          remaining_ttl = ttl
+        end
+        return {0, current, remaining_ttl}
+      end
+      
+      local new_val = redis.call('INCR', key)
+      if new_val == 1 then
+        redis.call('EXPIRE', key, ttl)
+      end
+      
+      local remaining_ttl = redis.call('TTL', key)
+      return {1, new_val, remaining_ttl}
+    `;
+
+    const result = (await redis.eval(
+      script,
+      [key],
+      [windowSeconds, maxRequests]
+    )) as number[];
+    const [allowed, count, ttl] = result;
+
+    const success = allowed === 1;
+    const remaining = Math.max(0, maxRequests - count);
+    const resetTime = now + (ttl > 0 ? ttl : windowSeconds);
+
+    return {
+      success,
+      limit: maxRequests,
+      remaining,
+      reset: resetTime * 1000,
+    };
+  } catch (error) {
+    console.error("Rate limit error:", error);
+    return {
+      success: true,
+      limit: maxRequests,
+      remaining: maxRequests - 1,
+      reset: (now + windowSeconds) * 1000,
+    };
+  }
+}
 
 export async function POST(request: NextRequest) {
   const { t } = await createTranslation();
@@ -30,12 +92,11 @@ export async function POST(request: NextRequest) {
     const ip = forwarded ? forwarded.split(",")[0] : request.ip || "unknown";
 
     const identifier = `payout:${id}:${ip}`;
-    const { success, limit, reset, remaining } = await ratelimit.limit(
-      identifier
-    );
 
-    if (!success) {
-      const resetDate = new Date(reset);
+    const rateLimitResult = await checkRateLimit(identifier, 1, 60);
+
+    if (!rateLimitResult.success) {
+      const resetDate = new Date(rateLimitResult.reset);
       const waitMinutes = Math.ceil(
         (resetDate.getTime() - Date.now()) / (1000 * 60)
       );
@@ -92,11 +153,7 @@ export async function POST(request: NextRequest) {
     const data = {
       affiliateId: id,
       paymentMethod: type,
-      paymentAccount:
-        type === "paypal"
-          ? affiliate.paypalAddress
-          : // @ts-ignore
-            affiliate.bankDetails?.accountNumber || "",
+      paymentAccount: type === "paypal" ? affiliate.paypalAddress : (affiliate.bankDetails as any)?.bank_account_no || "",
       requestedAmount: amount,
       paymentDetails: JSON.stringify(payment_details),
       transactionId: generateTransactionId(),
@@ -135,10 +192,11 @@ export async function POST(request: NextRequest) {
       message: t("payouts.payoutCreated"),
     });
   } catch (error) {
+    console.error("Error processing payout request:", error);
     return commonResponse({
       data: error,
       status: "error",
-      message: t("postback.invalidData"),
+      message: t("postbook.invalidData"),
     });
   }
 }

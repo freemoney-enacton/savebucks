@@ -6,7 +6,7 @@ interface AuthLayoutProps {
   children: React.ReactNode;
 }
 
-export default function AuthLayout({ children }: AuthLayoutProps) {
+export default async function AuthLayout({ children }: AuthLayoutProps) {
   return (
     <div className="min-h-screen bg-white relative">
       {/* Gradient Background - Top half of screen */}
@@ -14,7 +14,7 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
         {/* Welcome Text */}
         <div className="flex items-center justify-center h-full px-4">
           <h1 className="text-white text-2xl sm:text-3xl font-semibold text-center mb-2">
-            Welcome to Your Affiliate Portal
+            Welcome to the Savebucks Affiliate Dashboard
           </h1>
         </div>
       </div>
