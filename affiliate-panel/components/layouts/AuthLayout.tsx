@@ -6,7 +6,7 @@ interface AuthLayoutProps {
   children: React.ReactNode;
 }
 
-export default async function AuthLayout({ children }: AuthLayoutProps) {
+export default function AuthLayout({ children }: AuthLayoutProps) {
   return (
     <div className="min-h-screen bg-white relative">
       {/* Gradient Background - Top half of screen */}
