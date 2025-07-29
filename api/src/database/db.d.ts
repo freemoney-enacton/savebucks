@@ -1754,6 +1754,7 @@ export interface Users {
   mentions_count: Generated<number>;
   metadata: Json | null;
   name: string;
+  onesignal_notification_id: string | null;
   password: string | null;
   phone_no: string | null;
   promotion_update: Generated<number>;
