@@ -14,6 +14,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { AppRoutes } from "@/utils/routes";
 import { createTranslation } from "@/i18n/server";
+import { Config } from "@/utils/config";
 
 export default async function Page({
   params,
@@ -59,7 +60,9 @@ export default async function Page({
             />
           </Link> */}
 
-          <h1 className="text-3xl font-medium text-center">{t("linkNotActive")}</h1>
+          <h1 className="text-3xl font-medium text-center">
+            {t("linkNotActive")}
+          </h1>
         </div>
       </AuthLayout>
     );
@@ -117,7 +120,7 @@ export default async function Page({
     );
   } else {
     redirect(
-      `https://dev.savebucks.app/?click_code=${clickCode}&source=affiliate`
+      `${Config.env.app.app_url}/?click_code=${clickCode}&source=affiliate`
     );
   }
 
