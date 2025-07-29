@@ -120,7 +120,7 @@ export default async function Page({
     );
   } else {
     redirect(
-      `${Config.env.app.app_url}/?click_code=${clickCode}&source=affiliate`
+      `${Config.env.app.savebucks_web_url}/?click_code=${clickCode}&source=affiliate`
     );
   }
 

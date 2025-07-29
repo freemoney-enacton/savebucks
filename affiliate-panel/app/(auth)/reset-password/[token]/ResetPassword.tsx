@@ -11,7 +11,7 @@ import { Api } from "@/services/api-services";
 import { AppRoutes } from "@/utils/routes";
 import { ResetPasswordSchema } from "@/utils/validation";
 import { Form, Formik } from "formik";
-import { KeyRound } from "lucide-react";
+import { ArrowLeftIcon, KeyRound } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
@@ -42,7 +42,7 @@ export default function ResetPasswordPage({ id }: { id: string }) {
         id,
         newPassword: values.newPassword,
         confirmPassword: values.confirmPassword,
-      }
+      };
 
       const response = await Api.post({
         path: AppRoutes.auth.reset_password,
@@ -217,11 +217,11 @@ export default function ResetPasswordPage({ id }: { id: string }) {
             </CardContent>
           </Card>
         </div>
-
         <Link
           href={AppRoutes.auth.signIn}
-          className="text-sm hover:underline text-brand-500 font-semibold"
+          className="text-sm hover:underline text-brand-500 font-semibold flex items-center place-content-center mt-3"
         >
+          <ArrowLeftIcon className="w-4 h-4 mr-1" />
           {t("auth.forgotPassword.backToSignIn")}
         </Link>
       </div>

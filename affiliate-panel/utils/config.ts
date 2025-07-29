@@ -18,6 +18,8 @@ export const Config = {
         process.env.NEXT_PUBLIC_AUTH_URL || "http://localhost:3000/auth",
       admin_url:
         process.env.NEXT_PUBLIC_ADMIN_URL || "http://localhost:3000/admin",
+      savebucks_web_url:
+        process.env.NEXT_PUBLIC_SAVEBUCKS_WEB_URL || "http://localhost:3000",
       environment: process.env.ENVIRONMENT || "DEVELOPMENT",
       jwt_login_expiry: 86400,
       next_auth_cookie_name:

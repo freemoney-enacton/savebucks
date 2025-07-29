@@ -9,7 +9,7 @@ import {
 import { getAuthSession } from "@/models/auth-models";
 import { sendEmailToAffiliate } from "@/services/email-service";
 import { AppRoutes } from "@/utils/routes";
-import { CheckCircle } from "lucide-react";
+import { ArrowLeftIcon, CheckCircle } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -52,7 +52,7 @@ export default async function page({
       <AuthLayout>
         <div className="space-y-6">
           <div>
-            <Card>
+            <Card className="p-4">
               <CardHeader className="!p-0">
                 <div className="flex items-center justify-center mb-4">
                   <CheckCircle className="h-12 w-12 text-green-500" />
@@ -72,8 +72,9 @@ export default async function page({
           <div className="text-center">
             <Link
               href={AppRoutes.auth.signIn}
-              className="text-sm hover:underline text-brand-500 font-medium"
+              className="text-sm hover:underline text-brand-500 font-semibold flex items-center place-content-center mt-3"
             >
+              <ArrowLeftIcon className="w-4 h-4 mr-1" />
               {t("auth.verify_email.backToSignIn")}
             </Link>
           </div>
