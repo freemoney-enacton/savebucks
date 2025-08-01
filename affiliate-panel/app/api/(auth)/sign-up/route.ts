@@ -25,7 +25,14 @@ export async function POST(request: NextRequest) {
       strict: true,
     });
 
-    const { name, email, password } = body;
+    const {
+      name,
+      email,
+      password,
+      promotionMethod,
+      websiteLink,
+      estimatedMonthlyLeads,
+    } = body;
 
     const existingUser = await getAffiliateByEmail(email.toLowerCase());
     if (existingUser.data) {
@@ -43,6 +50,9 @@ export async function POST(request: NextRequest) {
       name,
       email,
       password: hashedPassword,
+      promotionMethod,
+      websiteLink,
+      estimatedMonthlyLeads,
       token,
       tokenExpiry,
       createdAt: new Date(),

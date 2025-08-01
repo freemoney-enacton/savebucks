@@ -77,6 +77,31 @@ class AffiliateResource extends Resource
                                 ->placeholder("Enter Paypal Account")
                                 ->maxLength(255),
 
+                            Forms\Components\Select::make('promotion_method')
+                                ->label('Promotion Method')
+                                ->options([
+                                    'social_media' => 'Social Media',
+                                    'website'      => 'Website',
+                                    'youtube'      => 'YouTube',
+                                    'other'        => 'Other',
+                                ])
+                                ->required(),
+
+                            Forms\Components\TextInput::make('website_link')
+                                ->label('Website or Social Link')
+                                ->url()
+                                ->required(),
+
+                            Forms\Components\Select::make('estimated_monthly_leads')
+                                ->label('Estimated Monthly Leads')
+                                ->options([
+                                    '0-100'    => '0-100',
+                                    '100-500'  => '100-500',
+                                    '500-1000' => '500-1000',
+                                    '1000+'    => 'More than 1000',
+                                ])
+                                ->required(),
+
                             // Forms\Components\TextInput::make('tax_id')
                             //     ->label("Tax ID")
                             //     ->placeholder("Enter Tax Id")

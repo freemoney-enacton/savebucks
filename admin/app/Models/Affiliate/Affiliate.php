@@ -31,6 +31,9 @@ class Affiliate extends Model
         'bank_details',
         'address',
         'tax_id',
+        'promotion_method',
+        'website_link',
+        'estimated_monthly_leads',
         'is_email_verified',
         'email_verified_at'
     ];

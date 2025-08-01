@@ -29,6 +29,9 @@
       "name": "Name",
       "email": "Email",
       "password": "Password",
+      "promotionMethod": "Promotion Method",
+      "websiteLink": "Website or Social Media Link",
+      "estimatedMonthlyLeads": "Estimated Monthly Leads",
       "submit": "Sign Up",
       "haveAccount": "Already have an account?",
       "signIn": "Sign In",
@@ -41,6 +44,18 @@
       "errorSendingWelcomeEmail": "Error sending welcome email",
       "verificationEmailSent": "Verification email sent successfully",
       "welcomeEmailSent": "Welcome email sent successfully"
+    },
+    "promotionMethodOptions": {
+      "socialMedia": "Social Media",
+      "website": "Website",
+      "youtube": "YouTube",
+      "other": "Other"
+    },
+    "monthlyLeadsOptions": {
+      "0-100": "0-100",
+      "100-500": "100-500",
+      "500-1000": "500-1000",
+      "1000+": "More than 1000"
     },
     "forgotPassword": {
       "title": "Forgot Password",
@@ -64,7 +79,10 @@
     "placeholder":{
       "name": "Enter your name",
       "email": "Enter your email",
-      "password": "Enter your password"
+      "password": "Enter your password",
+      "promotionMethod": "Select promotion method",
+      "websiteLink": "Enter your website or social link",
+      "estimatedMonthlyLeads": "Select estimated monthly leads"
     },
     "logout":{
       "title": "Log Out",
