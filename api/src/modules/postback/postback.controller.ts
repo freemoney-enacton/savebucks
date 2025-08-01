@@ -1,6 +1,7 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import app from "../../app";
 import crypto from "crypto";
+import * as ipaddr from "ipaddr.js";
 import * as postback from "./postback.model";
 import { UserOfferwallSales } from "../../database/db";
 import { dispatchEvent } from "../../events/eventBus";
@@ -104,25 +105,155 @@ function createPostbackData(reqData: Record<string, any>, postbackFields: Array<
   return postbackData as PostbackReqData;
 }
 
-// TODO: Add this code
-const networkSecurityValidation = {
-  mocknetwork: async (req: FastifyRequest) => true,
-  bitlabs: async (req: FastifyRequest) => true,
-  cpx: async (req: FastifyRequest) => true,
-  daisycon: async (req: FastifyRequest) => true,
-  savebucks: async (req: FastifyRequest) => true,
-  ayet: async (req: FastifyRequest) => true,
-  notik: async (req: FastifyRequest) => true,
-  cpxresearch: async (req: FastifyRequest) => true,
-  theoremreach: async (req: FastifyRequest) => true,
-  mychips: async (req: FastifyRequest) => true,
-  timewall: async (req: FastifyRequest) => true,
-  lootably: async (req: FastifyRequest) => true,
-  adscendmedia: async (req: FastifyRequest) => true,
-  revlum: async (req: FastifyRequest) => true,
-  primesurvey: async (req: FastifyRequest) => true
-  // ...
+function getRequestIP(req: FastifyRequest): string {
+  const xClientIp = (req.headers["x-client-ip"] as string | undefined)?.trim();
+  const xForwardedFor = (req.headers["x-forwarded-for"] as string | undefined)?.split(",")[0]?.trim();
+  return xClientIp || xForwardedFor || req.ip;
 }
+
+function ipMatches(ip: string, range: string): boolean {
+  try {
+    if (range.includes("/")) {
+      const [addr, prefix] = ipaddr.parseCIDR(range);
+      return (ipaddr.parse(ip) as any).match([addr, prefix]);
+    }
+    return ip === range;
+  } catch {
+    return false;
+  }
+}
+
+const networkSecurityValidation: Record<string, (req: FastifyRequest, network: any) => Promise<boolean>> = {
+  mocknetwork: async () => true,
+  bitlabs: async (req, network) => {
+    const defaultIps = [
+      "20.76.54.40/29",
+      "18.199.243.90",
+      "18.157.62.114",
+      "18.193.24.206",
+    ];
+    const ipList = (network.whitelist_ips ? network.whitelist_ips.split(',') : defaultIps).map((ip: string) => ip.trim());
+    const requestIp = getRequestIP(req);
+    const ipOk = ipList.some((ip: string) => ipMatches(requestIp, ip));
+    if (!ipOk) return false;
+    if (network.postback_key) {
+      const fullUrl = `${config.env.app.url}${req.raw.url}`;
+      const [base, hash] = fullUrl.split("&hash=");
+      if (!hash) return false;
+      const hmac = crypto.createHmac("sha1", network.postback_key);
+      hmac.update(base);
+      const computed = hmac.digest("hex");
+      return computed === hash;
+    }
+    return true;
+  },
+  cpx: async (req, network) => {
+    const defaultIps = ["188.40.3.73", "2a01:4f8:d0a:30ff::2", "157.90.97.92"];
+    const ipList = (network.whitelist_ips ? network.whitelist_ips.split(',') : defaultIps).map((ip: string) => ip.trim());
+    const requestIp = getRequestIP(req);
+    if (!ipList.some((ip: string) => ipMatches(requestIp, ip))) return false;
+    if (network.postback_key) {
+      const params: any = req.method === 'GET' ? req.query : req.body;
+      const expected = crypto
+        .createHash('md5')
+        .update(`${params.tid}-${network.postback_key}`)
+        .digest('hex');
+      return params.hash === expected;
+    }
+    return true;
+  },
+  daisycon: async () => true,
+  savebucks: async () => true,
+  ayet: async (req, network) => {
+    const defaultIps = [
+      "51.79.101.241",
+      "158.69.185.134",
+      "158.69.185.154",
+      "35.165.166.40",
+      "35.166.159.131",
+      "52.40.3.140",
+    ];
+    const ipList = (network.whitelist_ips ? network.whitelist_ips.split(',') : defaultIps).map((ip: string) => ip.trim());
+    const requestIp = getRequestIP(req);
+    if (!ipList.some((ip: string) => ipMatches(requestIp, ip))) return false;
+    const providedHash = req.headers['x-ayetstudios-security-hash'] as string | undefined;
+    if (!providedHash || !network.postback_key) return false;
+    const params: any = req.method === 'GET' ? req.query : req.body;
+    const keys = Object.keys(params).sort();
+    const base = keys.map(key => `${key}=${params[key]}`).join('&');
+    const expected = crypto.createHmac('sha256', network.postback_key).update(base).digest('hex');
+    return expected === providedHash;
+  },
+  notik: async (req, network) => {
+    const defaultIps = ["192.53.121.112"];
+    const ipList = (network.whitelist_ips ? network.whitelist_ips.split(',') : defaultIps).map((ip: string) => ip.trim());
+    const requestIp = getRequestIP(req);
+    if (!ipList.some((ip: string) => ipMatches(requestIp, ip))) return false;
+    if (network.postback_key) {
+      const fullUrl = `${config.env.app.url}${req.raw.url}`;
+      const [base, hash] = fullUrl.split("&hash=");
+      if (!hash) return false;
+      const hmac = crypto.createHmac('sha1', network.postback_key);
+      hmac.update(base);
+      const computed = hmac.digest('hex');
+      return computed === hash;
+    }
+    return true;
+  },
+  cpxresearch: async () => true,
+  theoremreach: async () => true,
+  mychips: async () => true,
+  timewall: async () => true,
+  lootably: async (req, network) => {
+    if (network.postback_key) {
+      const params: any = req.method === 'GET' ? req.query : req.body;
+      const base = `${params.uid}${params.cip}${params.pyt}${params.amt}${network.postback_key}`;
+      const expected = crypto.createHash('sha256').update(base).digest('hex');
+      return params.hash === expected;
+    }
+    return true;
+  },
+  adscendmedia: async (req, network) => {
+    const defaultIps = ["44.212.211.226"];
+    const ipList = (network.whitelist_ips ? network.whitelist_ips.split(',') : defaultIps).map((ip: string) => ip.trim());
+    const requestIp = getRequestIP(req);
+    if (!ipList.some((ip: string) => ipMatches(requestIp, ip))) return false;
+    if (network.postback_key) {
+      const params: any = req.method === 'GET' ? req.query : req.body;
+      const expected = crypto
+        .createHash('md5')
+        .update(`${params.oid}-${params.uid}-${network.postback_key}`)
+        .digest('hex');
+      return params.hash === expected;
+    }
+    return true;
+  },
+  revlum: async (req, network) => {
+    const defaultIps = [
+      "67.205.168.172",
+      "104.248.49.78",
+      "157.230.64.48",
+      "206.189.253.134",
+      "66.187.72.90",
+      "66.187.72.91",
+      "66.187.72.92",
+      "66.187.72.93",
+      "66.187.72.94",
+      "206.189.231.33",
+      "2604:e880:2::/64",
+      "2604:a880:400:d0::/64",
+    ];
+    const ipList = (network.whitelist_ips ? network.whitelist_ips.split(',') : defaultIps).map((ip: string) => ip.trim());
+    const requestIp = getRequestIP(req);
+    return ipList.some((ip: string) => ipMatches(requestIp, ip));
+  },
+  primesurvey: async (req, network) => {
+    const defaultIps = ["168.119.57.82", "49.12.33.196", "49.13.14.251"];
+    const ipList = (network.whitelist_ips ? network.whitelist_ips.split(',') : defaultIps).map((ip: string) => ip.trim());
+    const requestIp = getRequestIP(req);
+    return ipList.some((ip: string) => ipMatches(requestIp, ip));
+  },
+};
 
 export const triggerPostback = async (req: FastifyRequest, reply: FastifyReply) => {
   try {
@@ -166,9 +297,10 @@ export const triggerPostback = async (req: FastifyRequest, reply: FastifyReply) 
     const networkDetails = await postback.getNetworkDetails(postbackData.typ, postbackData.net);
     if (!networkDetails) throw new Error("Network not found");
     if (networkDetails?.postback_validation_key != postbackData.iky) throw new Error("Postback Key Mismatch");
-    // TODO: Add network ip validation
-    // @ts-ignore
-    const networkSecurityValidated = postbackData.net && networkSecurityValidation[postbackData.net] ? await networkSecurityValidation[postbackData.net](req) : true;
+    const networkSecurityValidated =
+      postbackData.net && networkSecurityValidation[postbackData.net]
+        ? await networkSecurityValidation[postbackData.net](req, networkDetails)
+        : true;
     // console.log("🚀 ~ triggerPostback ~ postbackData.net:", postbackData.net)
     // console.log("🚀 ~ triggerPostback ~ networkSecurityValidated:", networkSecurityValidated)
 
