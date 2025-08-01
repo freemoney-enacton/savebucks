@@ -78,7 +78,9 @@ export default async function Page({
       )
     )?.data || [];
 
-  const goals = campaignGoalsData.map((goal: any) => {
+const goals = campaignGoalsData
+  .filter((goal: any) => goal.status === 'active')
+  .map((goal: any) => {
     const affiliateGoal = affiliateGoalsData.find(
       (ag: any) => ag.campaignGoalId === goal.id
     );
@@ -116,7 +118,7 @@ export default async function Page({
 
   if (deviceType === "mobile" || deviceType === "tablet") {
     redirect(
-      `https://savebucks.onelink.me/qwcj/influencerId?click_code=${clickCode}&source=affiliate`
+      `https://savebucks.onelink.me/oIrG/influencerId?click_code=${clickCode}&source=affiliate`
     );
   } else {
     redirect(

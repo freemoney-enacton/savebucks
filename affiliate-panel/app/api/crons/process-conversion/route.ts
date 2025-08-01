@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
           : null;
 let campaignGoal = (Array.isArray(clickRecord?.campaignGoals) 
   ? clickRecord.campaignGoals.find((goal) => goal.trackingCode === tracking_code)
-  : null) ?? (await getCampaignGoalByTrackingCodeAndCampaignId(tracking_code, campaignId))?.data;
+  : null) 
 
   let affiliateCampaignGoal =null;
 
