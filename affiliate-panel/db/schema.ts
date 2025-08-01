@@ -68,10 +68,7 @@ export const affiliates = mysqlTable("affiliates", {
   bankDetails: json("bank_details"),
   address: json("address"),
   taxId: varchar("tax_id", { length: 255 }),
-  promotionMethod: mysqlEnum(
-    "promotion_method",
-    promotionMethodEnum
-  ).notNull(),
+  promotionMethod: mysqlEnum("promotion_method", promotionMethodEnum).notNull(),
   websiteLink: varchar("website_link", { length: 255 }).notNull(),
   estimatedMonthlyLeads: mysqlEnum(
     "estimated_monthly_leads",

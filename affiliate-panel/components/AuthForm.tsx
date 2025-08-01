@@ -93,112 +93,8 @@ export default function AuthForm({ type, onSubmit }: AuthFormProps) {
                   <p className="text-sm text-red-500">{errors.name}</p>
                 )}
               </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="promotionMethod">
-                  {t("auth.signUp.promotionMethod")}
-                  <span className="text-red-500"> *</span>
-                </Label>
-                <Select
-                  value={values.promotionMethod}
-                  onValueChange={(value) =>
-                    handleChange({ target: { name: "promotionMethod", value } })
-                  }
-                >
-                  <SelectTrigger id="promotionMethod">
-                    <SelectValue
-                      placeholder={t(
-                        "auth.signUp.placeholder.promotionMethod"
-                      )}
-                    />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="social_media">
-                      {t(
-                        "auth.signUp.promotionMethodOptions.socialMedia"
-                      )}
-                    </SelectItem>
-                    <SelectItem value="website">
-                      {t("auth.signUp.promotionMethodOptions.website")}
-                    </SelectItem>
-                    <SelectItem value="youtube">
-                      {t("auth.signUp.promotionMethodOptions.youtube")}
-                    </SelectItem>
-                    <SelectItem value="other">
-                      {t("auth.signUp.promotionMethodOptions.other")}
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-                {touched.promotionMethod && errors.promotionMethod && (
-                  <p className="text-sm text-red-500">
-                    {errors.promotionMethod as string}
-                  </p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="websiteLink">
-                  {t("auth.signUp.websiteLink")}
-                  <span className="text-red-500"> *</span>
-                </Label>
-                <Input
-                  id="websiteLink"
-                  name="websiteLink"
-                  type="text"
-                  placeholder={t("auth.signUp.placeholder.websiteLink")}
-                  onChange={handleChange}
-                  onBlur={handleBlur}
-                  value={values.websiteLink}
-                />
-                {touched.websiteLink && errors.websiteLink && (
-                  <p className="text-sm text-red-500">{errors.websiteLink}</p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="estimatedMonthlyLeads">
-                  {t("auth.signUp.estimatedMonthlyLeads")}
-                  <span className="text-red-500"> *</span>
-                </Label>
-                <Select
-                  value={values.estimatedMonthlyLeads}
-                  onValueChange={(value) =>
-                    handleChange({
-                      target: { name: "estimatedMonthlyLeads", value },
-                    })
-                  }
-                >
-                  <SelectTrigger id="estimatedMonthlyLeads">
-                    <SelectValue
-                      placeholder={t(
-                        "auth.signUp.placeholder.estimatedMonthlyLeads"
-                      )}
-                    />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="0-100">
-                      {t("auth.signUp.monthlyLeadsOptions.0-100")}
-                    </SelectItem>
-                    <SelectItem value="100-500">
-                      {t("auth.signUp.monthlyLeadsOptions.100-500")}
-                    </SelectItem>
-                    <SelectItem value="500-1000">
-                      {t("auth.signUp.monthlyLeadsOptions.500-1000")}
-                    </SelectItem>
-                    <SelectItem value="1000+">
-                      {t("auth.signUp.monthlyLeadsOptions.1000+")}
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-                {touched.estimatedMonthlyLeads && errors.estimatedMonthlyLeads && (
-                  <p className="text-sm text-red-500">
-                    {errors.estimatedMonthlyLeads as string}
-                  </p>
-                )}
-              </div>
             </>
           )}
-
           <div className="space-y-2">
             <Label htmlFor="email">
               {t(`auth.${type === "signin" ? "signIn" : "signUp"}.email`)}
@@ -237,6 +133,107 @@ export default function AuthForm({ type, onSubmit }: AuthFormProps) {
                 <p className="text-sm text-red-500">{errors.password}</p>
               )}
             </div>
+          )}
+          {type === "signup" && (
+            <>
+              <div className="space-y-2">
+                <Label htmlFor="promotionMethod">
+                  {t("auth.signUp.promotionMethod")}
+                  <span className="text-red-500"> *</span>
+                </Label>
+                <Select
+                  value={values.promotionMethod}
+                  onValueChange={(value) =>
+                    handleChange({ target: { name: "promotionMethod", value } })
+                  }
+                >
+                  <SelectTrigger id="promotionMethod">
+                    <SelectValue
+                      placeholder={t("auth.placeholder.promotionMethod")}
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="social_media">
+                      {t("auth.promotionMethodOptions.socialMedia")}
+                    </SelectItem>
+                    <SelectItem value="website">
+                      {t("auth.promotionMethodOptions.website")}
+                    </SelectItem>
+                    <SelectItem value="youtube">
+                      {t("auth.promotionMethodOptions.youtube")}
+                    </SelectItem>
+                    <SelectItem value="other">
+                      {t("auth.promotionMethodOptions.other")}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                {touched.promotionMethod && errors.promotionMethod && (
+                  <p className="text-sm text-red-500">
+                    {errors.promotionMethod as string}
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="websiteLink">
+                  {t("auth.signUp.websiteLink")}
+                  <span className="text-red-500"> *</span>
+                </Label>
+                <Input
+                  id="websiteLink"
+                  name="websiteLink"
+                  type="text"
+                  placeholder={t("auth.placeholder.websiteLink")}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                  value={values.websiteLink}
+                />
+                {touched.websiteLink && errors.websiteLink && (
+                  <p className="text-sm text-red-500">{errors.websiteLink}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="estimatedMonthlyLeads">
+                  {t("auth.signUp.estimatedMonthlyLeads")}
+                  <span className="text-red-500"> *</span>
+                </Label>
+                <Select
+                  value={values.estimatedMonthlyLeads}
+                  onValueChange={(value) =>
+                    handleChange({
+                      target: { name: "estimatedMonthlyLeads", value },
+                    })
+                  }
+                >
+                  <SelectTrigger id="estimatedMonthlyLeads">
+                    <SelectValue
+                      placeholder={t("auth.placeholder.estimatedMonthlyLeads")}
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0-100">
+                      {t("auth.monthlyLeadsOptions.0-100")}
+                    </SelectItem>
+                    <SelectItem value="100-500">
+                      {t("auth.monthlyLeadsOptions.100-500")}
+                    </SelectItem>
+                    <SelectItem value="500-1000">
+                      {t("auth.monthlyLeadsOptions.500-1000")}
+                    </SelectItem>
+                    <SelectItem value="1000+">
+                      {t("auth.monthlyLeadsOptions.1000+")}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                {touched.estimatedMonthlyLeads &&
+                  errors.estimatedMonthlyLeads && (
+                    <p className="text-sm text-red-500">
+                      {errors.estimatedMonthlyLeads as string}
+                    </p>
+                  )}
+              </div>
+            </>
           )}
           {type === "signin" && (
             <div className="flex items-center justify-between gap-0.5">
