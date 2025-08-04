@@ -108,6 +108,7 @@ function createPostbackData(reqData: Record<string, any>, postbackFields: Array<
 function getRequestIP(req: FastifyRequest): string {
   const xClientIp = (req.headers["x-client-ip"] as string | undefined)?.trim();
   const xForwardedFor = (req.headers["x-forwarded-for"] as string | undefined)?.split(",")[0]?.trim();
+  console.log(xClientIp , xForwardedFor , req.ip)
   return xClientIp || xForwardedFor || req.ip;
 }
 
@@ -122,36 +123,61 @@ function ipMatches(ip: string, range: string): boolean {
     return false;
   }
 }
+// Helper function to check if request IP is allowed
+function isIpWhitelisted(req: FastifyRequest, network: any): boolean {
+  const ipList: string[] = Array.isArray(network.whitelist_ips) ?network.whitelist_ips : []
+    console.log(ipList)
 
+  const requestIp = getRequestIP(req);
+  const ipOk = ipList.some((ip: string) => ipMatches(requestIp, ip));
+
+  if (!ipOk) return false;
+
+  return true
+}
 const networkSecurityValidation: Record<string, (req: FastifyRequest, network: any) => Promise<boolean>> = {
   mocknetwork: async () => true,
   bitlabs: async (req, network) => {
-    const defaultIps = [
-      "20.76.54.40/29",
-      "18.199.243.90",
-      "18.157.62.114",
-      "18.193.24.206",
-    ];
-    const ipList = (network.whitelist_ips ? network.whitelist_ips.split(',') : defaultIps).map((ip: string) => ip.trim());
-    const requestIp = getRequestIP(req);
-    const ipOk = ipList.some((ip: string) => ipMatches(requestIp, ip));
-    if (!ipOk) return false;
+    const ipValidation = isIpWhitelisted(req, network)
+    if (!ipValidation) return false
     if (network.postback_key) {
-      const fullUrl = `${config.env.app.url}${req.raw.url}`;
+      const fullUrl = `${config.env.app.appUrl}${req.raw.url}`;
+
       const [base, hash] = fullUrl.split("&hash=");
+
       if (!hash) return false;
+
       const hmac = crypto.createHmac("sha1", network.postback_key);
-      hmac.update(base);
-      const computed = hmac.digest("hex");
+      hmac.write(base);
+      hmac.end();
+      const computed = hmac.read().toString('hex');
+
       return computed === hash;
     }
     return true;
   },
-  cpx: async (req, network) => {
-    const defaultIps = ["188.40.3.73", "2a01:4f8:d0a:30ff::2", "157.90.97.92"];
-    const ipList = (network.whitelist_ips ? network.whitelist_ips.split(',') : defaultIps).map((ip: string) => ip.trim());
-    const requestIp = getRequestIP(req);
-    if (!ipList.some((ip: string) => ipMatches(requestIp, ip))) return false;
+  bitlabsSurveys: async (req, network) => {
+    const ipValidation = isIpWhitelisted(req, network)
+    if (!ipValidation) return false
+    if (network.postback_key) {
+      const fullUrl = `${config.env.app.appUrl}${req.raw.url}`;
+
+      const [base, hash] = fullUrl.split("&hash=");
+
+      if (!hash) return false;
+
+      const hmac = crypto.createHmac("sha1", network.postback_key);
+      hmac.write(base);
+      hmac.end();
+      const computed = hmac.read().toString('hex');
+
+      return computed === hash;
+    }
+    return true;
+  },
+  cpxresearch: async (req, network) => {
+    const ipValidation = isIpWhitelisted(req, network)
+    if (!ipValidation) return false
     if (network.postback_key) {
       const params: any = req.method === 'GET' ? req.query : req.body;
       const expected = crypto
@@ -165,94 +191,155 @@ const networkSecurityValidation: Record<string, (req: FastifyRequest, network: a
   daisycon: async () => true,
   savebucks: async () => true,
   ayet: async (req, network) => {
-    const defaultIps = [
-      "51.79.101.241",
-      "158.69.185.134",
-      "158.69.185.154",
-      "35.165.166.40",
-      "35.166.159.131",
-      "52.40.3.140",
-    ];
-    const ipList = (network.whitelist_ips ? network.whitelist_ips.split(',') : defaultIps).map((ip: string) => ip.trim());
-    const requestIp = getRequestIP(req);
-    if (!ipList.some((ip: string) => ipMatches(requestIp, ip))) return false;
+    const ipValidation = isIpWhitelisted(req, network)
+    if (!ipValidation) return false
+
     const providedHash = req.headers['x-ayetstudios-security-hash'] as string | undefined;
+
     if (!providedHash || !network.postback_key) return false;
     const params: any = req.method === 'GET' ? req.query : req.body;
     const keys = Object.keys(params).sort();
     const base = keys.map(key => `${key}=${params[key]}`).join('&');
     const expected = crypto.createHmac('sha256', network.postback_key).update(base).digest('hex');
+
     return expected === providedHash;
   },
   notik: async (req, network) => {
-    const defaultIps = ["192.53.121.112"];
-    const ipList = (network.whitelist_ips ? network.whitelist_ips.split(',') : defaultIps).map((ip: string) => ip.trim());
-    const requestIp = getRequestIP(req);
-    if (!ipList.some((ip: string) => ipMatches(requestIp, ip))) return false;
-    if (network.postback_key) {
-      const fullUrl = `${config.env.app.url}${req.raw.url}`;
-      const [base, hash] = fullUrl.split("&hash=");
-      if (!hash) return false;
-      const hmac = crypto.createHmac('sha1', network.postback_key);
-      hmac.update(base);
-      const computed = hmac.digest('hex');
-      return computed === hash;
-    }
-    return true;
+    const fullUrl = `${config.env.app.appUrl}${req.url}`;
+  const urlObj = new URL(fullUrl);
+  const searchParams = new URLSearchParams(urlObj.search);
+
+
+  // Extract the 'hash' parameter
+  const receivedHash = searchParams.get('hash');
+  if (!receivedHash) return false;
+
+  // Remove 'hash' parameter
+  searchParams.delete('hash');
+
+  // Rebuild URL without the hash
+  const cleanedQuery = searchParams.toString();
+  const baseUrl = `${config.env.app.appUrl}${urlObj.pathname}${cleanedQuery ? '?' + cleanedQuery : ''}`;
+
+
+  // Generate HMAC-SHA1 hash
+  const generatedHash = crypto
+    .createHmac('sha1', network.postback_key)
+    .update(baseUrl)
+    .digest('hex');
+
+  // Compare hashes
+  return generatedHash === receivedHash;
   },
-  cpxresearch: async () => true,
-  theoremreach: async () => true,
-  mychips: async () => true,
-  timewall: async () => true,
   lootably: async (req, network) => {
     if (network.postback_key) {
       const params: any = req.method === 'GET' ? req.query : req.body;
       const base = `${params.uid}${params.cip}${params.pyt}${params.amt}${network.postback_key}`;
       const expected = crypto.createHash('sha256').update(base).digest('hex');
+
       return params.hash === expected;
     }
     return true;
   },
-  adscendmedia: async (req, network) => {
-    const defaultIps = ["44.212.211.226"];
-    const ipList = (network.whitelist_ips ? network.whitelist_ips.split(',') : defaultIps).map((ip: string) => ip.trim());
-    const requestIp = getRequestIP(req);
-    if (!ipList.some((ip: string) => ipMatches(requestIp, ip))) return false;
-    if (network.postback_key) {
-      const params: any = req.method === 'GET' ? req.query : req.body;
-      const expected = crypto
-        .createHash('md5')
-        .update(`${params.oid}-${params.uid}-${network.postback_key}`)
-        .digest('hex');
-      return params.hash === expected;
-    }
-    return true;
-  },
-  revlum: async (req, network) => {
-    const defaultIps = [
-      "67.205.168.172",
-      "104.248.49.78",
-      "157.230.64.48",
-      "206.189.253.134",
-      "66.187.72.90",
-      "66.187.72.91",
-      "66.187.72.92",
-      "66.187.72.93",
-      "66.187.72.94",
-      "206.189.231.33",
-      "2604:e880:2::/64",
-      "2604:a880:400:d0::/64",
-    ];
-    const ipList = (network.whitelist_ips ? network.whitelist_ips.split(',') : defaultIps).map((ip: string) => ip.trim());
-    const requestIp = getRequestIP(req);
-    return ipList.some((ip: string) => ipMatches(requestIp, ip));
-  },
+  // adscendmedia: async (req, network) => {
+  //   const defaultIps = ["44.212.211.226"];
+  //   const ipList = (network.whitelist_ips ? network.whitelist_ips.split(',') : defaultIps).map((ip: string) => ip.trim());
+  //   const requestIp = getRequestIP(req);
+  //   if (!ipList.some((ip: string) => ipMatches(requestIp, ip))) return false;
+  //   if (network.postback_key) {
+  //     const params: any = req.method === 'GET' ? req.query : req.body;
+  //     const expected = crypto
+  //       .createHash('md5')
+  //       .update(`${params.oid}-${params.uid}-${network.postback_key}`)
+  //       .digest('hex');
+  //     return params.hash === expected;
+  //   }
+  //   return true;
+  // },
+  // revlum: async (req, network) => {
+  //   const defaultIps = [
+  //     "67.205.168.172",
+  //     "104.248.49.78",
+  //     "157.230.64.48",
+  //     "206.189.253.134",
+  //     "66.187.72.90",
+  //     "66.187.72.91",
+  //     "66.187.72.92",
+  //     "66.187.72.93",
+  //     "66.187.72.94",
+  //     "206.189.231.33",
+  //     "2604:e880:2::/64",
+  //     "2604:a880:400:d0::/64",
+  //   ];
+  //   const ipList = (network.whitelist_ips ? network.whitelist_ips.split(',') : defaultIps).map((ip: string) => ip.trim());
+  //   const requestIp = getRequestIP(req);
+  //   return ipList.some((ip: string) => ipMatches(requestIp, ip));
+  // },
   primesurvey: async (req, network) => {
-    const defaultIps = ["168.119.57.82", "49.12.33.196", "49.13.14.251"];
-    const ipList = (network.whitelist_ips ? network.whitelist_ips.split(',') : defaultIps).map((ip: string) => ip.trim());
-    const requestIp = getRequestIP(req);
-    return ipList.some((ip: string) => ipMatches(requestIp, ip));
+    const ipValidation = isIpWhitelisted(req, network)
+    if (!ipValidation) return false
+    return true
   },
+  // adjoe:async(req, network) => {
+  //   const ipValidation = isIpWhitelisted(req, network)
+  //   if (!ipValidation) return false
+  //   const fullUrl = `${config.env.app.appUrl}${req.url}`;
+  //   const urlObj = new URL(fullUrl);
+  // const params = new URLSearchParams(urlObj.search);
+
+  // const user_uuid = params.get('uid');
+  // const trans_uuid = params.get('tid');
+  // const currency = params.get('currency');
+  // const coin_amount = params.get('amt');
+  // const device_id = params.get('device_id');
+  // const sdk_app_id = params.get('sdk_app_id');
+
+  // // Check required fields
+  // if (!user_uuid || !trans_uuid || !currency || !coin_amount || !network.postback_key) {
+  //   return false;
+  // }
+
+  // const coinAmountNum = parseInt(coin_amount, 10);
+  // if (isNaN(coinAmountNum)) return false;
+
+  // // Build data string: always include required fields
+  // let data = trans_uuid + user_uuid + currency + coinAmountNum + network.postback_key;
+
+  // // Conditionally include optional fields
+  // if (device_id) data += device_id;
+  // if (sdk_app_id) data += sdk_app_id;
+
+  // // Calculate SHA1 hash
+  // const calculatedSid = crypto.createHash('sha1').update(data).digest('hex');
+
+  // // Get sid from URL
+  // const receivedSid = params.get('sid');
+
+  // // Compare (use timing-safe comparison if possible; basic here for clarity)
+  // return calculatedSid === receivedSid;
+  // },
+  revu:async(req, network) => {
+    const ipValidation = isIpWhitelisted(req, network)
+    if (!ipValidation) return false
+    return true
+  },
+  torox: async(req, network) => {
+    const ipValidation = isIpWhitelisted(req, network)
+    if (!ipValidation) return false
+    if(network.postback_key){
+      const params: any = req.method === 'GET' ? req.query : req.body;
+      const base = `${params.oid}-${params.uid}-${network.postback_key}`;
+      const expected = crypto
+      .createHash('md5')
+      .update(base)
+      .digest('hex');
+
+    return expected === params.hash;
+    }
+
+    return true
+    
+  }
 };
 
 export const triggerPostback = async (req: FastifyRequest, reply: FastifyReply) => {
