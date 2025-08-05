@@ -15,6 +15,8 @@ import * as postback from "../postback/postback.model";
 import crypto from "crypto";
 import * as providers from "../providers/offerProviders.model";
 import { replaceMacros } from "../../utils/replaceMacros";
+import { generateClickCode } from "../clicks/clicks.controller";
+import * as click from "../clicks/clicks.model";
 
 
 const imagePrefix = `${config.env.app.image_url}`;
@@ -693,6 +695,49 @@ export const fetchUrl = async (req: FastifyRequest, reply: FastifyReply) => {
   const { code } = req.params as { code: string };
   const result = await providers.fetchDetails(code);
   let userMacros = {};
+
+  const country_code = req.headers["x-country"] ?? req.headers["cf-ipcountry"] ?? "unknown";
+    const client_ip = req.headers["x-client-ip"] ?? req.headers["cf-connecting-ip"];
+    const userId = Number(req.userId);
+    const locale = req.headers["accept-language"] || ("en" as string);
+    const userAgent = req.headers["user-agent"] as string;
+    const referer = req.headers["referer"] as any;
+    const platform = Array.isArray(req.headers["is-app"]) ? req.headers["is-app"][0] : "web";
+  
+    let click_code: string="";
+    const maxAttempts = 5;
+  
+    for (let i = 0; i < maxAttempts; i++) {
+      click_code = generateClickCode();
+  
+      // Assume you have a DB method to check uniqueness
+      const exists = await click.doesClickCodeExist(click_code);
+      if (!exists) break;
+  
+      if (i === maxAttempts - 1) {
+        return reply.sendError(app.polyglot.t("error.clickCodeGenerationFailed"), 500);
+      }
+    }
+  
+  
+  
+    const clicks = await click.clickInsert(
+      userId,
+      platform,
+      code,
+      "tasks",
+      `${code}_iframe`,
+      "iframe",
+      locale?.toString(),
+      country_code?.toString(),
+      userAgent?.toString(),
+      client_ip?.toString(),
+      referer?.toString(),
+      click_code
+    );
+    if(!clicks){
+      return reply.sendError(app.polyglot.t("error.insertFailed"), 500);
+    }
 
   if (result) {
     userMacros = {

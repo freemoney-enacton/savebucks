@@ -9,12 +9,12 @@
     "categoriesNotFound": "Categories Not Found",
     "fetchedFailed": "Fetched Failed",
     "insertionFailed": "Insertion Failed",
-    "postbackFailed":"Postback Failed",
-    "adminFailed":"Couldn't send Request to admin",
+    "postbackFailed": "Postback Failed",
+    "adminFailed": "Couldn't send Request to admin",
     "footersNotFound": "Footers Not Found",
     "withdrawalRequestExists": "Withdrawal Request already in process",
     "pagesNotFound": "Pages Not Found",
-    "chatRoomNotFound":"Room not found",
+    "chatRoomNotFound": "Room not found",
     "kycVerification": {
       "kycVerificatonRequiredOnPayout": "KYC Verification required on payout",
       "redirectUrlRequired": "Redirect URL is required",
@@ -31,7 +31,7 @@
     "user": {
       "invalidUser": "Invalid User",
       "insufficientBalance": "Insufficient Balance",
-      "insufficientTier":"Insufficient tier",
+      "insufficientTier": "Insufficient tier",
       "paymentFailed": "Payment Failed!",
       "feesAmountError": "Transaction fees is greater than your amount",
       "payoutAmountError": "Amount can't be greater than Payout",
@@ -45,25 +45,26 @@
     },
     "task": {
       "detailsNotFound": "Details Not Found",
-      "inputsNotReceived":"All fields are required",
-      "taskExists":"Task already exists",
-      "invalidTask":"Task is invalid",
-      "invalidProvider":"Task Provider is invalid",
-      "invalidPlatform":"Task Platform in invalid",
-      "taskNotFound":"Task not found",
-      "networkNotFound":"Network not found"
+      "inputsNotReceived": "All fields are required",
+      "taskExists": "Task already exists",
+      "invalidTask": "Task is invalid",
+      "invalidProvider": "Task Provider is invalid",
+      "invalidPlatform": "Task Platform in invalid",
+      "taskNotFound": "Task not found",
+      "networkNotFound": "Network not found",
+      "clickCodeGenerationFailed": "Click Code generation failed"
     },
-    "cashback":{
-      "claimNotFound":"User claim not found",
-      "claimExists":"User claim already exists",
-      "storeNotFound":"Store not Found",
-      "rangeExceeded":"Transaction date out of range"
+    "cashback": {
+      "claimNotFound": "User claim not found",
+      "claimExists": "User claim already exists",
+      "storeNotFound": "Store not Found",
+      "rangeExceeded": "Transaction date out of range"
     },
-    "images":{
-      "imageSizeExceeded":"Image size exceeds the limit",
-      "imageNotFound":"Image file not found",
-      "imageTypeMismatch":"Image type mismatch",
-      "imageExists":"Image file already exists"
+    "images": {
+      "imageSizeExceeded": "Image size exceeds the limit",
+      "imageNotFound": "Image file not found",
+      "imageTypeMismatch": "Image type mismatch",
+      "imageExists": "Image file already exists"
     },
     "auth": {
       "newPasswordMustDiffer": "Current Password and new Password should be different",
