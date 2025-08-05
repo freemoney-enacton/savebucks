@@ -67,7 +67,26 @@ const SingleOfferCommonComponent = ({ OfferModalData, loading }: { OfferModalDat
     }
   }, [JSON.stringify(OfferModalData?.goal_url)]);
 
-  const handleOutRedirect = () => {
+  const appendUrl = (url: string, param: string | string[], value: string) => {
+    try {
+      const urlObject = new URL(url);
+      if (Array.isArray(param)) {
+        // If param is an array, append each param with the same value
+        param.forEach((p) => {
+          urlObject.searchParams.append(p, value);
+        });
+      } else {
+        // Single param case
+        urlObject.searchParams.append(param, value);
+      }
+      return urlObject.toString();
+    } catch (error) {
+      console.error('Invalid URL:', error);
+      return url;
+    }
+  };
+
+  const handleOutRedirect = async () => {
     // Track the click regardless of redirect type
     const body = {
       platform: deviceType,
@@ -75,7 +94,13 @@ const SingleOfferCommonComponent = ({ OfferModalData, loading }: { OfferModalDat
       network: OfferModalData?.network,
       campaign_id: OfferModalData?.task_id,
     };
-    public_post_api({ path: 'clicks/insert', body: body }).then((res) => {});
+
+    const res = await public_post_api({ path: 'clicks/insert', body: body });
+    let finalUrl = OfferModalData?.url;
+
+    if (res?.data && OfferModalData?.url_param) {
+      finalUrl = appendUrl(finalUrl, OfferModalData.url_param, res.data);
+    }
 
     // Determine if the offer is compatible with the current device
     const offerPlatforms = OfferModalData?.platforms || [];
@@ -97,17 +122,17 @@ const SingleOfferCommonComponent = ({ OfferModalData, loading }: { OfferModalDat
     } else {
       // Direct redirect case
       if (isDesktop) {
-        window.open(OfferModalData?.url, '_blank');
+        window.open(finalUrl, '_blank');
       } else {
         if (typeof window !== 'undefined' && window.ReactNativeWebView !== undefined && OfferModalData?.open_external_browser) {
           window.ReactNativeWebView.postMessage(
             JSON.stringify({
               type: `OPEN_IN_EXTERNAL_BROWSER`,
-              url: OfferModalData?.url,
+              url: finalUrl,
             })
           );
         } else {
-          window.open(OfferModalData?.url, '_blank', 'noopener,noreferrer');
+          window.open(finalUrl, '_blank', 'noopener,noreferrer');
         }
       }
     }
