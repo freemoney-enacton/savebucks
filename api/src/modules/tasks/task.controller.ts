@@ -261,6 +261,7 @@ export const detailsBySlug = async (req: FastifyRequest, reply: FastifyReply) =>
       image: (result.image?.includes('http') || !result.image) ? result.image : `${imagePrefix}/${result.image}`,
       // @ts-ignore
       url: (req.userTier && result.tier && req.userTier < result.tier) ? '#' : result.url.replace("#USER_ID", req.userId),
+      url_param:result.sub_id,
       payout: result.payout,
       payout_type: result.payout_type,
       countries: result.countries ? JSON.parse(result.countries) : null,

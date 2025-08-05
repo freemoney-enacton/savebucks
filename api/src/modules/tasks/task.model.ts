@@ -677,6 +677,7 @@ export const detailsBySlug = async (
       "offerwall_networks.icon as network_icon",
       "offerwall_networks.open_task_external_browser",
       "offerwall_networks.render_type",
+      'offerwall_networks.sub_id',
       "offerwall_categories.id",
       "offerwall_categories.icon as category_icon",
       "offerwall_categories.name as name",

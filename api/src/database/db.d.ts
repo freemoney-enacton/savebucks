@@ -919,12 +919,13 @@ export interface OfferwallNetworks {
   rating_count: Generated<number>;
   render_type: Generated<"new_tab" | "popup" | "same_tab" | null>;
   sort_order: Generated<number | null>;
+  sub_id: Json | null;
   support_url: string | null;
   survey_url: string | null;
   task_iframe_only: Generated<number>;
   type: "surveys" | "tasks";
   updated_at: Date | null;
-  whitelist_ips: string | null;
+  whitelist_ips: Json | null;
 }
 
 export interface OfferwallPostbackLogs {
@@ -1949,6 +1950,7 @@ export interface UserStreaks {
 
 export interface UserTaskClicks {
   campaign_id: string;
+  click_code: string | null;
   clicked_on: Generated<Date>;
   countries: string;
   created_at: Generated<Date>;
