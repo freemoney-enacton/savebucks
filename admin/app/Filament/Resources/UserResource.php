@@ -85,8 +85,9 @@ class UserResource extends Resource
                     ->mutateFormDataUsing(function ($data) {
                         if (isset($data['password']) && $data['password'] != null) {
                             $data['password'] = Hash::make($data['password']);
+                            unset($data['password_confirmation']);
                         } else {
-                            unset($data['password']);
+                            unset($data['password'], $data['password_confirmation']);
                         }
                         return $data;
                     })->extraModalFooterActions(fn (): array => [

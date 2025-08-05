@@ -119,11 +119,11 @@ class AdminPanelProvider extends PanelProvider
             ->spa()
             ->sidebarCollapsibleOnDesktop()
             ->navigationItems([
-                // NavigationItem::make('Task Manager')
-                //     ->url(url('/totem'), shouldOpenInNewTab: true)
-                //     ->icon('heroicon-o-clock')
-                //     ->group('Settings')
-                //     ->sort(2),
+                NavigationItem::make('Task Manager')
+                    ->url(url('/totem'), shouldOpenInNewTab: true)
+                    ->icon('heroicon-o-clock')
+                    ->group('Settings')
+                    ->sort(2),
             ]);
     }
 }

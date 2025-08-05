@@ -1,4 +1,5 @@
 const app = require("express")();
+import * as OneSignal from "onesignal-node";
 const httpServer = require("http").createServer(app);
 import jwt from "jsonwebtoken";
 
@@ -6,6 +7,13 @@ import * as auth from "../src/modules/auth/auth.model";
 import * as chatModel from "../src/modules/chat/chat.model";
 import * as userModel from "../src/modules/user/user.model"
 import { config } from "./config/config";
+import { not } from "tap/dist/commonjs/main";
+
+const oneSignalClient = new OneSignal.Client(
+  config.env.app.onesignal_Id,
+  config.env.app.onesignal_key
+);
+const frontendUrl = config.env.app.frontend_url;
 
 const io = require("socket.io")(httpServer, {
   cors: {
@@ -68,6 +76,7 @@ io.use(async (socket: any, next: any) => {
   const requestRoom = socket.handshake.query.room;
   const requestCountry = socket.handshake.query.country;
 
+  
   if (!token) {
     return next(new Error("Invalid token"));
   }
@@ -76,23 +85,6 @@ io.use(async (socket: any, next: any) => {
     return next(new Error("Invalid token"));
   }
   socket.user = userDetails;
-
-  // const roomDetails = await getRoomDetails(requestRoom);
-
-  // if(!roomDetails) {
-  //   return next(new Error("Invalid room"));
-  // }
-
-  // if(roomDetails.tier && userDetails.current_tier < roomDetails.tier) {
-  //   return next(new Error("Insufficient tier"));
-  // }
-
-  // // @ts-ignore
-  // if(roomDetails.countries && Array(roomDetails.countries) && !roomDetails.countries.includes(requestCountry)) {
-  //   return next(new Error("Invalid country"));
-  // }
-  
-  // socket.room = roomDetails;
 
   next();
 })
@@ -146,6 +138,17 @@ io.on("connection", async (socket: any) => {
           console.error("Error fetching unread notifications:", err);
         }
       }, 10000);
+
+  if(socket.user.onesignal_notification_id){
+    try {
+      const response = await oneSignalClient.cancelNotification(socket.user.onesignal_notification_id);
+      console.log("Notification cancelled successfully:", response.statusCode);
+      await userModel.clearOneSignalNotificationId(socket.user.id);   
+    } catch (error) {
+      console.error("Failed to cancel notification:", error);
+    }
+    
+  }
 
   socket.on("join_room", async ({room_code}: any, callback: any) => {
 
@@ -272,12 +275,40 @@ io.on("connection", async (socket: any) => {
 });
 
   // Debug: Log connection and disconnection events
-  socket.on('disconnect', () => {
+  socket.on('disconnect', async () => {
     socket.leave(socket?.room?.code);
 
     if(roomCounts[socket?.room?.code] && roomCounts[socket?.room?.code] > 0)
       roomCounts[socket?.room?.code] -= 1;
+
+    //onesignal ntofication
+  try {
+    let result=await chatModel.getNotificationContents('inactive_user');
+    if(!result?.title){
+      console.error("No content found for the notification");
+      return 
+    }
+  if(socket.user.lang !=null || socket.user.lang != undefined){
+    //@ts-ignore
+    result.title['en']=result.title[socket.user.lang] 
+  }
+    const notificationPayload = {
+    include_external_user_ids: [`${socket.user.email ?? socket.user.id}`],
+    contents: result.title as any,
+    url:`${frontendUrl}${result.route}`,
+    channel_for_external_user_ids: "push",
+    send_after: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString()
+  };
+    const notification=await oneSignalClient.createNotification(notificationPayload);
+    console.log("Notification sent successfully:", notification.body.id);
+    await userModel.saveNotification(socket.user.id, notification.body.id);
+  } catch (error) {
+    console.error("Failed to send notification:", error);
+  }
   });
+
+  
+  
 });
 
 

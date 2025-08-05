@@ -19,19 +19,19 @@ use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\HtmlString;
 
 class AffiliateStatsOverview extends BaseWidget
-{    
+{
     protected static ?int $sort = 1;
     public function getColumns(): int
     {
         return 4;
     }
     protected function getStats(): array
-    {   
+    {
 
         $affiliateCount         = Affiliate::count();
         $clickCount             = Click::count();
         $conversionCount        = ViewConversion::count();
-        $conversionAmount       = ViewConversion::whereIn('conversion_status', ['paid', 'approved'])->sum('conversion_value');
+        $conversionAmount       = ViewConversion::whereIn('conversion_status', ['paid', 'approved'])->sum('commission');
         // $conversionAmount       = View::where('status','<>','declined')->sum("commission");
 
        $stats = [
@@ -63,7 +63,7 @@ class AffiliateStatsOverview extends BaseWidget
                 "url"        => ViewConversionResource::getUrl(),
                 "value_type" => "amount",
             ],
-           
+
         ];
 
         return collect($stats)
@@ -95,7 +95,7 @@ class AffiliateStatsOverview extends BaseWidget
 
     // public function getLabelWithTooltip($label, $tooltip)
     // {
-    //     return new HtmlString(Blade::render('<div class="d-inline flex space-x-2">'.($tooltip ? '<div class="cursor-pointer" x-data="" x-tooltip=\'{theme: "light" ,content: $refs?.template?.innerHTML, allowHTML: true, appendTo: $root, interactive: true}\'><template x-ref="template"><div class="text-left">'.($tooltip).'</div></template><x-heroicon-o-information-circle class="w-5 h-5 text-gray-500"/></div>': '').'<div>'.($label).'</div></div>'));
+    //     return new HtmlString(Blade::render('<div class="flex space-x-2 d-inline">'.($tooltip ? '<div class="cursor-pointer" x-data="" x-tooltip=\'{theme: "light" ,content: $refs?.template?.innerHTML, allowHTML: true, appendTo: $root, interactive: true}\'><template x-ref="template"><div class="text-left">'.($tooltip).'</div></template><x-heroicon-o-information-circle class="w-5 h-5 text-gray-500"/></div>': '').'<div>'.($label).'</div></div>'));
     // }
 
 
@@ -106,11 +106,11 @@ class AffiliateStatsOverview extends BaseWidget
         }
 
         $html = '
-            <div class="inline-flex items-center space-x-2 gap-1">
+            <div class="inline-flex items-center gap-1 space-x-2">
                 <span class="mr-4">' . $label . '</span>
                 <div class="tooltip-wrapper" style="position: relative; display: inline-block;">
                     <x-heroicon-o-information-circle class="w-4 h-4 text-gray-400 hover:text-gray-600 cursor-help" />
-                    
+
                     <div class="tooltip-box" style="
                         position: absolute;
                         bottom: 100%;
@@ -132,7 +132,7 @@ class AffiliateStatsOverview extends BaseWidget
                         z-index: 1000;
                     ">
                         ' . $tooltip . '
-                        
+
                         <!-- Arrow -->
                         <div style="
                             position: absolute;
@@ -149,7 +149,7 @@ class AffiliateStatsOverview extends BaseWidget
                     </div>
                 </div>
             </div>
-            
+
             <style>
                 .tooltip-wrapper:hover .tooltip-box {
                     opacity: 1 !important;
@@ -163,6 +163,6 @@ class AffiliateStatsOverview extends BaseWidget
 
     public function getValueWithUrl($value, $url, $urlLabel = 'View All')
     {
-        return new HtmlString(Blade::render('<div class="d-inline flex1 justify-between"> <div class="text-3xl font-semibold tracking-tight text-gray-950">'.($value).'</div> <x-filament::link class="shadow-md px-2 py-1 rounded" href="'.($url).'" icon="heroicon-o-arrow-up-right" icon-position="after">'.($urlLabel).'</x-filament::link> </div>'));
+        return new HtmlString(Blade::render('<div class="justify-between d-inline flex1"> <div class="text-3xl font-semibold tracking-tight text-gray-950">'.($value).'</div> <x-filament::link class="px-2 py-1 rounded shadow-md" href="'.($url).'" icon="heroicon-o-arrow-up-right" icon-position="after">'.($urlLabel).'</x-filament::link> </div>'));
     }
 }

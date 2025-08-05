@@ -1,6 +1,7 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import app from "../../app";
 import crypto from "crypto";
+import * as ipaddr from "ipaddr.js";
 import * as postback from "./postback.model";
 import { UserOfferwallSales } from "../../database/db";
 import { dispatchEvent } from "../../events/eventBus";
@@ -104,25 +105,242 @@ function createPostbackData(reqData: Record<string, any>, postbackFields: Array<
   return postbackData as PostbackReqData;
 }
 
-// TODO: Add this code
-const networkSecurityValidation = {
-  mocknetwork: async (req: FastifyRequest) => true,
-  bitlabs: async (req: FastifyRequest) => true,
-  cpx: async (req: FastifyRequest) => true,
-  daisycon: async (req: FastifyRequest) => true,
-  savebucks: async (req: FastifyRequest) => true,
-  ayet: async (req: FastifyRequest) => true,
-  notik: async (req: FastifyRequest) => true,
-  cpxresearch: async (req: FastifyRequest) => true,
-  theoremreach: async (req: FastifyRequest) => true,
-  mychips: async (req: FastifyRequest) => true,
-  timewall: async (req: FastifyRequest) => true,
-  lootably: async (req: FastifyRequest) => true,
-  adscendmedia: async (req: FastifyRequest) => true,
-  revlum: async (req: FastifyRequest) => true,
-  primesurvey: async (req: FastifyRequest) => true
-  // ...
+function getRequestIP(req: FastifyRequest): string {
+  const xClientIp = (req.headers["x-client-ip"] as string | undefined)?.trim();
+  const xForwardedFor = (req.headers["x-forwarded-for"] as string | undefined)?.split(",")[0]?.trim();
+  console.log(xClientIp , xForwardedFor , req.ip)
+  return xClientIp || xForwardedFor || req.ip;
 }
+
+function ipMatches(ip: string, range: string): boolean {
+  try {
+    if (range.includes("/")) {
+      const [addr, prefix] = ipaddr.parseCIDR(range);
+      return (ipaddr.parse(ip) as any).match([addr, prefix]);
+    }
+    return ip === range;
+  } catch {
+    return false;
+  }
+}
+// Helper function to check if request IP is allowed
+function isIpWhitelisted(req: FastifyRequest, network: any): boolean {
+  const ipList: string[] = Array.isArray(network.whitelist_ips) ?network.whitelist_ips : []
+    console.log(ipList)
+
+  const requestIp = getRequestIP(req);
+  const ipOk = ipList.some((ip: string) => ipMatches(requestIp, ip));
+
+  if (!ipOk) return false;
+
+  return true
+}
+const networkSecurityValidation: Record<string, (req: FastifyRequest, network: any) => Promise<boolean>> = {
+  mocknetwork: async () => true,
+  bitlabs: async (req, network) => {
+    const ipValidation = isIpWhitelisted(req, network)
+    if (!ipValidation) return false
+    if (network.postback_key) {
+      const fullUrl = `${config.env.app.appUrl}${req.raw.url}`;
+
+      const [base, hash] = fullUrl.split("&hash=");
+
+      if (!hash) return false;
+
+      const hmac = crypto.createHmac("sha1", network.postback_key);
+      hmac.write(base);
+      hmac.end();
+      const computed = hmac.read().toString('hex');
+
+      return computed === hash;
+    }
+    return true;
+  },
+  bitlabsSurveys: async (req, network) => {
+    const ipValidation = isIpWhitelisted(req, network)
+    if (!ipValidation) return false
+    if (network.postback_key) {
+      const fullUrl = `${config.env.app.appUrl}${req.raw.url}`;
+
+      const [base, hash] = fullUrl.split("&hash=");
+
+      if (!hash) return false;
+
+      const hmac = crypto.createHmac("sha1", network.postback_key);
+      hmac.write(base);
+      hmac.end();
+      const computed = hmac.read().toString('hex');
+
+      return computed === hash;
+    }
+    return true;
+  },
+  cpxresearch: async (req, network) => {
+    const ipValidation = isIpWhitelisted(req, network)
+    if (!ipValidation) return false
+    if (network.postback_key) {
+      const params: any = req.method === 'GET' ? req.query : req.body;
+      const expected = crypto
+        .createHash('md5')
+        .update(`${params.tid}-${network.postback_key}`)
+        .digest('hex');
+      return params.hash === expected;
+    }
+    return true;
+  },
+  daisycon: async () => true,
+  savebucks: async () => true,
+  ayet: async (req, network) => {
+    const ipValidation = isIpWhitelisted(req, network)
+    if (!ipValidation) return false
+
+    const providedHash = req.headers['x-ayetstudios-security-hash'] as string | undefined;
+
+    if (!providedHash || !network.postback_key) return false;
+    const params: any = req.method === 'GET' ? req.query : req.body;
+    const keys = Object.keys(params).sort();
+    const base = keys.map(key => `${key}=${params[key]}`).join('&');
+    const expected = crypto.createHmac('sha256', network.postback_key).update(base).digest('hex');
+
+    return expected === providedHash;
+  },
+  notik: async (req, network) => {
+    const fullUrl = `${config.env.app.appUrl}${req.url}`;
+  const urlObj = new URL(fullUrl);
+  const searchParams = new URLSearchParams(urlObj.search);
+
+
+  // Extract the 'hash' parameter
+  const receivedHash = searchParams.get('hash');
+  if (!receivedHash) return false;
+
+  // Remove 'hash' parameter
+  searchParams.delete('hash');
+
+  // Rebuild URL without the hash
+  const cleanedQuery = searchParams.toString();
+  const baseUrl = `${config.env.app.appUrl}${urlObj.pathname}${cleanedQuery ? '?' + cleanedQuery : ''}`;
+
+
+  // Generate HMAC-SHA1 hash
+  const generatedHash = crypto
+    .createHmac('sha1', network.postback_key)
+    .update(baseUrl)
+    .digest('hex');
+
+  // Compare hashes
+  return generatedHash === receivedHash;
+  },
+  lootably: async (req, network) => {
+    if (network.postback_key) {
+      const params: any = req.method === 'GET' ? req.query : req.body;
+      const base = `${params.uid}${params.cip}${params.pyt}${params.amt}${network.postback_key}`;
+      const expected = crypto.createHash('sha256').update(base).digest('hex');
+
+      return params.hash === expected;
+    }
+    return true;
+  },
+  // adscendmedia: async (req, network) => {
+  //   const defaultIps = ["44.212.211.226"];
+  //   const ipList = (network.whitelist_ips ? network.whitelist_ips.split(',') : defaultIps).map((ip: string) => ip.trim());
+  //   const requestIp = getRequestIP(req);
+  //   if (!ipList.some((ip: string) => ipMatches(requestIp, ip))) return false;
+  //   if (network.postback_key) {
+  //     const params: any = req.method === 'GET' ? req.query : req.body;
+  //     const expected = crypto
+  //       .createHash('md5')
+  //       .update(`${params.oid}-${params.uid}-${network.postback_key}`)
+  //       .digest('hex');
+  //     return params.hash === expected;
+  //   }
+  //   return true;
+  // },
+  // revlum: async (req, network) => {
+  //   const defaultIps = [
+  //     "67.205.168.172",
+  //     "104.248.49.78",
+  //     "157.230.64.48",
+  //     "206.189.253.134",
+  //     "66.187.72.90",
+  //     "66.187.72.91",
+  //     "66.187.72.92",
+  //     "66.187.72.93",
+  //     "66.187.72.94",
+  //     "206.189.231.33",
+  //     "2604:e880:2::/64",
+  //     "2604:a880:400:d0::/64",
+  //   ];
+  //   const ipList = (network.whitelist_ips ? network.whitelist_ips.split(',') : defaultIps).map((ip: string) => ip.trim());
+  //   const requestIp = getRequestIP(req);
+  //   return ipList.some((ip: string) => ipMatches(requestIp, ip));
+  // },
+  primesurvey: async (req, network) => {
+    const ipValidation = isIpWhitelisted(req, network)
+    if (!ipValidation) return false
+    return true
+  },
+  // adjoe:async(req, network) => {
+  //   const ipValidation = isIpWhitelisted(req, network)
+  //   if (!ipValidation) return false
+  //   const fullUrl = `${config.env.app.appUrl}${req.url}`;
+  //   const urlObj = new URL(fullUrl);
+  // const params = new URLSearchParams(urlObj.search);
+
+  // const user_uuid = params.get('uid');
+  // const trans_uuid = params.get('tid');
+  // const currency = params.get('currency');
+  // const coin_amount = params.get('amt');
+  // const device_id = params.get('device_id');
+  // const sdk_app_id = params.get('sdk_app_id');
+
+  // // Check required fields
+  // if (!user_uuid || !trans_uuid || !currency || !coin_amount || !network.postback_key) {
+  //   return false;
+  // }
+
+  // const coinAmountNum = parseInt(coin_amount, 10);
+  // if (isNaN(coinAmountNum)) return false;
+
+  // // Build data string: always include required fields
+  // let data = trans_uuid + user_uuid + currency + coinAmountNum + network.postback_key;
+
+  // // Conditionally include optional fields
+  // if (device_id) data += device_id;
+  // if (sdk_app_id) data += sdk_app_id;
+
+  // // Calculate SHA1 hash
+  // const calculatedSid = crypto.createHash('sha1').update(data).digest('hex');
+
+  // // Get sid from URL
+  // const receivedSid = params.get('sid');
+
+  // // Compare (use timing-safe comparison if possible; basic here for clarity)
+  // return calculatedSid === receivedSid;
+  // },
+  revu:async(req, network) => {
+    const ipValidation = isIpWhitelisted(req, network)
+    if (!ipValidation) return false
+    return true
+  },
+  torox: async(req, network) => {
+    const ipValidation = isIpWhitelisted(req, network)
+    if (!ipValidation) return false
+    if(network.postback_key){
+      const params: any = req.method === 'GET' ? req.query : req.body;
+      const base = `${params.oid}-${params.uid}-${network.postback_key}`;
+      const expected = crypto
+      .createHash('md5')
+      .update(base)
+      .digest('hex');
+
+    return expected === params.hash;
+    }
+
+    return true
+    
+  }
+};
 
 export const triggerPostback = async (req: FastifyRequest, reply: FastifyReply) => {
   try {
@@ -166,9 +384,10 @@ export const triggerPostback = async (req: FastifyRequest, reply: FastifyReply) 
     const networkDetails = await postback.getNetworkDetails(postbackData.typ, postbackData.net);
     if (!networkDetails) throw new Error("Network not found");
     if (networkDetails?.postback_validation_key != postbackData.iky) throw new Error("Postback Key Mismatch");
-    // TODO: Add network ip validation
-    // @ts-ignore
-    const networkSecurityValidated = postbackData.net && networkSecurityValidation[postbackData.net] ? await networkSecurityValidation[postbackData.net](req) : true;
+    const networkSecurityValidated =
+      postbackData.net && networkSecurityValidation[postbackData.net]
+        ? await networkSecurityValidation[postbackData.net](req, networkDetails)
+        : true;
     // console.log("🚀 ~ triggerPostback ~ postbackData.net:", postbackData.net)
     // console.log("🚀 ~ triggerPostback ~ networkSecurityValidated:", networkSecurityValidated)
 
@@ -334,7 +553,7 @@ export const triggerPostback = async (req: FastifyRequest, reply: FastifyReply) 
     }
 
     // Update Ticker
-    if (postbackDataDB.status == "confirmed") {
+    if (postbackDataDB.status == "confirmed" && Number(postbackDataDB.amount) >0) {
       await postback.insertTicker(
         postbackData.uid,
         "Earnings",

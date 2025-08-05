@@ -4,7 +4,7 @@ import fastify, {
   FastifyRequest,
 } from "fastify";
 import fastifyPassport from "@fastify/passport";
-import fastifyMultipart from '@fastify/multipart';
+import fastifyMultipart from "@fastify/multipart";
 import path, { join } from "path";
 import autoload from "@fastify/autoload";
 import fastifySwagger from "@fastify/swagger";
@@ -29,11 +29,17 @@ import polyglotPlugin from "./plugins/polyglot";
 import { isAuthenticated } from "./middleware/authMiddleware";
 import multer from "fastify-multer";
 
-declare module 'fastify' {
+declare module "fastify" {
   interface FastifyReply {
-    sendSuccess(data: any, statusCodes: number, msg: string | null, currentPage: any, lastPage: any): void;
+    sendSuccess(
+      data: any,
+      statusCodes: number,
+      msg: string | null,
+      currentPage: any,
+      lastPage: any
+    ): void;
     sendError(err: string, statusCodes: number): void;
-    sendErrorWithData(err:string,statusCode:number,data:any):void;
+    sendErrorWithData(err: string, statusCode: number, data: any): void;
   }
 
   interface FastifyRequest {
@@ -45,7 +51,7 @@ declare module 'fastify' {
 }
 
 export const createApp = (): FastifyInstance => {
-  const app = fastify({ logger: true , pluginTimeout:0 }) as FastifyInstance;
+  const app = fastify({ logger: true, pluginTimeout: 0 }) as FastifyInstance;
   const sessionSecret = config.env.app.sessionSecret?.toString();
   if (!sessionSecret) {
     throw new Error("Session secret is not defined in the config");
@@ -64,7 +70,8 @@ export const createApp = (): FastifyInstance => {
   // });
   app.register(multer.contentParser);
   app.setErrorHandler(
-    (error: any, request: FastifyRequest, reply: FastifyReply) => { console.log("FastifyRequest error");
+    (error: any, request: FastifyRequest, reply: FastifyReply) => {
+      console.log("FastifyRequest error");
       //handle zoderror
       if (error.name === "ZodError") {
         return reply.sendError(error.errors[0].message, 400);
@@ -84,7 +91,8 @@ export const createApp = (): FastifyInstance => {
             429
           );
         }
-      } console.log(error);
+      }
+      console.log(error);
       if (error.message?.includes("You are already registered with this Use")) {
         reply.status(409).send({ success: false, error: error.message });
       }
@@ -125,26 +133,30 @@ export const createApp = (): FastifyInstance => {
   app.register(fastifySwagger, swaggerOptions);
   app.register(fastifySwaggerUi, swaggerUiOptions);
   app.register(require("@fastify/formbody"));
-  
+
   app.register(require("@fastify/rate-limit"), {
     // Global settings can be applied here, if needed
     max: 2000, // limit each IP to 100 requests per windowMs
     timeWindow: "10 second", // start counting after 1 minute
   });
-  console.log(config.env.redis.port,config.env.redis.host,config.env.redis.password )
+  console.log(
+    config.env.redis.port,
+    config.env.redis.host,
+    config.env.redis.password
+  );
 
   redisPlugin(app, {
     // url: config.env.redis.url ? config.env.redis.url.toString() : "",
     port: Number(config.env.redis.port), // Redis port
     host: config.env.redis.host, // Redis host
     password: config.env.redis.password,
-     tls: {
+    tls: {
       // TLS options to configure secure connection
       rejectUnauthorized: false, // Set to true if you want to verify the server's certificate
-      }
+    },
   } as any);
 
-// Register autoload for modules
+  // Register autoload for modules
   app.register(autoload, {
     dir: join(__dirname, "modules"),
     options: { prefix: "/api/v1" }, // Use a prefix for all modules
@@ -172,9 +184,9 @@ export const createApp = (): FastifyInstance => {
     }
   );
   //to store static files
-  app.register(require('@fastify/static'), {
-    root: path.join(process.cwd(), 'uploads'),
-    prefix: '/uploads/'
+  app.register(require("@fastify/static"), {
+    root: path.join(process.cwd(), "uploads"),
+    prefix: "/uploads/",
   });
   app.get(
     "/auth/google/callback",
@@ -192,14 +204,20 @@ export const createApp = (): FastifyInstance => {
           409
         );
       }
-      const userExist = await authModel.login(user?.email ?? user.emails[0].value);
-      const country_code = req.headers["X-COUNTRY"] ?? req.headers["cf-ipcountry"] ?? "unknown";
-      const client_ip = req.headers["X-CLIENT-IP"] ?? req.headers["cf-connecting-ip"];
-      
+      const userExist = await authModel.login(
+        user?.email ?? user.emails[0].value
+      );
+      const country_code =
+        req.headers["X-COUNTRY"] ?? req.headers["cf-ipcountry"] ?? "unknown";
+      const client_ip =
+        req.headers["X-CLIENT-IP"] ?? req.headers["cf-connecting-ip"];
+
       if (userExist?.signup_ip === null) {
-        const device_id:any = req.cookies.device_id;
-        const country_code = req.headers["X-COUNTRY"] ?? req.headers["cf-ipcountry"] ?? "unknown";
-        const client_ip = req.headers["X-CLIENT-IP"] ?? req.headers["cf-connecting-ip"];
+        const device_id: any = req.cookies.device_id;
+        const country_code =
+          req.headers["X-COUNTRY"] ?? req.headers["cf-ipcountry"] ?? "unknown";
+        const client_ip =
+          req.headers["X-CLIENT-IP"] ?? req.headers["cf-connecting-ip"];
         const clientInfo = await getIpDetails(client_ip);
         const metaData = {
           ...clientInfo,
@@ -225,21 +243,40 @@ export const createApp = (): FastifyInstance => {
           },
           `${parseInt(config.env.app.expiresIn)}h`
         );
-         await auth.insertAuthLogs(userExist.id,client_ip,device_id,JSON.stringify(metaData));
-        reply.setCookie("token", token, { path: "/", domain: config.env.app.domain_cookie });
+        await auth.insertAuthLogs(
+          userExist.id,
+          client_ip,
+          device_id,
+          JSON.stringify(metaData)
+        );
+        reply.setCookie("token", token, {
+          path: "/",
+          domain: config.env.app.domain_cookie,
+        });
         // return reply.send({ success: "true", token: token });
-        return reply.redirect(`${config.env.app.frontend_url}/callback/social?token=${token}`);
+        return reply.redirect(
+          `${config.env.app.frontend_url}/callback/social?token=${token}${
+            userExist?.lang ? `&lang=${userExist.lang}` : ""
+          }&action=register`
+        );
       } else {
-        const device_id:any = req.cookies.device_id;
-        const country_code = req.headers["X-COUNTRY"] ?? req.headers["cf-ipcountry"] ?? "unknown";
-        const client_ip = req.headers["X-CLIENT-IP"] ?? req.headers["cf-connecting-ip"];
+        const device_id: any = req.cookies.device_id;
+        const country_code =
+          req.headers["X-COUNTRY"] ?? req.headers["cf-ipcountry"] ?? "unknown";
+        const client_ip =
+          req.headers["X-CLIENT-IP"] ?? req.headers["cf-connecting-ip"];
         const clientInfo = await getIpDetails(client_ip);
         const metaData = {
           ...clientInfo,
           userAgent: req.headers["x-user-agent"] ?? req.headers["user-agent"],
           referrer: req.headers["x-referer"] ?? req.headers.referer,
         };
-        await auth.insertAuthLogs(userExist?.id,client_ip,device_id,JSON.stringify(metaData));
+        await auth.insertAuthLogs(
+          userExist?.id,
+          client_ip,
+          device_id,
+          JSON.stringify(metaData)
+        );
         let token = await createJWTToken(
           {
             user: {
@@ -256,7 +293,11 @@ export const createApp = (): FastifyInstance => {
           domain: config.env.app.domain_cookie,
         });
         // reply.send({ success: "true", token: token });
-        return reply.redirect(`${config.env.app.frontend_url}/callback/social?token=${token}`);
+        return reply.redirect(
+          `${config.env.app.frontend_url}/callback/social?token=${token}${
+            userExist?.lang ? `&lang=${userExist.lang}` : ""
+          }&action=login`
+        );
       }
     }
   );
@@ -302,9 +343,11 @@ export const createApp = (): FastifyInstance => {
       }
       const userExist = await authModel.login(user?.email);
       if (userExist?.signup_ip === null) {
-        const device_id:any = req.cookies.device_id;
-        const country_code = req.headers["X-COUNTRY"] ?? req.headers["cf-ipcountry"] ?? "unknown";
-        const client_ip = req.headers["X-CLIENT-IP"] ?? req.headers["cf-connecting-ip"];
+        const device_id: any = req.cookies.device_id;
+        const country_code =
+          req.headers["X-COUNTRY"] ?? req.headers["cf-ipcountry"] ?? "unknown";
+        const client_ip =
+          req.headers["X-CLIENT-IP"] ?? req.headers["cf-connecting-ip"];
         const clientInfo = await getIpDetails(client_ip);
 
         const metaData = {
@@ -313,7 +356,12 @@ export const createApp = (): FastifyInstance => {
           referrer: req.headers.referer,
         };
         const timezone = clientInfo.timezone ?? "unknown";
-        await auth.insertAuthLogs(userExist.id,client_ip,device_id,JSON.stringify(metaData));
+        await auth.insertAuthLogs(
+          userExist.id,
+          client_ip,
+          device_id,
+          JSON.stringify(metaData)
+        );
         await authModel.updateUserInfo(
           user?.email,
           JSON.stringify(metaData),
@@ -332,11 +380,17 @@ export const createApp = (): FastifyInstance => {
           domain: config.env.app.domain_cookie,
         });
         // return reply.send({ success: "true", token: token });
-        return reply.redirect(`${config.env.app.frontend_url}/callback/social?token=${token}`);
+        return reply.redirect(
+          `${config.env.app.frontend_url}/callback/social?token=${token}${
+            userExist?.lang ? `&lang=${userExist.lang}` : ""
+          }&action=register`
+        );
       } else {
-        const device_id:any = req.cookies.device_id;
-        const country_code = req.headers["X-COUNTRY"] ?? req.headers["cf-ipcountry"] ?? "unknown";
-        const client_ip = req.headers["X-CLIENT-IP"] ?? req.headers["cf-connecting-ip"];
+        const device_id: any = req.cookies.device_id;
+        const country_code =
+          req.headers["X-COUNTRY"] ?? req.headers["cf-ipcountry"] ?? "unknown";
+        const client_ip =
+          req.headers["X-CLIENT-IP"] ?? req.headers["cf-connecting-ip"];
         const clientInfo = await getIpDetails(client_ip);
 
         const metaData = {
@@ -345,7 +399,12 @@ export const createApp = (): FastifyInstance => {
           referrer: req.headers.referer,
         };
         const timezone = clientInfo.timezone ?? "unknown";
-        await auth.insertAuthLogs(userExist?.id,client_ip,device_id,JSON.stringify(metaData));
+        await auth.insertAuthLogs(
+          userExist?.id,
+          client_ip,
+          device_id,
+          JSON.stringify(metaData)
+        );
         let token = await createJWTToken(
           { user: req.user },
           `${parseInt(config.env.app.expiresIn)}h`
@@ -356,7 +415,11 @@ export const createApp = (): FastifyInstance => {
           domain: config.env.app.domain_cookie,
         });
         // reply.send({ success: "true", token: token });
-        return reply.redirect(`${config.env.app.frontend_url}/callback/social?token=${token}`);
+        return reply.redirect(
+          `${config.env.app.frontend_url}/callback/social?token=${token}${
+            userExist?.lang ? `&lang=${userExist.lang}` : ""
+          }&action=login`
+        );
       }
     }
   );
@@ -377,10 +440,12 @@ export const createApp = (): FastifyInstance => {
       }
       const userExist = await authModel.login(user?.email);
       if (userExist?.signup_ip === null) {
-        const device_id:any = req.cookies.device_id;
-        
-        const country_code = req.headers["X-COUNTRY"] ?? req.headers["cf-ipcountry"] ?? "unknown";
-        const client_ip = req.headers["X-CLIENT-IP"] ?? req.headers["cf-connecting-ip"];
+        const device_id: any = req.cookies.device_id;
+
+        const country_code =
+          req.headers["X-COUNTRY"] ?? req.headers["cf-ipcountry"] ?? "unknown";
+        const client_ip =
+          req.headers["X-CLIENT-IP"] ?? req.headers["cf-connecting-ip"];
         const clientInfo = await getIpDetails(client_ip);
 
         const metaData = {
@@ -389,7 +454,12 @@ export const createApp = (): FastifyInstance => {
           referrer: req.headers.referer,
         };
         const timezone = clientInfo.timezone ?? "unknown";
-        await auth.insertAuthLogs(userExist.id,client_ip,device_id,JSON.stringify(metaData));
+        await auth.insertAuthLogs(
+          userExist.id,
+          client_ip,
+          device_id,
+          JSON.stringify(metaData)
+        );
         await authModel.updateUserInfo(
           user?.email,
           JSON.stringify(metaData),
@@ -408,12 +478,18 @@ export const createApp = (): FastifyInstance => {
           domain: config.env.app.domain_cookie,
         });
         // return reply.send({ success: "true", token: token });
-        return reply.redirect(`${config.env.app.frontend_url}/callback/social?token=${token}`);
+        return reply.redirect(
+          `${config.env.app.frontend_url}/callback/social?token=${token}${
+            userExist?.lang ? `&lang=${userExist.lang}` : ""
+          }&action=register`
+        );
       } else {
-        const device_id:any = req.cookies.device_id;
-        
-        const country_code = req.headers["X-COUNTRY"] ?? req.headers["cf-ipcountry"] ?? "unknown";
-        const client_ip = req.headers["X-CLIENT-IP"] ?? req.headers["cf-connecting-ip"];
+        const device_id: any = req.cookies.device_id;
+
+        const country_code =
+          req.headers["X-COUNTRY"] ?? req.headers["cf-ipcountry"] ?? "unknown";
+        const client_ip =
+          req.headers["X-CLIENT-IP"] ?? req.headers["cf-connecting-ip"];
         const clientInfo = await getIpDetails(client_ip);
 
         const metaData = {
@@ -422,7 +498,12 @@ export const createApp = (): FastifyInstance => {
           referrer: req.headers.referer,
         };
         const timezone = clientInfo.timezone ?? "unknown";
-        await auth.insertAuthLogs(userExist?.id,client_ip,device_id,JSON.stringify(metaData));
+        await auth.insertAuthLogs(
+          userExist?.id,
+          client_ip,
+          device_id,
+          JSON.stringify(metaData)
+        );
         let token = await createJWTToken(
           { user: req.user },
           `${parseInt(config.env.app.expiresIn)}h`
@@ -433,7 +514,11 @@ export const createApp = (): FastifyInstance => {
           domain: config.env.app.domain_cookie,
         });
         // reply.send({ success: "true", token: token });
-        return reply.redirect(`${config.env.app.frontend_url}/callback/social?token=${token}`);
+        return reply.redirect(
+          `${config.env.app.frontend_url}/callback/social?token=${token}${
+            userExist?.lang ? `&lang=${userExist.lang}` : ""
+          }&action=login`
+        );
       }
     }
   );

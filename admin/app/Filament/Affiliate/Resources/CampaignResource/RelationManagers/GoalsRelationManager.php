@@ -23,66 +23,97 @@ class GoalsRelationManager extends RelationManager
         return $form
             ->schema([
 
-                Forms\Components\TextInput::make('name')
-                    ->required()
-                    ->maxLength(255),
+            Forms\Components\Select::make('tracking_code')
+                ->label('Tracking Code')
+                ->preload()
+                ->searchable()
+                ->disabledOn("edit")
+                ->options(function (RelationManager $livewire, ?Model $record = null) {
+                    // Get the parent campaign record
+                    $campaign = $livewire->getOwnerRecord();
+                    
+                    // All possible tracking codes
+                    $allCodes = [
+                        'app_install'           => 'app_install',
+                        'register'              => 'register', 
+                        'user_transaction'      => 'user_transaction',
+                    ];
+                    
+                    if (!$campaign) {
+                        return $allCodes;
+                    }
+                    
+                    // Get existing goals for this campaign
+                    $existingGoals = $campaign->goals();
+                    
+                    // If we're editing, exclude the current record from the check
+                    if ($record && $record->exists) {
+                        $existingGoals = $existingGoals->where('id', '!=', $record->id);
+                    }
+                    
+                    // Get used tracking codes
+                    $usedCodes = $existingGoals->pluck('tracking_code')->toArray();
+                    
+                    // Return only available codes
+                    return array_filter($allCodes, function($label, $code) use ($usedCodes) {
+                        return !in_array($code, $usedCodes);
+                    }, ARRAY_FILTER_USE_BOTH);
+                })
+                ->reactive()
+                ->required()
+                ->infotip('Select a unique tracking code for this goal. Choose from the available options.'), 
 
-                Forms\Components\TextInput::make('description')
-                    ->required()
-                    ->maxLength(255),
+            Forms\Components\TextInput::make('qualification_amount')
+                ->required()
+                ->prefix(config('freemoney.default.default_currency'))
+                ->label('Qualification Amount')
+                ->numeric()
+                ->default(0)
+                ->visible(function($get) {
+                    $tracking_code = $get('tracking_code');
+                    return $tracking_code == 'user_transaction'; // Show only if 'user_transaction' is selected
+                })
+                ->reactive()
+                ->minValue(0)
+                ->infotip('Enter the amount required to qualify for this goal. This field will appear only if "User Transaction" is selected as the tracking code.'),
 
-                // Forms\Components\Select::make('commission_type')
-                //     ->required()
-                //     ->label('Commission Type')
-                //     ->disabledOn('edit')
-                //     ->visibleOn('create')
-                //     ->options([
-                //         'fixed'   => 'Fixed Amount',
-                //         'percent' => 'Percentage',
-                //     ])
-                //     ->default('fixed'),
+            Forms\Components\TextInput::make('name')
+                ->placeholder("Add goal Name")
+                ->required()
+                ->infotip('Provide a name for the goal associated with the campaign.')
+                ->maxLength(255)
+                ->infotip('Goal name should be concise and descriptive.'),
 
-                Forms\Components\Hidden::make('commission_type')
-                    ->default('fixed'),
+            Forms\Components\TextInput::make('description')
+                ->required()
+                ->infotip('Provide a brief description for this campaign goal.')
+                ->maxLength(255)
+                ->infotip('Ensure the description clearly explains the purpose and target of the goal.'),
 
-                Forms\Components\TextInput::make('commission_amount')
-                    ->required()
-                    ->prefix(config('freemoney.default.default_currency'))
-                    ->label('Commission Amount')
-                    ->numeric()
-                    ->minValue(0),
+            Forms\Components\Hidden::make('commission_type')
+                ->default('fixed')
+                ->infotip('The commission type will determine how the commission amount is calculated.'),
 
-                Forms\Components\TextInput::make('qualification_amount')
-                    ->required()
-                    ->prefix(config('freemoney.default.default_currency'))
-                    ->label('Qualification Amount')
-                    ->numeric()
-                    ->minValue(0),
+            Forms\Components\TextInput::make('commission_amount')
+                ->required()
+                ->prefix(config('freemoney.default.default_currency'))
+                ->label('Commission Amount')
+                ->numeric()
+                ->minValue(0)
+                ->infotip('Enter the amount for the commission associated with this goal. A positive value is required for all active goals.'),
 
-                Forms\Components\TextInput::make('tracking_code')
-                    ->label('Tracking Code')
-                    ->disabledOn("edit")
-                    ->required()
-                    ->validationMessages([
-                        'unique' => 'The tracking code must be unique.',
-                        'max' => 'The tracking code must not exceed 50 characters.',
-                        'min' => 'The tracking code must be at least 2 characters.',
-                    ])
-                    ->maxLength(50)
-                    ->minLength(2)
-                    ->unique(ignoreRecord: true)
-                    ->infotip('Unique tracking code for goal (up to 50 characters)'),
+            Forms\Components\Radio::make('status')
+                ->required()
+                ->label('Status')
+                ->inline()
+                ->inlineLabel(false)
+                ->options([
+                    'active' => 'Active',
+                    'inactive' => 'Inactive',
+                ])
+                ->default('active')
+                ->infotip('Set the goal status. An "active" status will include the goal in the current campaigns, while "inactive" will exclude it.')
 
-                Forms\Components\Radio::make('status')
-                    ->required()
-                    ->label('Status')
-                    ->inline()
-                    ->inlineLabel(false)
-                    ->options([
-                        'active' => 'Active',
-                        'inactive' => 'Inactive',
-                    ])
-                    ->default('active'),
 
             ]);
     }
@@ -160,8 +191,8 @@ class GoalsRelationManager extends RelationManager
                 // Tables\Actions\DeleteAction::make()->label('')->tooltip('Delete Goal')->size('lg'),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    // Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ]);
     }

@@ -309,3 +309,14 @@ export const getPaginatedMessages = async (
 
   return {data:formattedResult,lastPage};
 };
+
+export const getNotificationContents=async(code:string)=>{
+  const result =await db
+    .selectFrom("notification_templates")
+    .select(['title','route'])
+    .where("template_code", "=", code)
+    .executeTakeFirst();
+
+    return result
+
+}

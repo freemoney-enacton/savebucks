@@ -12,6 +12,8 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use ValentinMorice\FilamentJsonColumn\JsonColumn;
+use Carbon\Carbon;
 
 class ClickResource extends Resource
 {
@@ -111,6 +113,9 @@ class ClickResource extends Resource
                             ->maxLength(1000)
                             ->label('User Agent')
                             ->columnSpanFull(),
+
+                        JsonColumn::make('campaign_goals')->viewerOnly(),
+                        
                     ])->columnSpan(2),
 
             ])->columns(2);
@@ -175,8 +180,34 @@ class ClickResource extends Resource
                     ->preload(),
                 
                 Tables\Filters\TernaryFilter::make('is_converted')
-                 ->label("Is Converted")
-                 ->placeholder("All"),
+                    ->label("Is Converted")
+                    ->trueLabel('Converted')
+                    ->falseLabel('Not Converted')
+                    ->placeholder("All"),
+
+                Tables\Filters\Filter::make('clicked_at')
+                    ->form([
+                        Forms\Components\DatePicker::make('from')->native(false)->label("Click Date from")->columnSpan(1)->icon('heroicon-s-calendar'),
+                        Forms\Components\DatePicker::make('until')->native(false)->label("Click Date To")->columnSpan(1)->icon('heroicon-s-calendar'),
+                    ])
+                    ->query(function ($query, array $data) {
+                        return $query
+                            ->when($data['from'], fn ($q) => $q->whereDate('clicked_at', '>=', $data['from']))
+                            ->when($data['until'], fn ($q) => $q->whereDate('clicked_at', '<=', $data['until']));
+                    })
+                    ->indicateUsing(function (array $data): array {
+                        $indicators = [];
+                
+                        if ($data['from'] ?? null) {
+                            $indicators['from'] = 'Click Date from ' . Carbon::parse($data['from'])->toFormattedDateString();
+                        }
+                
+                        if ($data['until'] ?? null) {
+                            $indicators['until'] = 'Click Date To ' . Carbon::parse($data['until'])->toFormattedDateString();
+                        }
+                
+                        return $indicators;
+                }),
                
             ])
             ->actions([

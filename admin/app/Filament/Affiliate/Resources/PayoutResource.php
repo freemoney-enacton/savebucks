@@ -5,6 +5,7 @@ namespace App\Filament\Affiliate\Resources;
 use App\Filament\Affiliate\Resources\PayoutResource\Pages;
 use App\Filament\Affiliate\Resources\PayoutResource\RelationManagers;
 use App\Models\Affiliate\Payout;
+use App\Models\Affiliate\Affiliate;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -20,7 +21,6 @@ use Filament\Notifications\Notification;
 use Filament\Tables\Actions\BulkAction;
 use Filament\Tables\Actions\BulkActionGroup;
 use App\Filament\Affiliate\Resources\AffiliateResource;
-use App\Models\Affiliate\Affiliate;
 use App\Filament\Affiliate\Resources\PayoutResource\RelationManagers\PaymentLogsRelationManager;
 
 class PayoutResource extends Resource
@@ -29,6 +29,7 @@ class PayoutResource extends Resource
     protected static ?string $navigationGroup = 'Payout';
     protected static ?string $modelLabel    = 'Payout Request';
     protected static ?string $navigationIcon = 'heroicon-o-currency-dollar';
+
 
     public static function form(Form $form): Form
     {
@@ -43,41 +44,88 @@ class PayoutResource extends Resource
                         ->schema([
 
                         Forms\Components\Select::make('affiliate_id')
-                            ->relationship('affiliate', 'name')
+                            ->relationship('affiliate', 'email')
                             ->preload()
                             ->searchable()
-                            ->disabledon("edit")
+                            ->disabled(fn (string $operation): bool => $operation === 'edit')
                             ->label('Affiliate')
+                            ->reactive()
+                            ->afterStateUpdated(function ($state, callable $set) {
+                                if ($state) {
+                                    // Auto-generate Payout ID only
+                                    $set('transaction_id', substr(str_shuffle('abcdefghijklmnopqrstuvwxyz0123456789'), 0, 8) . '-' . substr(uniqid(), -10));
+                                    
+                                    // Clear previous payment details when affiliate changes
+                                    $set('payment_method', null);
+                                    $set('payment_account', '');
+                                    $set('payment_details', null);
+                                }
+                            })
                             ->required(),
                         
                         Forms\Components\TextInput::make('transaction_id')
                             ->label('Payout ID')
                             ->required()
-                            ->infotip("System generated transaction id for the payout")
+                            ->infotip("Auto-generated when affiliate is selected, but you can modify it")
                             ->maxLength(255),
                             
                         Forms\Components\TextInput::make('requested_amount')
                             ->label('Requested Amount')
                             ->numeric()
                             ->prefix(config('freemoney.currencies.default'))
-                            // ->prefixIcon("heroicon-o-currency-dollar")
                             ->required(),
                         
-                        Forms\Components\TextInput::make('payment_method')
+                        Forms\Components\Select::make('payment_method')
                             ->label('Payment Method')
-                            ->required()
-                            ->maxLength(50),
+                            ->options([
+                                'bank' => 'Bank',                             
+                            ])
+                            ->searchable()
+                            ->preload()
+                            ->placeholder('Select payment method')
+                            ->reactive()
+                            ->afterStateUpdated(function ($state, callable $set, callable $get) {
+                                // When payment method is selected, update payment details accordingly
+                                $affiliateId = $get('affiliate_id');
+                                if ($affiliateId && $state === 'bank') {
+                                    $affiliate = Affiliate::find($affiliateId);
+                                    if ($affiliate && $affiliate->bank_details) {
+                                        $set('payment_details', $affiliate->bank_details);
+                                        
+                                        // Extract account number
+                                        $bankDetails = is_string($affiliate->bank_details) 
+                                            ? json_decode($affiliate->bank_details, true) 
+                                            : $affiliate->bank_details;
+                                            
+                                        if (is_array($bankDetails)) {
+                                            $accountNumber = $bankDetails['account_number'] 
+                                                ?? $bankDetails['bank_account_no']                                        
+                                                ?? '';
+                                            
+                                            if ($accountNumber) {
+                                                $set('payment_account', $accountNumber);
+                                            }
+                                        }
+                                    }
+                                } elseif ($affiliateId && $state === 'paypal') {
+                                    $affiliate = Affiliate::find($affiliateId);
+                                    if ($affiliate && $affiliate->paypal_address) {
+                                        $set('payment_account', $affiliate->paypal_address);
+                                        $set('payment_details', json_encode(['paypal_email' => $affiliate->paypal_address]));
+                                    }
+                                }
+                            })
+                            ->required(),
 
                         Forms\Components\TextInput::make('payment_account')
                             ->label('Payment Account')
+                            ->helperText("Auto-filled from affiliate profile when available")
                             ->required()
                             ->maxLength(255),        
-            
-                        // Forms\Components\TextInput::make('payment_details')
-                        //     ->label('Payment Details'),
 
                         JsonColumn::make('payment_details')
-                            ->label('Payment Details')        
+                            ->label('Payment Details')     
+                            ->infotip("Additional details for payout request")   
                             ->columnSpanFull()              
                             ->viewerOnly(),
                 
@@ -136,9 +184,6 @@ class PayoutResource extends Resource
 
                 ])->columnSpan(1),
 
-
-              
-
             ])->columns(3);
     }
 
@@ -157,7 +202,7 @@ class PayoutResource extends Resource
                     ->searchable()
                     ->sortable(),               
 
-                Tables\Columns\TextColumn::make('payment_method')
+                Tables\Columns\TextColumn::make('payment_method')                    
                     ->label("Payment Method")
                     ->searchable(),
 

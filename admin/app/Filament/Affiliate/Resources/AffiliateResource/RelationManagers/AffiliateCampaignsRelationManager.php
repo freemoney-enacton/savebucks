@@ -16,15 +16,19 @@ class AffiliateCampaignsRelationManager extends RelationManager
     public function form(Form $form): Form
     {
         return $form->schema([
+
             Forms\Components\Select::make('campaign_id')
                 ->label('Campaign')
                 ->options(fn () => Campaign::where('status', 'active')->pluck('name','id'))
                 ->preload()
                 ->searchable()
                 ->required(),
+
             Forms\Components\Select::make('status')
+                ->preload()
+                ->searchable()
                 ->options([
-                    'pending' => 'Pending',
+                    'pending'  => 'Pending',
                     'approved' => 'Approved',
                     'rejected' => 'Rejected',
                 ])
@@ -37,15 +41,34 @@ class AffiliateCampaignsRelationManager extends RelationManager
     {
         return $table
             ->columns([
+
                 Tables\Columns\TextColumn::make('campaign.name')->label('Campaign'),
-                Tables\Columns\BadgeColumn::make('status'),
+                Tables\Columns\TextColumn::make('status')
+                    ->badge()
+                    ->color(fn($state) => match ($state) {
+                            'pending'   => 'warning',
+                            'approved'  => "success",
+                            'rejected'  => "danger",
+                            default     =>  "gray",
+                        })                    
+                    ->formatStateUsing(fn($state)=> ucfirst($state)),
             ])
             ->headerActions([
                 Tables\Actions\CreateAction::make(),
             ])
+            ->filters([
+                Tables\Filters\SelectFilter::make('status')
+                    ->preload()
+                    ->searchable()
+                    ->options([
+                        'pending'   => 'Pending',
+                        'approved'  => 'Approved',
+                        'rejected'  => 'Rejected',
+                    ]),
+            ])
             ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\EditAction::make()->label("")->tooltip("Edit")->size("lg"),
+                Tables\Actions\DeleteAction::make()->label("")->tooltip("Delete")->size("lg"),
             ]);
     }
 }

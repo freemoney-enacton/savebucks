@@ -11,7 +11,10 @@ use Spatie\Permission\Traits\HasRoles;
 use OwenIt\Auditing\Contracts\Auditable;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\SendMailToUser;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
+use App\Observers\AffiliateObserver;
 
+#[ObservedBy([AffiliateObserver::class])]
 // Affiliate Model
 class Affiliate extends Model
 {
@@ -28,6 +31,9 @@ class Affiliate extends Model
         'bank_details',
         'address',
         'tax_id',
+        'promotion_method',
+        'website_link',
+        'estimated_monthly_leads',
         'is_email_verified',
         'email_verified_at'
     ];

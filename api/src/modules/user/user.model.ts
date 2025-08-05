@@ -569,3 +569,26 @@ export const fetchMentions = async (user_id: number) => {
 
     return result 
 };
+
+export const saveNotification = async (userId: number, notificationId: string) => {
+  const resuilt=await db
+    .updateTable("users") 
+    .set({
+      onesignal_notification_id: notificationId,
+    })
+    .where("id", "=", userId)
+    .executeTakeFirst();
+  return resuilt
+}
+
+export const clearOneSignalNotificationId=async (userId: number) => {
+  const result=await db
+    .updateTable("users")
+    .set({
+      onesignal_notification_id: null,
+    })
+    .where("id", "=", userId)
+    .executeTakeFirst();
+
+    return result
+}

@@ -9,6 +9,13 @@ export const SignUpSchema = Yup.object().shape({
     .min(8, "Password must be at least 8 characters")
     .max(50, "Password must be at most 50 characters")
     .required("Password is required"),
+  promotionMethod: Yup.string().required("Promotion method is required"),
+  websiteLink: Yup.string()
+    .url("Invalid URL")
+    .required("Website or social media link is required"),
+  estimatedMonthlyLeads: Yup.string().required(
+    "Estimated monthly leads is required"
+  ),
 });
 
 export const SignInSchema = Yup.object().shape({

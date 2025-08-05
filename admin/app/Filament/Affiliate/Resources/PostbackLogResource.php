@@ -99,7 +99,7 @@ class PostbackLogResource extends Resource
                     ->color(fn (string $state): string => match ($state) {
                         'success' => 'success',
                         'failure' => 'danger',
-                        'pending' => 'pending', 
+                        'pending' => 'warning', 
                         default => 'gray',
                     })
                     ->searchable(),

@@ -14,6 +14,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { AppRoutes } from "@/utils/routes";
 import { createTranslation } from "@/i18n/server";
+import { Config } from "@/utils/config";
 
 export default async function Page({
   params,
@@ -45,10 +46,10 @@ export default async function Page({
   if (affiliateLink.status === "inactive") {
     return (
       <AuthLayout>
-        <div className="flex flex-col items-start justify-center min-h-screen w-full p-4 space-y-5 overflow-clip">
-          <Link
+        <div className="flex flex-col items-center justify-center w-full space-y-5 overflow-clip min-h-[100px]">
+          {/* <Link
             href={AppRoutes.dashboard}
-            className="lg:hidden h-14 w-fit flex items-start mx-auto"
+            className=" h-14 w-fit flex items-start mx-auto"
           >
             <Image
               src={"/images/savebucks-logo.png"}
@@ -57,9 +58,11 @@ export default async function Page({
               width={100}
               className="max-h-12 w-auto"
             />
-          </Link>
+          </Link> */}
 
-          <h1 className="text-3xl font-medium">{t("linkNotActive")}</h1>
+          <h1 className="text-3xl font-medium text-center">
+            {t("linkNotActive")}
+          </h1>
         </div>
       </AuthLayout>
     );
@@ -117,7 +120,7 @@ export default async function Page({
     );
   } else {
     redirect(
-      `https://dev.savebucks.app/?click_code=${clickCode}&source=affiliate`
+      `${Config.env.app.savebucks_web_url}/?click_code=${clickCode}&source=affiliate`
     );
   }
 

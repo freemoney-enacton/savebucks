@@ -41,6 +41,20 @@ export const payoutStatusEnum = [
 
 export const postbackStatusEnum = ["success", "failure", "pending"] as const;
 
+export const promotionMethodEnum = [
+  "social_media",
+  "website",
+  "youtube",
+  "other",
+] as const;
+
+export const estimatedMonthlyLeadsEnum = [
+  "0-100",
+  "100-500",
+  "500-1000",
+  "1000+",
+] as const;
+
 // Affiliates table
 export const affiliates = mysqlTable("affiliates", {
   id: serial("id").primaryKey(),
@@ -54,6 +68,12 @@ export const affiliates = mysqlTable("affiliates", {
   bankDetails: json("bank_details"),
   address: json("address"),
   taxId: varchar("tax_id", { length: 255 }),
+  promotionMethod: mysqlEnum("promotion_method", promotionMethodEnum).notNull(),
+  websiteLink: varchar("website_link", { length: 255 }).notNull(),
+  estimatedMonthlyLeads: mysqlEnum(
+    "estimated_monthly_leads",
+    estimatedMonthlyLeadsEnum
+  ).notNull(),
   token: varchar("token", { length: 255 }),
   tokenExpiry: timestamp("token_expiry"),
   isEmailVerified: boolean("is_email_verified").notNull().default(false),

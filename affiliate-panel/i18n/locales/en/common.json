@@ -4,6 +4,7 @@
 "cancel": "Cancel",
 "delete": "Delete",
 "deleting": "Deleting...",
+"welcome_title":"Welcome to the Savebucks Affiliate Dashboard",
 "somethingWentWrong": "Something went wrong. Please try again.",
 "passwordChanged": "Password updated successfully",
  "errorSendingEmail": "Error sending email",
@@ -28,6 +29,9 @@
       "name": "Name",
       "email": "Email",
       "password": "Password",
+      "promotionMethod": "Promotion Method",
+      "websiteLink": "Website or Social Media Link",
+      "estimatedMonthlyLeads": "Estimated Monthly Leads",
       "submit": "Sign Up",
       "haveAccount": "Already have an account?",
       "signIn": "Sign In",
@@ -40,6 +44,18 @@
       "errorSendingWelcomeEmail": "Error sending welcome email",
       "verificationEmailSent": "Verification email sent successfully",
       "welcomeEmailSent": "Welcome email sent successfully"
+    },
+    "promotionMethodOptions": {
+      "socialMedia": "Social Media",
+      "website": "Website",
+      "youtube": "YouTube",
+      "other": "Other"
+    },
+    "monthlyLeadsOptions": {
+      "0-100": "0-100",
+      "100-500": "100-500",
+      "500-1000": "500-1000",
+      "1000+": "More than 1000"
     },
     "forgotPassword": {
       "title": "Forgot Password",
@@ -63,7 +79,10 @@
     "placeholder":{
       "name": "Enter your name",
       "email": "Enter your email",
-      "password": "Enter your password"
+      "password": "Enter your password",
+      "promotionMethod": "Select promotion method",
+      "websiteLink": "Enter your website or social link",
+      "estimatedMonthlyLeads": "Select estimated monthly leads"
     },
     "logout":{
       "title": "Log Out",
@@ -146,6 +165,18 @@
   "status": "Status",
   "noData": "No recent transactions found.",
   "viewAll": "View all transactions"
+},
+"reports": {
+  "title": "Reports",
+  "daily": "Daily",
+  "monthly": "Monthly",
+  "table": {
+    "date": "Date",
+    "month": "Month",
+    "transactions": "No. of Transactions",
+    "earning": "Earning",
+    "empty": "No data found."
+  }
 },
 "payments": {
   "paypalUpdated": "PayPal ID updated successfully",
@@ -282,6 +313,7 @@
   "earn": "{amount}",
   "qualify": "Qualify {amount}",
   "termsAndConditions": "Terms & Conditions",
+  "termsFallbackDescription": "Terms & Conditions not available.",
   "noActiveCampaigns": "No active campaigns found.",
   "selectCampaign": "Select Campaign",
   "selectPlaceholder": "Choose campaign"
@@ -337,6 +369,14 @@
   "campaign": {
     "label": "Campaign",
     "all": "All campaigns"
+  },
+  "month": {
+    "label": "Month",
+    "all": "All months"
+  },
+  "year": {
+    "label": "Year",
+    "all": "All years"
   },
   "dateRange": "Date Range",
   "placeholder": "Pick a date",

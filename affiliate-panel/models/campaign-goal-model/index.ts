@@ -131,6 +131,34 @@ export const getCampaignGoalByTrackingCode = async (trackingCode: string) => {
     };
   }
 };
+export const getCampaignGoalByTrackingCodeAndCampaignId = async (
+  trackingCode: string,
+  campaignId: number
+) => {
+  try {
+    const result = await db
+      .select()
+      .from(campaignGoals)
+      .where(
+        and(
+          eq(campaignGoals.trackingCode, trackingCode),
+          eq(campaignGoals.campaignId, campaignId)
+        )
+      );
+
+    return {
+      data: result[0] || null,
+      message: "ok",
+      status: "success",
+    };
+  } catch (error: any) {
+    return {
+      data: null,
+      message: error.message || "An error occurred",
+      status: "error",
+    };
+  }
+};
 
 export const insertCampaignGoal = async (campaignGoalData: any) => {
   try {

@@ -4,6 +4,7 @@ namespace App\Filament\Affiliate\Pages;
 
 use App\Filament\Affiliate\Widgets\AffiliateStatsOverview;
 use App\Filament\Affiliate\Widgets\ClicksTrendChart;
+use App\Filament\Affiliate\Widgets\ConversionTrendChart;
 use Filament\Pages\Page;
 use Filament\Pages\Dashboard as BaseDashboard;
 
@@ -16,7 +17,8 @@ class Dashboard extends BaseDashboard
     {
         return [
             AffiliateStatsOverview::class,
-            ClicksTrendChart::class
+            ClicksTrendChart::class,
+            ConversionTrendChart::class
         ];
     }
 

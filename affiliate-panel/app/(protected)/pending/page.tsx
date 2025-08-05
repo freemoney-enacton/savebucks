@@ -26,8 +26,8 @@ export default async function PendingPage() {
       <div className="space-y-6">
         {emailVerified === false ? (
           <div>
-            <Card className="w-full shadow-lg border-0">
-              <CardHeader>
+            <Card className="border-0 shadow-none">
+              <CardHeader className="!p-0">
                 <div className="flex items-center justify-center mb-4">
                   <MailWarning className="h-12 w-12 text-yellow-500" />
                 </div>
@@ -35,7 +35,7 @@ export default async function PendingPage() {
                   {t("auth.pending.email_title")}
                 </CardTitle>
               </CardHeader>
-              <CardContent className="text-center">
+              <CardContent className="text-center !p-0">
                 <p className="text-gray-600">
                   Thank you for signing up on Savebucks Affiliate Portal. Your account is in pending status. You will be able to access your account once the admin approves your account
                 </p>
@@ -43,8 +43,8 @@ export default async function PendingPage() {
             </Card>
           </div>
         ) : (
-          <Card className="w-full shadow-lg border-0">
-            <CardHeader>
+          <Card className="border-0 shadow-none">
+            <CardHeader className="!p-0">
               <div className="flex items-center justify-center mb-4">
                 <CheckCircle className="h-12 w-12 text-green-500" />
               </div>
@@ -52,7 +52,7 @@ export default async function PendingPage() {
                 {t("auth.pending.title")}
               </CardTitle>
             </CardHeader>
-            <CardContent className="text-center">
+            <CardContent className="text-center !p-0">
               <p className="text-gray-600">
                 {t("auth.pending.message")}
               </p>

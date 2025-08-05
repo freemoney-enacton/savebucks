@@ -10,11 +10,11 @@ use Illuminate\Support\Facades\DB;
 class ClicksTrendChart extends ChartWidget
 {
     protected static ?string $heading = 'Clicks Trend Chart';
-    protected static ?string $maxHeight = '450px';
+    protected static ?string $maxHeight = '400px';
     protected static ?int $sort = 1;
 
     protected function getData(): array
-    {       
+    {
         $clickCounts = [];
         $labels = [];
 
@@ -74,6 +74,7 @@ class ClicksTrendChart extends ChartWidget
         return [
             'responsive' => true,
             'maintainAspectRatio' => false,
+            'aspectRatio' => 0.85,
             'plugins' => [
                 'legend' => [
                     'display' => false,

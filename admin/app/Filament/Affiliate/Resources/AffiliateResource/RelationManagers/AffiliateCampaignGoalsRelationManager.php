@@ -30,6 +30,7 @@ class AffiliateCampaignGoalsRelationManager extends RelationManager
                     ->preload()
                     ->searchable()
                     ->reactive()
+                    ->infotip('Select the campaign associated with the affiliate. Only campaigns assigned to this affiliate will be shown.')
                     ->afterStateUpdated(fn (callable $set) => $set('campaign_goal_id', null))
                     ->required(),
 
@@ -50,17 +51,30 @@ class AffiliateCampaignGoalsRelationManager extends RelationManager
                     ->searchable()
                     ->reactive()
                     ->required()
+                    ->infotip('Select a campaign goal for the affiliate from the available goals related to the selected campaign.')
                     ->disabled(fn (callable $get) => !$get('campaign_id')),
 
                 Forms\Components\TextInput::make('custom_commission_rate')
                     ->label('Custom Commission Rate')
                     ->prefix(config('freemoney.default.default_currency'))
+                    ->infotip('Enter the commission rate for the affiliate. This is a custom rate specific to the affiliate for this goal.')
                     ->numeric(),
 
                 Forms\Components\TextInput::make('qualification_amount')
                     ->label('Qualification Amount')
                     ->prefix(config('freemoney.default.default_currency'))
-                    ->numeric(),
+                    ->numeric()
+                    ->minValue(0)
+                    ->visible(function ($get) {
+                        $goalId = $get('campaign_goal_id');
+                        
+                        // Fetch the tracking code of the selected goal
+                        $goal = CampaignGoal::find($goalId);
+                        
+                        // Only show the qualification amount if the goal's tracking code is 'user_transaction'
+                        return $goal && $goal->tracking_code == 'user_transaction';
+                    })
+                    ->infotip('Enter the amount required for the affiliate to qualify for this goal. This will only show if the "User Transaction" goal is selected.'),
 
             ]);
     }

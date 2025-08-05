@@ -19,6 +19,7 @@ use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Filament\Navigation\NavigationItem;
 use App\Filament\Affiliate\Resources\CampaignResource;
+use Leandrocfe\FilamentApexCharts\FilamentApexChartsPlugin;
 
 class AffiliatePanelProvider extends PanelProvider
 {
@@ -47,6 +48,9 @@ class AffiliatePanelProvider extends PanelProvider
             ->pages([
                 Pages\Dashboard::class,
             ])
+             ->plugins([
+                FilamentApexChartsPlugin::make()
+            ])
             ->discoverWidgets(in: app_path('Filament/Affiliate/Widgets'), for: 'App\\Filament\\Affiliate\\Widgets')
             ->middleware([
                 EncryptCookies::class,
@@ -65,13 +69,13 @@ class AffiliatePanelProvider extends PanelProvider
                 Authenticate::class,
             ])
             ->navigationItems([
-            NavigationItem::make('Campaigns')
-                ->url( fn (): string => CampaignResource::getUrl('view', ['record' => 1]) , shouldOpenInNewTab: false)
-                ->icon('heroicon-o-presentation-chart-line')
-                ->group('Campaigns')
-                // ->isActiveWhen(fn () => request()->routeIs('filament.resources.campaigns.view'))
-                ->isActiveWhen(fn () => request()->routeIs('filament.affiliate.resources.campaigns.view'))
-                ->sort(1),
+            // NavigationItem::make('Campaigns')
+            //     ->url( fn (): string => CampaignResource::getUrl('view', ['record' => 1]) , shouldOpenInNewTab: false)
+            //     ->icon('heroicon-o-presentation-chart-line')
+            //     ->group('Campaigns')
+            //     // ->isActiveWhen(fn () => request()->routeIs('filament.resources.campaigns.view'))
+            //     ->isActiveWhen(fn () => request()->routeIs('filament.affiliate.resources.campaigns.view'))
+            //     ->sort(1),
             ]);
     }
 }
