@@ -120,18 +120,16 @@ export const login = async (email: string) => {
     .selectFrom("users")
     .selectAll()
     .where("email", "=", email)
-    .where("status", "=", "active")
     .where("is_deleted", "=", 0)
     .executeTakeFirst();
   return result;
 };
 
-export const check = async (email: string) => {
+export const check = async (device_id: string) => {
   const result = db
     .selectFrom("users")
-    .selectAll()
-    .where("email", "=", email)
-    .where("status", "=", "banned")
+    .select(['email'])
+    .where("device_id", "=", device_id)
     .where("is_deleted", "=", 0)
     .executeTakeFirst();
   return result;

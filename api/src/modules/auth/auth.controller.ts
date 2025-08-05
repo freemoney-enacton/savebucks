@@ -25,7 +25,7 @@ const generateOtp = () => {
   return Math.floor(100000 + Math.random() * 900000);
 };
 export const register = async (req: FastifyRequest, reply: FastifyReply) => {
-  let { name, email, password, referral, click_code } =
+  let { name, email, password, referral, click_code,device } =
     req.body as registerUserSchemas;
   // @ts-ignore
   const response_key: any = req.body["recaptcha"];
@@ -52,14 +52,14 @@ export const register = async (req: FastifyRequest, reply: FastifyReply) => {
     return reply.sendError(app.polyglot.t("error.auth.disposableEmail"), 409);
   }
 
-  const userBanned = await auth.check(email);
-  if (userBanned) {
-    return reply.sendError(app.polyglot.t("error.auth.userBanned"), 409);
-  }
-
   const userExist = await auth.login(email);
   if (userExist) {
     return reply.sendError(app.polyglot.t("error.auth.userExist"), 409);
+  }
+
+  const deviceBanned = await auth.check(device!);
+  if (deviceBanned) {
+    return reply.sendError(`User Already Exists.`, 409);
   }
 
   let referredBy = null;
@@ -102,7 +102,7 @@ export const register = async (req: FastifyRequest, reply: FastifyReply) => {
     referral ? referral : null,
     JSON.stringify(metaData),
     client_ip,
-    device_id,
+    device,
     country_code,
     clientInfo.timezone ?? "unknown",
     "email",

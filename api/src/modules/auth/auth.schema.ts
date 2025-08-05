@@ -124,6 +124,7 @@ export const registerUserSchema = z.object({
     .nullable(),
   recaptcha: z.string().optional().nullable(),
   click_code: z.string().optional().nullable(),
+  device:z.string().optional().nullable(),
 });
 export type loginBodySchema = z.infer<typeof loginSchema>;
 export type registerUserSchemas = z.infer<typeof registerUserSchema>;
