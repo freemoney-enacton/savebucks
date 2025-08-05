@@ -351,3 +351,15 @@ export const insertPostbackLog = async (postbackData: PostbackLogData) => {
     })
     .execute();
 };
+
+export const clickCodeVerify= async (user_id: number, code: string,network: string,offer_id: string) => {
+  const result = await db
+    .selectFrom("user_task_clicks")
+    .select(["id"])
+    .where("user_id", "=", user_id)
+    .where("click_code", "=", code)
+    .where("network", "=", network)
+    .where('campaign_id', '=', offer_id)
+    .executeTakeFirst();
+  return result;
+}

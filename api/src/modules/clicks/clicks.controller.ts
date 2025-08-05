@@ -6,6 +6,11 @@ import { getIpDetails } from "../../utils/getClientInfo";
 import { insertAuthLogs } from "../auth/auth.model";
 import { fetchIcon } from "../providers/offerProviders.model";
 import app from "../../app";
+
+// utils/generateClickCode.ts
+export const generateClickCode = (): string => {
+  return Math.random().toString(36).substring(2, 10).toUpperCase(); // 6-8 char, e.g., "A3F9K2"
+};
 export const insert = async (req: FastifyRequest, reply: FastifyReply) => {
   const { platform, network, task_type, campaign_id } =
     req.body as ClickTaskQuery;
@@ -25,6 +30,21 @@ export const insert = async (req: FastifyRequest, reply: FastifyReply) => {
   const userAgent = req.headers["user-agent"] as string;
   const referer = req.headers["referer"] as any;
 
+  let click_code: string="";
+  const maxAttempts = 5;
+
+  for (let i = 0; i < maxAttempts; i++) {
+    click_code = generateClickCode();
+
+    // Assume you have a DB method to check uniqueness
+    const exists = await click.doesClickCodeExist(click_code);
+    if (!exists) break;
+
+    if (i === maxAttempts - 1) {
+      return reply.sendError(app.polyglot.t("error.clickCodeGenerationFailed"), 500);
+    }
+  }
+
 
 
   const result = await click.clickInsert(
@@ -38,7 +58,8 @@ export const insert = async (req: FastifyRequest, reply: FastifyReply) => {
     country_code?.toString(),
     userAgent?.toString(),
     client_ip?.toString(),
-    referer?.toString()
+    referer?.toString(),
+    click_code
   );
   if (result) {
     await click.taskClickUpdate(`${network}_${campaign_id}`);
@@ -51,7 +72,7 @@ export const insert = async (req: FastifyRequest, reply: FastifyReply) => {
     //     route: req.routeOptions.url,
     //   })
     // );
-    reply.sendSuccess("", 200, "Inserted SuccessFull", null, null);
+    reply.sendSuccess(click_code, 200, "Inserted SuccessFull", null, null);
   } else {
     return reply.sendError(app.polyglot.t(" error.insertionFailed"), 500);
   }

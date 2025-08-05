@@ -12,7 +12,8 @@ export const clickInsert = async (
   countries: string,
   userAgent: string,
   ip: any,
-  referer: string
+  referer: string,
+  click_code: string,
 ) => {
   const query = await db
     .insertInto("user_task_clicks")
@@ -28,6 +29,7 @@ export const clickInsert = async (
       user_agent: userAgent,
       referer: referer,
       ip: ip,
+      click_code:click_code
     })
     .execute();
   return query;
@@ -136,3 +138,12 @@ export const taskClickUpdate = async (offer_id: string) => {
     .execute();
   return query;
 };
+
+export const doesClickCodeExist=async(code:string)=>{
+  const query = await db
+    .selectFrom("user_task_clicks")
+    .select(["id"])
+    .where("click_code", "=", code)
+    .executeTakeFirst();
+  return query;
+}

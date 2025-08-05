@@ -398,6 +398,13 @@ export const triggerPostback = async (req: FastifyRequest, reply: FastifyReply) 
     let conversionStatus = (networkDetails?.conversion_statuses ? networkDetails?.conversion_statuses[postbackData.sts] : null) ?? networkDetails.default_conversion_status ?? postbackData.sts ?? 'confirmed';
     console.log("🚀 ~ triggerPostback ~ conversionStatus:", conversionStatus)
 
+    if(postbackData.scr){
+      const result = await postback.clickCodeVerify(Number(postbackData.uid),postbackData.scr,postbackData.net,postbackData.oid)
+      if(result){
+        throw new Error("Invalid Click Code")
+      }
+    }
+
     if (networkDetails.code === "daisycon") {
 
 
@@ -444,6 +451,7 @@ export const triggerPostback = async (req: FastifyRequest, reply: FastifyReply) 
         : postbackData.amt;
       postbackDataDB.amount = (Number(postbackData.amt) * 0.01).toString();
     }
+    
     const userSale = await postback.updateOrCreateUserSale(postbackDataDB);
 
     const currentUser = await postback.getUserDetails(postbackData.uid)

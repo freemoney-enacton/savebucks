@@ -44,20 +44,20 @@ export const cronConfig = [
     cron: "0 * * * *",
     task: () => cleanupTickersTable(),
   },
-  {
-    name: "Import Ayet",
-    cron: "*/5 * * * *",
-    task: () => handleAyetTasksImport()
-      .then(() => {
-        fetch(`${config.env.admin.url}/downloadTaskImage/ayet`)
-          .then(() => {
-            console.log("ayet tasks imported successfully. from api");
-          });
-      })
-      .catch((error: any) => { // Explicitly typing the error parameter
-        console.error("Failed to import ayet tasks:", error);
-      }),
-  },
+  // {
+  //   name: "Import Ayet",
+  //   cron: "*/5 * * * *",
+  //   task: () => handleAyetTasksImport()
+  //     .then(() => {
+  //       fetch(`${config.env.admin.url}/downloadTaskImage/ayet`)
+  //         .then(() => {
+  //           console.log("ayet tasks imported successfully. from api");
+  //         });
+  //     })
+  //     .catch((error: any) => { // Explicitly typing the error parameter
+  //       console.error("Failed to import ayet tasks:", error);
+  //     }),
+  // },
   // {
   //   name: "Import Notik",
   //   cron: "*/7 * * * *",
@@ -72,34 +72,34 @@ export const cronConfig = [
   //     console.error("Failed to import notik tasks:", error);
   //     }),
   // },
-  {
-    name: "Import torox",
-    cron: "*/7 * * * *",
-    task: () => handleToroImportTask()
-      .then(() => {
-        fetch(`${config.env.admin.url}/downloadTaskImage/torox`)
-          .then(() => {
-            console.log("torox tasks imported successfully. from api");
-          });
-      })
-      .catch((error: any) => { // Explicitly typing the error parameter
-        console.error("from api Failed to import torox tasks:", error);
-      }),
-  },
-  {
-    name: "Import bitlabs",
-    cron: "*/5 * * * *",
-    task: () => handleBitlabsTasksImport()
-      .then(() => {
-        fetch(`${config.env.admin.url}/downloadTaskImage/bitlabs`)
-          .then(() => {
-            console.log("bitlabs tasks imported successfully.");
-          });
-      })
-      .catch((error: any) => { // Explicitly typing the error parameter
-        console.error("Failed to import bitlabs tasks:", error);
-      }),
-  },
+  // {
+  //   name: "Import torox",
+  //   cron: "*/7 * * * *",
+  //   task: () => handleToroImportTask()
+  //     .then(() => {
+  //       fetch(`${config.env.admin.url}/downloadTaskImage/torox`)
+  //         .then(() => {
+  //           console.log("torox tasks imported successfully. from api");
+  //         });
+  //     })
+  //     .catch((error: any) => { // Explicitly typing the error parameter
+  //       console.error("from api Failed to import torox tasks:", error);
+  //     }),
+  // },
+  // {
+  //   name: "Import bitlabs",
+  //   cron: "*/5 * * * *",
+  //   task: () => handleBitlabsTasksImport()
+  //     .then(() => {
+  //       fetch(`${config.env.admin.url}/downloadTaskImage/bitlabs`)
+  //         .then(() => {
+  //           console.log("bitlabs tasks imported successfully.");
+  //         });
+  //     })
+  //     .catch((error: any) => { // Explicitly typing the error parameter
+  //       console.error("Failed to import bitlabs tasks:", error);
+  //     }),
+  // },
   // {
   //   name: "",
   //   cron: "2 12 * * *",
