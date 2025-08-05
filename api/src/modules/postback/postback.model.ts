@@ -363,3 +363,22 @@ export const clickCodeVerify= async (user_id: number, code: string,network: stri
     .executeTakeFirst();
   return result;
 }
+
+export const verifyIframeClick = async (
+  user_id: number,
+  network: string,
+) => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const result = await db
+    .selectFrom("user_task_clicks")
+    .select(["id"])
+    .where("user_id", "=", user_id)
+    .where("network", "=", network)
+    .where("campaign_id", "=", 'iframe')
+    .where("created_at", ">=", today)
+    .executeTakeFirst();
+
+  return result; // Returns record if a matching iframe click exists today
+};

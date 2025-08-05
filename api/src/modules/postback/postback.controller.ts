@@ -399,10 +399,19 @@ export const triggerPostback = async (req: FastifyRequest, reply: FastifyReply) 
     console.log("🚀 ~ triggerPostback ~ conversionStatus:", conversionStatus)
 
     if(postbackData.scr){
-      const result = await postback.clickCodeVerify(Number(postbackData.uid),postbackData.scr,postbackData.net,postbackData.oid)
+      if(postbackData.scr === 'iframe'){
+        const result =await postback.verifyIframeClick(Number(postbackData.uid),postbackData.net)
+        if(result){
+        throw new Error("Invalid Click Code")
+      }
+      } 
+      else{
+        const result = await postback.clickCodeVerify(Number(postbackData.uid),postbackData.scr,postbackData.net,postbackData.oid)
       if(result){
         throw new Error("Invalid Click Code")
       }
+
+      }  
     }
 
     if (networkDetails.code === "daisycon") {
