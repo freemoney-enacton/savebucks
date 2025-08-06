@@ -90,7 +90,7 @@ export default async function (app: FastifyInstance) {
 
   app.withTypeProvider<ZodTypeProvider>().route({
     method: "GET",
-    url: "/recommended",
+    url: "/recommend",
     schema: {
       headers: z.object({
         "x-language": z.string({

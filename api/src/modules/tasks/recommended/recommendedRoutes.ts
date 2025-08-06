@@ -2,7 +2,7 @@ import { FastifyInstance } from "fastify";
 import { ZodTypeProvider } from "fastify-type-provider-zod";
 import { z } from "zod";
 import { isAuthenticated } from "../../../middleware/authMiddleware";
-import * as revuController from "./revu.controller";
+import * as revuController from "./recommended.controller";
 
 export default async function (app: FastifyInstance) {
   app.withTypeProvider<ZodTypeProvider>().route({
@@ -16,6 +16,6 @@ export default async function (app: FastifyInstance) {
       }),
       tags: ["Revu"],
     },
-    handler: revuController.fetchRevuOffers,
+    handler: revuController.fetchRecommendedOffers,
   });
 }
