@@ -173,16 +173,18 @@ export const fetchAyetTasks = async (
   const end = start + pageSize;
   const paginatedOffers = offers.slice(start, end);
 
+
   // Map only the current page's offers
-  const mappedResponse = paginatedOffers.map((offer: any, index: number) => {
+  const mappedResponse = await Promise.all(
+  paginatedOffers.map(async (offer: any, index: number) => {
+    const status = await checkClickExists(userDetails.id, offer.id, network.code) ? "pending" : "not_started";
     return {
       id: start + index + 1,
       name: offer.name,
       description: offer.description,
-      instructions:
-        offer.conversion_instructions || offer.conversion_instructions_long,
+      instructions: offer.conversion_instructions || offer.conversion_instructions_long,
       network: network.code,
-      task_id: offer.id,
+      task_id: String(offer.id),
       offer_id: `${network.code}_${offer.id}`,
       category_id: null,
       image: offer.icon,
@@ -192,7 +194,7 @@ export const fetchAyetTasks = async (
       payout_type: "fixed",
       countries: null,
       platforms: platform,
-      status: "publish",
+      status: status,
       tier: null,
       is_featured: 0,
       banner_image: offer.icon_large || null,
@@ -206,14 +208,12 @@ export const fetchAyetTasks = async (
       provider: {
         code: network.code,
         name: network.name,
-        icon:
-          network.icon?.includes("http") || !network.icon
-            ? network.icon
-            : `${imagePrefix}/${network.icon}`,
-        logo:
-          network.logo?.includes("http") || !network.logo
-            ? network.logo
-            : `${imagePrefix}/${network.logo}`,
+        icon: network.icon?.includes("http") || !network.icon
+          ? network.icon
+          : `${imagePrefix}/${network.icon}`,
+        logo: network.logo?.includes("http") || !network.logo
+          ? network.logo
+          : `${imagePrefix}/${network.logo}`,
         render_type: network.render_type,
       },
       category: {
@@ -227,7 +227,8 @@ export const fetchAyetTasks = async (
       user_screenshot_upload: null,
       currency: currency,
     };
-  });
+  })
+);
 
   return { mappedResponse, pageNumber, totalPages };
 };
@@ -240,3 +241,16 @@ export const getNetwork = async () => {
     .executeTakeFirst();
   return net?.val;
 };
+
+export const checkClickExists = async (user_id: number, offer_id: number, network_code: string) => {
+  const exists = await db
+    .selectFrom("user_task_clicks")
+    .select(["id"])
+    .where("user_id", "=", user_id)
+    .where("campaign_id", "=", String(offer_id))
+    .where("network", "=", network_code)
+    .executeTakeFirst();
+
+    return exists
+}
+    

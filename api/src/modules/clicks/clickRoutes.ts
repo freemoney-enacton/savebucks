@@ -15,7 +15,7 @@ export default async function (app: FastifyInstance) {
     url: "/insert",
     schema: {
       tags: ["Clicks"],
-      body: clickTaskQuerySchema,
+      //body: clickTaskQuerySchema,
       response: {
         200: clickInsertResponse,
       },

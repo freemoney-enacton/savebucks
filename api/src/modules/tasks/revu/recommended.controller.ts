@@ -8,6 +8,7 @@ import { db } from "../../../database/database";
 import { getSetCachedData } from "../../../utils/getCached";
 import app from "../../../app";
 import { fetchAyetTasks, fetchRevuTasks, getNetwork } from "./revuTasks";
+import * as click from "../../clicks/clicks.model";
 
 const imagePrefix = `${config.env.app.image_url}`;
 
@@ -36,7 +37,7 @@ export const fetchRecommendedOffers = async (
   const pageSize = Number(limit) || 20;
 
   const net = (await getNetwork()) || "ayet";
-  const platform = [req.headers["is-app"] ?? "web"];
+  const platform = [req.headers["is-app"] as string ?? "web"];
   const device = platform[0] === "web" ? "desktop" : platform[0];
 
   const network = await getNetworkDetails("tasks", net);
@@ -116,7 +117,6 @@ export const fetchRecommendedOffers = async (
         );
         break;
     }
-
     if (!result) {
       return reply.sendError("No offers Found", 404);
     }
