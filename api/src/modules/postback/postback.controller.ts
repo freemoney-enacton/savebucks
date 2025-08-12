@@ -349,11 +349,14 @@ console.log(data)
     if (!ipValidation) return false
     if(network.postback_key){
       const params: any = req.method === 'GET' ? req.query : req.body;
-      const base = `${params.oid}-${params.uid}-${network.postback_key}`;
+      const key=params.scr?network.api_key:network.postback_key;
+      const base = `${params.oid}-${params.uid}-${key}`;
       const expected = crypto
       .createHash('md5')
       .update(base)
       .digest('hex');
+
+      console.log(params,key,base,expected)
 
     return expected === params.hash;
     }
