@@ -280,44 +280,65 @@ const networkSecurityValidation: Record<string, (req: FastifyRequest, network: a
     if (!ipValidation) return false
     return true
   },
-  // adjoe:async(req, network) => {
-  //   const ipValidation = isIpWhitelisted(req, network)
-  //   if (!ipValidation) return false
-  //   const fullUrl = `${config.env.app.appUrl}${req.url}`;
-  //   const urlObj = new URL(fullUrl);
-  // const params = new URLSearchParams(urlObj.search);
+  adjoe:async(req, network) => {
+    const ipValidation = isIpWhitelisted(req, network)
+    if (!ipValidation) return false
+    const fullUrl = `${config.env.app.appUrl}${req.url}`;
+    const urlObj = new URL(fullUrl);
+  const params = new URLSearchParams(urlObj.search);
 
-  // const user_uuid = params.get('uid');
-  // const trans_uuid = params.get('tid');
-  // const currency = params.get('currency');
-  // const coin_amount = params.get('amt');
-  // const device_id = params.get('device_id');
-  // const sdk_app_id = params.get('sdk_app_id');
+  const user_uuid = params.get('uid');
+  const trans_uuid = params.get('tid');
+  const currency = params.get('currency');
+  const coin_amount = params.get('amt');
+  const device_id = params.get('device_id');
+  const sdk_app_id = params.get('sdk_app_id');
 
-  // // Check required fields
-  // if (!user_uuid || !trans_uuid || !currency || !coin_amount || !network.postback_key) {
-  //   return false;
-  // }
+  const s2s_token= sdk_app_id ==='com.app.savebucks'?network.postback_key:network.api_key
 
-  // const coinAmountNum = parseInt(coin_amount, 10);
-  // if (isNaN(coinAmountNum)) return false;
+  // Check required fields
+  if (!user_uuid || !trans_uuid || !currency || !coin_amount || !s2s_token) {
+    return false;
+  }
 
-  // // Build data string: always include required fields
-  // let data = trans_uuid + user_uuid + currency + coinAmountNum + network.postback_key;
+  const coinAmountNum = parseInt(coin_amount, 10);
+  if (isNaN(coinAmountNum)) return false;
 
-  // // Conditionally include optional fields
-  // if (device_id) data += device_id;
-  // if (sdk_app_id) data += sdk_app_id;
+  const parts = [
+  trans_uuid,
+  user_uuid,
+  currency,
+  coinAmountNum  // This is coin_amount
+];
 
-  // // Calculate SHA1 hash
-  // const calculatedSid = crypto.createHash('sha1').update(data).digest('hex');
+// Add optional fields IF they are present (in the correct order)
+if (device_id) {
+  parts.push(device_id);
+}
 
-  // // Get sid from URL
-  // const receivedSid = params.get('sid');
+if (sdk_app_id) {
+  parts.push(sdk_app_id);
+}
 
-  // // Compare (use timing-safe comparison if possible; basic here for clarity)
-  // return calculatedSid === receivedSid;
-  // },
+// s2s_token is always added LAST
+parts.push(s2s_token);
+
+// Concatenate all values (as strings) with no separator
+const data = parts.map(String).join('');
+
+console.log(data)
+
+  // Calculate SHA1 hash
+  const calculatedSid = crypto.createHash('sha1').update(data).digest('hex');
+
+  // Get sid from URL
+  const receivedSid = params.get('hash');
+
+  console.log("calculatedSid:", calculatedSid, "receivedSid:", receivedSid)
+
+  // Compare (use timing-safe comparison if possible; basic here for clarity)
+  return calculatedSid === receivedSid;
+  },
   revu:async(req, network) => {
     const ipValidation = isIpWhitelisted(req, network)
     if (!ipValidation) return false

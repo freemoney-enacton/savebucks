@@ -121,9 +121,22 @@ export const login = async (email: string) => {
     .selectAll()
     .where("email", "=", email)
     .where("is_deleted", "=", 0)
+    .where("status", "=", "active")
     .executeTakeFirst();
   return result;
 };
+
+export const ban =async (email: string) => {
+  const result = db
+    .selectFrom("users")
+    .selectAll()
+    .where("email", "=", email)
+    .where("is_deleted", "=", 0)
+    .where("status", "=", "banned")
+    .executeTakeFirst();
+  return result;
+  
+}
 
 export const check = async (device_id: string) => {
   const result = db

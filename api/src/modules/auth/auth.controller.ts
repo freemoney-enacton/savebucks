@@ -52,6 +52,11 @@ export const register = async (req: FastifyRequest, reply: FastifyReply) => {
     return reply.sendError(app.polyglot.t("error.auth.disposableEmail"), 409);
   }
 
+  const userBanned=await auth.ban(email);
+  if (userBanned) {
+    return reply.sendError(app.polyglot.t("error.auth.userExist"), 409);
+  }
+
   const userExist = await auth.login(email);
   if (userExist) {
     return reply.sendError(app.polyglot.t("error.auth.userExist"), 409);
