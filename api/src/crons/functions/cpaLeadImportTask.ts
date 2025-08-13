@@ -77,7 +77,7 @@ async function transformResponse(
       instructions: null,
       network_image: offer?.creatives?.og_image || offer?.creatives?.url,
       payout: parseFloat(offer.amount) || 0,
-      url: offer.link,
+      url: `${offer.link}&subid=#USER_ID`,
       countries: JSON.stringify(
         cleanCountries(offer.countries || [])
       ),

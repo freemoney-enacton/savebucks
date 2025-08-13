@@ -202,6 +202,8 @@ const networkSecurityValidation: Record<string, (req: FastifyRequest, network: a
     const base = keys.map(key => `${key}=${params[key]}`).join('&');
     const expected = crypto.createHmac('sha256', network.postback_key).update(base).digest('hex');
 
+    console.log("Provided Hash:", providedHash, "Expected Hash:", expected, "Base String:", base)
+
     return expected === providedHash;
   },
   notik: async (req, network) => {
