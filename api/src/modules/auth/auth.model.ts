@@ -67,7 +67,8 @@ export const registerSocial = async (
   referral: string,
   provider_type: string,
   lang: string,
-  click_code: string | null
+  click_code: string | null,
+  referrerCode: string | null 
 ) => {
   if (email == null) {
     const result = db
@@ -81,6 +82,7 @@ export const registerSocial = async (
         referral_code: referral,
         lang,
         affiliate_click_code: click_code ? click_code : null,
+        referrer_code: referrerCode ? referrerCode : null,
       })
       .executeTakeFirst();
     return result;

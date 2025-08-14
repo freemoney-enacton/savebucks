@@ -39,6 +39,7 @@ fastifyPassport.use(
           : null;
       console.log(googleProfilePicUrl);
       const referralCode = (Math.random() + 1).toString(36).substring(7);
+      const referrerCode = req.cookies.referral || req.cookies.referrer_code;
       const click_code = req.cookies.click_code;
       // const userExist = await auth.userExist("google", googleId);
       const userExist = await auth.login(email);
@@ -81,9 +82,11 @@ fastifyPassport.use(
         referralCode,
         "google",
         lang,
-        click_code || null
+        click_code || null,
+        referrerCode
       );
 
+      let referredBy = null;
       if (result && result.insertId) {
         if (avatar) {
           const users = await user.findByEmail(email);
@@ -99,12 +102,23 @@ fastifyPassport.use(
           );
         }
 
-        const joinBonus = await bonusDetails("join_no_refer");
-        await handleBonusAndNotifications(
-          Number(result.insertId),
-          joinBonus,
-          null
-        );
+        if (referrerCode) {
+                  referredBy = await user.referCodeUser(referrerCode);
+                  console.log("Referred by user:", referredBy);
+                }
+        
+                let joinBonus = await bonusDetails("join_no_refer");
+                const joinWithRefer = await bonusDetails("join_with_refer");
+                if (referredBy && joinWithRefer && joinWithRefer !== undefined) {
+                  joinBonus = joinWithRefer;
+                }
+                console.log("Join bonus details:", joinBonus);
+        
+                await handleBonusAndNotifications(
+                  Number(result.insertId),
+                  joinBonus,
+                  referredBy
+                );
         const userData = await db
           .selectFrom("users")
           .select(["affiliate_click_code"])
@@ -149,6 +163,7 @@ fastifyPassport.use(
           : null;
       console.log(fbProfilePicUrl);
       const referralCode = (Math.random() + 1).toString(36).substring(7);
+      const referrerCode = req.cookies.referral || req.cookies.referrer_code;
       const userExist = await auth.login(email);
       const lang = req.headers["x-language"]
         ? req.headers["x-language"][0]
@@ -194,9 +209,11 @@ fastifyPassport.use(
           referralCode,
           "facebook",
           lang,
-          click_code || null
+          click_code || null,
+          referrerCode
         );
 
+        let referredBy = null;
         if (result && result.insertId) {
           if (avatar) {
             const users = await user.findByEmail(email);
@@ -211,11 +228,19 @@ fastifyPassport.use(
               avatar?.url
             );
           }
-          const joinBonus = await bonusDetails("join_no_refer");
+          if (referrerCode) {
+            referredBy = await user.referCodeUser(referrerCode);
+          }
+          let joinBonus = await bonusDetails("join_no_refer");
+          const joinWithRefer = await bonusDetails("join_with_refer");
+          if (referredBy && joinWithRefer && joinWithRefer !== undefined) {
+            joinBonus = joinWithRefer;
+          }
+
           await handleBonusAndNotifications(
             Number(result.insertId),
             joinBonus,
-            null
+            referredBy
           );
           const userData = await db
             .selectFrom("users")
@@ -268,9 +293,11 @@ fastifyPassport.use(
           referralCode,
           "facebook",
           lang,
-          click_code || null
+          click_code || null,
+          referrerCode
         );
 
+        let referredBy = null;
         if (result && result.insertId) {
           if (avatar) {
             const users = await user.findByEmail(email);
@@ -285,11 +312,19 @@ fastifyPassport.use(
               avatar?.url
             );
           }
-          const joinBonus = await bonusDetails("join_no_refer");
+          if (referrerCode) {
+            referredBy = await user.referCodeUser(referrerCode);
+          }
+          let joinBonus = await bonusDetails("join_no_refer");
+          const joinWithRefer = await bonusDetails("join_with_refer");
+          if (referredBy && joinWithRefer && joinWithRefer !== undefined) {
+            joinBonus = joinWithRefer;
+          }
+
           await handleBonusAndNotifications(
             Number(result.insertId),
             joinBonus,
-            null
+            referredBy
           );
           const userData = await db
             .selectFrom("users")
@@ -333,6 +368,7 @@ fastifyPassport.use(
       const match = decodedToken?.email.match(/^[a-zA-Z]+/);
       const name = match ? match[0] : "";
       const referralCode = (Math.random() + 1).toString(36).substring(7);
+      const referrerCode = req.cookies.referral || req.cookies.referrer_code;
       const click_code = req.cookies.click_code;
       const userExist = await auth.login(email);
       const lang = req.headers["x-language"]
@@ -350,8 +386,7 @@ fastifyPassport.use(
           userExist["metadata"] = null;
           return cb(null, userExist);
         }
-        //Join No Refer bonus_code
-        const noReferBonus = await bonusDetails("join_no_refer");
+        
         const result = await auth.registerSocial(
           name,
           email,
@@ -359,14 +394,24 @@ fastifyPassport.use(
           referralCode,
           "apple",
           lang,
-          click_code || null
+          click_code || null,
+          referrerCode
         );
+        let referredBy = null;
         if (result && result.insertId) {
-          const joinBonus = await bonusDetails("join_no_refer");
+          if (referrerCode) {
+            referredBy = await user.referCodeUser(referrerCode);
+          }
+          let joinBonus = await bonusDetails("join_no_refer");
+          const joinWithRefer = await bonusDetails("join_with_refer");
+          if (referredBy && joinWithRefer && joinWithRefer !== undefined) {
+            joinBonus = joinWithRefer;
+          }
+
           await handleBonusAndNotifications(
             Number(result.insertId),
             joinBonus,
-            null
+            referredBy
           );
           const userData = await db
             .selectFrom("users")
@@ -395,9 +440,38 @@ fastifyPassport.use(
           referralCode,
           "apple",
           lang,
-          click_code || null
+          click_code || null,
+          referrerCode
         );
-        if (result) {
+        let referredBy = null;
+        if (result && result.insertId) {
+          if (referrerCode) {
+            referredBy = await user.referCodeUser(referrerCode);
+          }
+          let joinBonus = await bonusDetails("join_no_refer");
+          const joinWithRefer = await bonusDetails("join_with_refer");
+          if (referredBy && joinWithRefer && joinWithRefer !== undefined) {
+            joinBonus = joinWithRefer;
+          }
+
+          await handleBonusAndNotifications(
+            Number(result.insertId),
+            joinBonus,
+            referredBy
+          );
+          const userData = await db
+            .selectFrom("users")
+            .select(["affiliate_click_code"])
+            .where("id", "=", Number(result.insertId))
+            .executeTakeFirst();
+
+          if (userData && userData.affiliate_click_code) {
+            const res = await sendConversionRequest({
+              tracking_code: "register",
+              click_code: userData?.affiliate_click_code,
+              transaction_id: result.insertId.toString(),
+            });
+          }
           return cb(null, decodedToken);
         }
       }

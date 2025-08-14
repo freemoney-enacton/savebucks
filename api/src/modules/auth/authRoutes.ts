@@ -20,6 +20,7 @@ import {
 } from "./auth.schema";
 import fastifyPassport from "@fastify/passport";
 import { ZodTypeProvider } from "fastify-type-provider-zod";
+import { config } from "../../config/config";
 
 export default async function (app: FastifyInstance) {
   app.withTypeProvider<ZodTypeProvider>().route({
@@ -170,9 +171,62 @@ export default async function (app: FastifyInstance) {
   app.get(
     "/google",
     {
-      preValidation: fastifyPassport.authenticate("google", {
-        scope: ["profile", "email"],
-      }),
+      preValidation: [
+        async (request, reply) => {
+          console.log(request.cookies.referral);
+          console.log(request.cookies.click_code);
+          const { referrer_code, click_code,device_id,is_app } = request.query as {
+            referrer_code?: string;
+            click_code?: string;
+            device_id?: string;
+            is_app?:string
+          };
+          console.log("Referrer code from query:", referrer_code);
+          if (referrer_code) {
+            reply.setCookie("referrer_code", referrer_code, {
+              httpOnly: false,
+              maxAge: 24 * 60 * 60 * 1000, 
+              path: "/",
+              domain: config.env.app.domain_cookie,
+            });
+
+            if (click_code) {
+              reply.setCookie("click_code", click_code, {
+                httpOnly: false,
+                maxAge: 24 * 60 * 60 * 1000, 
+                path: "/",
+              domain: config.env.app.domain_cookie
+              });
+            }
+            console.log(
+              "Referrer code set in cookie:",
+              request.cookies.referrer_code
+            );
+            console.log(
+              "Click code set in cookie:",
+              request.cookies.click_code
+            );
+          }
+          if(device_id){
+            reply.setCookie("encrypted_device_id", device_id, {
+              httpOnly: false,
+              maxAge: 24 * 60 * 60 * 1000, 
+              path: "/",
+              domain: config.env.app.domain_cookie,
+            });
+          }
+          const isAppValue = is_app || "web";
+          reply.setCookie("is_app", isAppValue, {
+              httpOnly: false,
+              maxAge: 24 * 60 * 60 * 1000, 
+              path: "/",
+              domain: config.env.app.domain_cookie,
+            });
+        },
+        fastifyPassport.authenticate("google", {
+          scope: ["profile", "email"],
+        }),
+      ],
       preHandler: isDeviceID,
       schema: { tags: ["Authentication"] },
     },
@@ -180,12 +234,66 @@ export default async function (app: FastifyInstance) {
       console.log("GOOGLE API forward");
     }
   );
+
   app.get(
     "/apple",
     {
-      preValidation: fastifyPassport.authenticate("apple", {
-        scope: ["name", "email"],
-      }),
+      preValidation: [
+        async (request, reply) => {
+          console.log(request.cookies.referral);
+          console.log(request.cookies.click_code);
+          const { referrer_code, click_code,device_id,is_app} = request.query as {
+            referrer_code?: string;
+            click_code?: string;
+            device_id?: string;
+            is_app?:string
+          };
+          console.log("Referrer code from query:", referrer_code);
+          if (referrer_code) {
+            reply.setCookie("referrer_code", referrer_code, {
+              httpOnly: false,
+              maxAge: 24 * 60 * 60 * 1000, 
+              path: "/",
+              domain: config.env.app.domain_cookie,
+            });
+
+            if (click_code) {
+              reply.setCookie("click_code", click_code, {
+                httpOnly: false,
+                maxAge: 24 * 60 * 60 * 1000,
+                path: "/",
+              domain: config.env.app.domain_cookie
+              });
+            }
+            console.log(
+              "Referrer code set in cookie:",
+              request.cookies.referrer_code
+            );
+            console.log(
+              "Click code set in cookie:",
+              request.cookies.click_code
+            );
+          }
+          if(device_id){
+            reply.setCookie("encrypted_device_id", device_id, {
+              httpOnly: false,
+              maxAge: 24 * 60 * 60 * 1000, 
+              path: "/",
+              domain: config.env.app.domain_cookie,
+            });
+          }
+          const isAppValue = is_app || "web";
+          reply.setCookie("is_app", isAppValue, {
+              httpOnly: false,
+              maxAge: 24 * 60 * 60 * 1000, 
+              path: "/",
+              domain: config.env.app.domain_cookie,
+            });
+        },
+        fastifyPassport.authenticate("apple", {
+          scope: ["name", "email"],
+        }),
+      ],
       preHandler: isDeviceID,
       schema: { tags: ["Authentication"] },
     },
@@ -196,9 +304,62 @@ export default async function (app: FastifyInstance) {
   app.get(
     "/facebook",
     {
-      preValidation: fastifyPassport.authenticate("facebook", {
-        scope: ["email"],
-      }),
+      preValidation: [
+        async (request, reply) => {
+          console.log(request.cookies.referral);
+          console.log(request.cookies.click_code);
+          const { referrer_code, click_code,device_id,is_app } = request.query as {
+            referrer_code?: string;
+            click_code?: string;
+            device_id?: string;
+            is_app?:string
+          };
+          console.log("Referrer code from query:", referrer_code);
+          if (referrer_code) {
+            reply.setCookie("referrer_code", referrer_code, {
+              httpOnly: false,
+              maxAge: 24 * 60 * 60 * 1000, 
+              path: "/",
+              domain: config.env.app.domain_cookie,
+            });
+
+            if (click_code) {
+              reply.setCookie("click_code", click_code, {
+                httpOnly: false,
+                maxAge: 24 * 60 * 60 * 1000, 
+                path: "/",
+              domain: config.env.app.domain_cookie
+              });
+            }
+            console.log(
+              "Referrer code set in cookie:",
+              request.cookies.referrer_code
+            );
+            console.log(
+              "Click code set in cookie:",
+              request.cookies.click_code
+            );
+          }
+          if(device_id){
+            reply.setCookie("encrypted_device_id", device_id, {
+              httpOnly: false,
+              maxAge: 24 * 60 * 60 * 1000, 
+              path: "/",
+              domain: config.env.app.domain_cookie,
+            });
+          }
+          const isAppValue = is_app || "web";
+          reply.setCookie("is_app", isAppValue, {
+              httpOnly: false,
+              maxAge: 24 * 60 * 60 * 1000, 
+              path: "/",
+              domain: config.env.app.domain_cookie,
+            });
+        },
+        fastifyPassport.authenticate("facebook", {
+          scope: ["email"],
+        }),
+      ],
       preHandler: isDeviceID,
       schema: { tags: ["Authentication"] },
     },
