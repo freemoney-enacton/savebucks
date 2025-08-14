@@ -141,10 +141,12 @@ export const createUserSpin = async (
 };
 
 export const getUserSpin = async (userSpinCode: string) => {
-  return db.selectFrom("user_spins")
+  const result=await db.selectFrom("user_spins")
     .selectAll()
     .where("code","=",userSpinCode)
     .executeTakeFirst();
+
+    return result
 }
 
 export const claimUserSpin = async (userSpinCode: string, reward_code: string) => {

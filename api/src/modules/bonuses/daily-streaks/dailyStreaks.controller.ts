@@ -164,6 +164,8 @@ export const claim = async (req: FastifyRequest, reply: FastifyReply) => {
     const spinDetails = await fetchSpin(streakDetails.spin_code);
     const userSpinCode = await createUserSpin(spinDetails, Number(req.userId), 'bonus_code');
 
+    console.log("userSpinCode created ", userSpinCode);
+
     return reply.sendSuccess(
       {
   
@@ -187,19 +189,19 @@ export const claim = async (req: FastifyRequest, reply: FastifyReply) => {
 
 export const claimSpin = async (req: FastifyRequest, reply: FastifyReply) => {
   // Get details from req
-  const { day, usersipncode } = req.params as { day: string, usersipncode: string };
+  const { day, userspincode } = req.params as { day: string, userspincode: string };
   const user = req.user;
 
   const streakDetails = await dailyStreakModel.fetchDetails(Number(day));
 
   // chk user spin exists and available
-  const userSpin = await getUserSpin(usersipncode);
+  const userSpin = await getUserSpin(userspincode);
 
   // get spin reward
   const spinReward = getSpinRewards(userSpin?.spin_config)
   
   // claim spin
-  await claimUserSpin(usersipncode, spinReward.code);
+  await claimUserSpin(userspincode, spinReward.code);
 
   // award user bonus
   await dailyStreakModel.awardUserBonusForStreak(streakDetails, Number(day), Number(req.userId), spinReward.amount);
