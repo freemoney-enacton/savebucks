@@ -1,27 +1,10 @@
 import { FastifyInstance } from "fastify";
 import * as postbackController from "./postback.controller";
 import { ZodTypeProvider } from "fastify-type-provider-zod";
+import { InBrainMappedSchema, postbackDataSchema } from "./postback.schema";
 import { z } from "zod";
 
-const postbackDataSchema = z.object({
-  hash: z.string(),
-  typ: z.string(),
-  net: z.string(),
-  iky: z.string(),
-  uid: z.string(),
-  tid: z.string(),
-  sts: z.string(),
-  amt: z.string().optional(),
-  pyt: z.string(),
-  oid: z.string().optional(), // Optional fields
-  onm: z.string().optional(),
-  gid: z.string().optional(),
-  sid: z.string().optional(),
-  snm: z.string().optional(),
-  cip: z.string().optional(),
-  scr: z.string().optional(),
-  currency:z.string().optional(),
-});
+
 
 export default async function (app: FastifyInstance) {
   app.withTypeProvider<ZodTypeProvider>().route({
@@ -42,4 +25,22 @@ export default async function (app: FastifyInstance) {
     },
     handler: postbackController.triggerPostback,
   });
+  app.withTypeProvider<ZodTypeProvider>().route({
+  method: "POST",
+  url: "/inbrain",
+  schema: {
+    body: z.any(), // ← Still validate as your format
+    tags: ["Postback"],
+    description: "inBrain callback (mapped via preParsing)",
+  },
+  preHandler: async (req, reply) => {
+    try {
+      const newPayload = await InBrainMappedSchema(req.body);
+      req.body = newPayload; 
+    } catch (error) {
+      throw new Error("Failed to parse body: " + error);
+    }
+  },
+  handler: postbackController.triggerPostback,
+});
 }

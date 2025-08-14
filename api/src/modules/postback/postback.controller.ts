@@ -365,7 +365,24 @@ console.log(data)
 
     return true
     
-  }
+  },
+  inbrain: async(req, network) => {
+    if(network.postback_key){
+        const params:any = req.method === 'GET' ? req.query : req.body;
+        const key = network.postback_key; // Using postback_key as the CallbackSecret
+        
+        // Combine PanelistId + RewardId + CallbackSecret
+        const base = params.uid+params.tid+key;
+        const expected = crypto
+            .createHash('md5')
+            .update(base)
+            .digest('hex');
+
+        return expected === params.hash;
+    }
+
+    return true
+}
 };
 
 export const triggerPostback = async (req: FastifyRequest, reply: FastifyReply) => {
