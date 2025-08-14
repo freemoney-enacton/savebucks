@@ -83,7 +83,8 @@ fastifyPassport.use(
         "google",
         lang,
         click_code || null,
-        referrerCode
+        referrerCode,
+        req.cookies.is_app
       );
 
       let referredBy = null;
@@ -210,7 +211,8 @@ fastifyPassport.use(
           "facebook",
           lang,
           click_code || null,
-          referrerCode
+          referrerCode,
+          req.cookies.is_app
         );
 
         let referredBy = null;
@@ -294,7 +296,8 @@ fastifyPassport.use(
           "facebook",
           lang,
           click_code || null,
-          referrerCode
+          referrerCode,
+          req.cookies.is_app
         );
 
         let referredBy = null;
@@ -395,7 +398,8 @@ fastifyPassport.use(
           "apple",
           lang,
           click_code || null,
-          referrerCode
+          referrerCode,
+          req.cookies.is_app
         );
         let referredBy = null;
         if (result && result.insertId) {
@@ -441,7 +445,8 @@ fastifyPassport.use(
           "apple",
           lang,
           click_code || null,
-          referrerCode
+          referrerCode,
+          req.cookies.is_app
         );
         let referredBy = null;
         if (result && result.insertId) {

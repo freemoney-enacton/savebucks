@@ -1758,6 +1758,7 @@ export interface Users {
   onesignal_notification_id: string | null;
   password: string | null;
   phone_no: string | null;
+  platform: string | null;
   promotion_update: Generated<number>;
   provider_id: string | null;
   provider_type: string | null;

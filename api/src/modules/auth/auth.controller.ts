@@ -85,6 +85,7 @@ export const register = async (req: FastifyRequest, reply: FastifyReply) => {
   const client_ip =
     req.headers["x-client-ip"] ?? req.headers["cf-connecting-ip"];
   const clientInfo = await getIpDetails(client_ip);
+  const is_app=req.headers["is-app"]|| "web";
   // const lang = req.headers["x-language"]? req.headers["x-language"]  : "en";
   // console.log(req.headers["x-language"])
   // console.log(lang)
@@ -111,7 +112,8 @@ export const register = async (req: FastifyRequest, reply: FastifyReply) => {
     country_code,
     clientInfo.timezone ?? "unknown",
     "email",
-    click_code
+    click_code,
+    is_app
   );
 
   if (!register) {
