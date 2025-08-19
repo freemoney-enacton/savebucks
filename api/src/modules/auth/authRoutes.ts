@@ -173,8 +173,7 @@ export default async function (app: FastifyInstance) {
     {
       preValidation: [
         async (request, reply) => {
-          console.log(request.cookies.referral);
-          console.log(request.cookies.click_code);
+          console.log("req.query", request.query);
           const { referrer_code, click_code,device_id,is_app } = request.query as {
             referrer_code?: string;
             click_code?: string;

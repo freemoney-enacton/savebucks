@@ -207,32 +207,91 @@ const networkSecurityValidation: Record<string, (req: FastifyRequest, network: a
     return expected === providedHash;
   },
   notik: async (req, network) => {
-    const fullUrl = `${config.env.app.appUrl}${req.url}`;
-  const urlObj = new URL(fullUrl);
-  const searchParams = new URLSearchParams(urlObj.search);
+  // 1. Validate IP first
+  const ipValidation = isIpWhitelisted(req, network);
+  if (!ipValidation) {
+    console.warn('Blocked: IP not whitelisted');
+    return false;
+  }
 
+  const { url: requestUrl } = req;
 
-  // Extract the 'hash' parameter
-  const receivedHash = searchParams.get('hash');
-  if (!receivedHash) return false;
+  try {
+    // 2. Extract path and raw query string
+    const [path, rawQuery] = requestUrl.split('?', 2);
+    if (!rawQuery) {
+      console.error('Missing query string');
+      return false;
+    }
 
-  // Remove 'hash' parameter
-  searchParams.delete('hash');
+    // 3. Parse all key-value pairs manually, preserving encoding
+    const paramPairs = rawQuery.split('&');
+    let receivedHash = null;
+    const paramsToSign = [];
 
-  // Rebuild URL without the hash
-  const cleanedQuery = searchParams.toString();
-  const baseUrl = `${config.env.app.appUrl}${urlObj.pathname}${cleanedQuery ? '?' + cleanedQuery : ''}`;
+    for (const pair of paramPairs) {
+      if (!pair) continue;
 
+      const eqIndex = pair.indexOf('=');
+      if (eqIndex === -1) {
+        const key = pair.trim();
+        if (key.toLowerCase() === 'hash') continue; // ignore hash without =
+        paramsToSign.push(key); // rare case: param without value
+      } else {
+        const key = pair.slice(0, eqIndex);
+        const value = pair.slice(eqIndex + 1); // keep raw: + and %3A intact
 
-  // Generate HMAC-SHA1 hash
-  const generatedHash = crypto
-    .createHmac('sha1', network.postback_key)
-    .update(baseUrl)
-    .digest('hex');
+        if (key.toLowerCase() === 'hash') {
+          receivedHash = value;
+          continue;
+        }
 
-  // Compare hashes
-  return generatedHash === receivedHash;
-  },
+        paramsToSign.push(`${key}=${value}`);
+      }
+    }
+
+    // 4. Ensure hash was present
+    if (!receivedHash) {
+      console.error('Missing "hash" parameter');
+      return false;
+    }
+
+    // 5. Rebuild canonical query string
+    const signedQuery = paramsToSign.join('&');
+    const baseUrl = `${config.env.app.appUrl.replace(/\/+$/, '')}${path}`; // Ensure no trailing slashes
+    const urlToHash = signedQuery ? `${baseUrl}?${signedQuery}` : baseUrl;
+
+    console.log('✅ URL to Hash:', urlToHash); // Debug
+
+    // 6. Generate HMAC-SHA1
+    const generatedHash = crypto
+      .createHmac('sha1', network.postback_key)
+      .update(urlToHash)
+      .digest('hex');
+
+    console.log('🔐 Generated Hash:', generatedHash);
+    console.log('📩 Received Hash:', receivedHash);
+
+    // 7. Timing-safe comparison
+    const bufferA = Buffer.from(generatedHash, 'hex');
+    const bufferB = Buffer.from(receivedHash, 'hex');
+
+    if (bufferA.length !== bufferB.length) {
+      return false;
+    }
+
+    const isValid = crypto.timingSafeEqual(bufferA, bufferB);
+
+    if (!isValid) {
+      console.warn('Hash validation failed');
+    }
+
+    return isValid;
+  } catch (err) {
+    console.error('Error validating postback:', err);
+    return false;
+  }
+},
   lootably: async (req, network) => {
     if (network.postback_key) {
       const params: any = req.method === 'GET' ? req.query : req.body;
