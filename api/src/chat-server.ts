@@ -96,8 +96,18 @@ setInterval(() => {
   io.emit('room_counts', { roomCounts });
 }, ROOM_COUNT_REFRESH_INTERVAL)
 
+const userSockets = new Map();
 // io.on("connection", (socket: any) => { /* ... */ });
 io.on("connection", async (socket: any) => {
+
+  const userId = socket.user.id;
+  if (!userSockets.has(userId)) {
+    userSockets.set(userId, new Set());
+  }
+  userSockets.get(userId).add(socket.id);
+  
+  const socketCount = userSockets.get(userId).size;
+  console.log(`🔌 User ${userId} connected. Total sockets: ${socketCount}`);
 
   let idleTimeout = setTimeout(() => {
     socket.disconnect(true);
@@ -139,15 +149,15 @@ io.on("connection", async (socket: any) => {
         }
       }, 10000);
 
-  if(socket.user.onesignal_notification_id){
+   if (socketCount === 1 && socket.user.onesignal_notification_id) {
     try {
       const response = await oneSignalClient.cancelNotification(socket.user.onesignal_notification_id);
-      console.log("Notification cancelled successfully:", response.statusCode);
-      await userModel.clearOneSignalNotificationId(socket.user.id);   
+      console.log("Notification cancelled successfully:", socket.user.id);
+      await userModel.clearOneSignalNotificationId(socket.user.id);
     } catch (error) {
       console.error("Failed to cancel notification:", error);
+      await userModel.clearOneSignalNotificationId(socket.user.id);
     }
-    
   }
 
   socket.on("join_room", async ({room_code}: any, callback: any) => {
@@ -276,6 +286,18 @@ io.on("connection", async (socket: any) => {
 
   // Debug: Log connection and disconnection events
   socket.on('disconnect', async () => {
+    const userSocketSet = userSockets.get(userId);
+    userSocketSet?.delete(socket.id);
+    
+    const remainingSockets = userSocketSet ? userSocketSet.size : 0;
+    console.log(`🔌 User ${userId} disconnected. Remaining sockets: ${remainingSockets}`);
+    
+    // Room cleanup (your existing code)
+    socket.leave(socket?.room?.code);
+    if (roomCounts[socket?.room?.code] && roomCounts[socket?.room?.code] > 0)
+      roomCounts[socket?.room?.code] -= 1;
+
+    
     socket.leave(socket?.room?.code);
 
     if(roomCounts[socket?.room?.code] && roomCounts[socket?.room?.code] > 0)
@@ -292,6 +314,7 @@ io.on("connection", async (socket: any) => {
     //@ts-ignore
     result.title['en']=result.title[socket.user.lang] 
   }
+  
     const notificationPayload = {
     include_external_user_ids: [`${socket.user.email ?? socket.user.id}`],
     contents: result.title as any,
@@ -300,7 +323,9 @@ io.on("connection", async (socket: any) => {
     send_after: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString()
   };
     const notification=await oneSignalClient.createNotification(notificationPayload);
-    console.log("Notification sent successfully:", notification.body.id);
+    if(socket.user.id == 33488 || socket.user.id == 29503){
+      console.log("Notification scheduled successfully:",socket.user.id);
+    }
     await userModel.saveNotification(socket.user.id, notification.body.id);
   } catch (error) {
     console.error("Failed to send notification:", error);

@@ -121,6 +121,7 @@ export const fetchUrl = async (req: FastifyRequest, reply: FastifyReply) => {
       USER_NAME: req.userName,
       USER_EMAIL: req.userEmail,
       token: result[0].app_id,
+      TIMESTAMP: Date.now(),
     };
 
     const response: any = result.map((network: any) => {

@@ -441,6 +441,40 @@ console.log(data)
     }
 
     return true
+},
+pollfish: async (req, network) => {
+  const params: any = req.method === 'GET' ? req.query : req.body;
+
+  if (!network.postback_key) {
+    console.warn('Missing pollfish_secret_key in network config');
+    return false;
+  }
+
+  const { signature, ...data } = params;
+
+  if (!signature) {
+    console.warn('Missing signature in Pollfish callback');
+    return false;
+  }
+
+  const sortedKeys = Object.keys(data).sort();
+  const baseString = sortedKeys.map(key => data[key]).join(':');
+
+  // Create HMAC-SHA1 hash using the Account Secret Key
+  const expectedSignature = crypto
+    .createHmac('sha1', network.pollfish_secret_key)
+    .update(baseString)
+    .digest('hex');
+
+  // Log for debugging (optional)
+  console.log({
+    baseString,
+    expectedSignature,
+    receivedSignature: signature,
+    params,
+  });
+
+  return expectedSignature === signature;
 }
 };
 
