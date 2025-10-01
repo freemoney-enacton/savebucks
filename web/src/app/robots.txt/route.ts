@@ -1,7 +1,7 @@
 import { getRobotsConfig } from '../robots';
 
-export function GET(): Response {
-  const { baseUrl, disallowedPaths } = getRobotsConfig();
+export async function GET(): Promise<Response> {
+  const { baseUrl, disallowedPaths } = await getRobotsConfig();
 
   const lines = [
     'User-agent: *',

@@ -155,9 +155,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     addEntry(entries, seen, route, now);
   });
 
-  const [stores, offers, cmsPages] = await Promise.all([
+  const [stores, cmsPages] = await Promise.all([
     safeFetchCollection<EntityWithSlug>('stores'),
-    safeFetchCollection<EntityWithSlug>('tasks'),
     safeFetchCollection<EntityWithSlug>('cms/pages?status=publish'),
   ]);
 
@@ -167,11 +166,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       addEntry(entries, seen, `/single-store/${store.slug}`, resolveLastModified(store, now));
     });
 
-  offers
-    .filter((offer) => offer?.slug)
-    .forEach((offer) => {
-      addEntry(entries, seen, `/offer/${offer.slug}`, resolveLastModified(offer, now));
-    });
+  // offers
+  //   .filter((offer) => offer?.slug)
+  //   .forEach((offer) => {
+  //     addEntry(entries, seen, `/offer/${offer.slug}`, resolveLastModified(offer, now));
+  //   });
 
   cmsPages
     .filter((page) => page?.slug)
