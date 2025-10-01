@@ -1,4 +1,6 @@
+import app from "../../app";
 import { db } from "../../database/database";
+import { getSetCachedData } from "../../utils/getCached";
 
 export const fetch = async (group: string) => {
   const result = db
@@ -91,6 +93,32 @@ export const getPagesMetaTitleDesc = async () => {
     ])
     .where("status","=","publish")
     .execute();
+}
+
+export const getBlockedCountries = async () => {
+  const blockedCountriesSetting:any=await getSetCachedData(
+      "blocked_countries",
+      async () => {
+        const curr = await db
+          .selectFrom("settings")
+          .select("val")
+          .where("name", "=", "blocked_countries")
+          .executeTakeFirst();
+        return JSON.stringify(curr);
+      },
+      3600,
+      app
+    );
+
+    console.log("Blocked countries setting:", blockedCountriesSetting);
+    const countryList = blockedCountriesSetting?.val ?? "";
+
+    console.log("Blocked countries list:", countryList);
+
+  return countryList
+    .split(",")
+    .map((c:any) => c.trim().toUpperCase())
+    .filter((c:any) => c !== "");
 }
 
 

@@ -92,7 +92,8 @@
       "loginRequest": "Please Login",
       "alreadyRegisteredRequest": "Please login! You are already registered!",
       "passwordChangeNotAllowed": "Password change not allowed: Account linked with #PROVIDER_TYPE",
-      "userBanned": "Your Account is banned! Please contact support for help"
+      "userBanned": "Your Account is banned! Please contact support for help",
+      "blockedCountry": "Access from your country is restricted"
     },
     "zod": {
       "minError": "#VAR must contain minimum #NUM characters",

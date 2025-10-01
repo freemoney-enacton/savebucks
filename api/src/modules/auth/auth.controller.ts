@@ -16,34 +16,42 @@ import {
   updateUser,
 } from "../user/user.model";
 import { dispatchEvent } from "../../events/eventBus";
-import { getIpDetails } from "../../utils/getClientInfo";
+import { checkIp, getIpDetails, getRequestIP } from "../../utils/getClientInfo";
 import { handleBonusAndNotifications } from "../../utils/bonusHandle";
 import app from "../../app";
 import { db } from "../../database/database";
 import { sendConversionRequest } from "../../utils/sendAffiliatePostback";
+import { getSetCachedData } from "../../utils/getCached";
+import { getBlockedCountries } from "../settings/settings.model";
 const generateOtp = () => {
   return Math.floor(100000 + Math.random() * 900000);
 };
 export const register = async (req: FastifyRequest, reply: FastifyReply) => {
   let { name, email, password, referral, click_code,device } =
-    req.body as registerUserSchemas;
+  req.body as registerUserSchemas;
   // @ts-ignore
   const response_key: any = req.body["recaptcha"];
   // @ts-ignore
   // const secret_key = config.env.app.recaptcha_secret;
   // const verifyEndpoint = "https://www.google.com/recaptcha/api/siteverify";
   // const captchaResponse = await fetch(verifyEndpoint, {
-  //   method: "POST",
+    //   method: "POST",
   //   headers: { "Content-type": "application/x-www-form-urlencoded" },
   //   body: new URLSearchParams({
-  //     secret: secret_key as string,
+    //     secret: secret_key as string,
   //     response: response_key,
   //   }),
   // }).then((res) => res.json());
   // if (!captchaResponse.success) {
-  //   return reply.sendError(app.polyglot.t("error.auth.captchaResponse"), 498);
-  // }
-
+    //   return reply.sendError(app.polyglot.t("error.auth.captchaResponse"), 498);
+    // }
+  const country_code = req.headers["x-country"] ?? req.headers["cf-ipcountry"] ?? "unknown";
+  console.log("Country Code from headers:", country_code);
+  const blockedCountries=await getBlockedCountries();
+  if (blockedCountries.includes(country_code)) {
+    return reply.sendError(app.polyglot.t("error.auth.blockedCountry"), 409);
+  }
+    
   const disposal: any = await fetch(
     `https://disposable.debounce.io/?email=${email}`
   );
@@ -66,6 +74,10 @@ export const register = async (req: FastifyRequest, reply: FastifyReply) => {
   if (deviceBanned) {
     return reply.sendError(`User Already Exists.`, 409);
   }
+  const ipDetected = await checkIp(req, getRequestIP(req));
+  if (ipDetected?.ip_detected) {
+    return reply.sendError("VPN Detected. Please turn of VPN to proceed", 409);
+  }
 
   let referredBy = null;
   if (referral) {
@@ -80,8 +92,6 @@ export const register = async (req: FastifyRequest, reply: FastifyReply) => {
   const hashPassword: string = await bcrypt.hash(password, 10);
   const referralCode = (Math.random() + 1).toString(36).substring(7);
   const device_id: any = req.cookies.device_id;
-  const country_code =
-    req.headers["x-country"] ?? req.headers["cf-ipcountry"] ?? "unknown";
   const client_ip =
     req.headers["x-client-ip"] ?? req.headers["cf-connecting-ip"];
   const clientInfo = await getIpDetails(client_ip);
@@ -185,6 +195,10 @@ export const login = async (req: FastifyRequest, reply: FastifyReply) => {
     referrer: req.headers.referer,
   };
   const userData = await auth.login(email);
+  const ipDetected = await checkIp(req, getRequestIP(req));
+  if (ipDetected?.ip_detected) {
+    return reply.sendError("VPN Detected. Please turn of VPN to proceed", 409);
+  }
   if (userData?.status === "banned") {
     return reply.sendError(app.polyglot.t("error.auth.userBanned"), 401);
   }
@@ -680,4 +694,35 @@ export const verifyOtp = async (req: FastifyRequest, reply: FastifyReply) => {
       );
     }
   }
+};
+
+export const verifyUserIp = async (
+  req: FastifyRequest,
+  reply: FastifyReply
+) => {
+  const ip = getRequestIP(req);
+
+  const ipDetails = await checkIp(req, ip);
+
+  console.log("🐱‍🚀",ipDetails);
+
+  if (!ipDetails) {
+    return reply.sendError("Failed to fetch ip Data", 404);
+  }
+  if (ipDetails.ip_detected) {
+    return reply.sendSuccess(
+      { is_vpn: true },
+      200,
+      "User is legitmate",
+      null,
+      null
+    );
+  }
+  return reply.sendSuccess(
+    { is_vpn: false },
+    200,
+    "User is legitmate",
+    null,
+    null
+  );
 };

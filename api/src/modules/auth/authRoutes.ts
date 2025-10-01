@@ -21,6 +21,7 @@ import {
 import fastifyPassport from "@fastify/passport";
 import { ZodTypeProvider } from "fastify-type-provider-zod";
 import { config } from "../../config/config";
+import { getBlockedCountries } from "../settings/settings.model";
 
 export default async function (app: FastifyInstance) {
   app.withTypeProvider<ZodTypeProvider>().route({
@@ -173,6 +174,22 @@ export default async function (app: FastifyInstance) {
     {
       preValidation: [
         async (request, reply) => {
+
+          console.log("req.headers", request.headers);
+          const country_code = 
+          (request.headers["x-country"] as string) ??
+          (request.headers["cf-ipcountry"] as string) ??
+          "unknown";
+
+        console.log("Country Code from headers:", country_code);
+        const blockedCountries = await getBlockedCountries();
+
+        if (blockedCountries.includes(country_code.toUpperCase())) {
+          // Redirect to frontend error page (adjust URL as needed)
+          return reply.redirect(
+            `${config.env.app.frontend_url}`
+          );
+        }
           console.log("req.query", request.query);
           const { referrer_code, click_code,device_id,is_app } = request.query as {
             referrer_code?: string;
@@ -366,4 +383,12 @@ export default async function (app: FastifyInstance) {
       console.log("facebook API forward");
     }
   );
+  app.withTypeProvider<ZodTypeProvider>().route({
+    method: "GET",
+    url: "/ip",
+    schema: {
+      tags: ["Authentication"],
+    },
+    handler: authController.verifyUserIp,
+  });
 }

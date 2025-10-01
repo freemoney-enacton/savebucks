@@ -1,16 +1,8 @@
-import { FastifyRedis } from "@fastify/redis";
+
 import { FastifyPluginAsync } from "fastify";
 import Redis from "ioredis";
 
-declare module "fastify" {
-  interface FastifyInstance {
-    redis: FastifyRedis;
-    polyglot: any;
-    redisUpstash: FastifyRedis;
-  }
-}
-
-const redisPlugin: FastifyPluginAsync<{
+const upstashPlugin: FastifyPluginAsync<{
   host: string;
   port: number;
   password: string;
@@ -19,9 +11,13 @@ const redisPlugin: FastifyPluginAsync<{
     host: options.host,
     port: options.port,
     password: options.password,
+    tls: {
+      // TLS options to configure secure connection
+      rejectUnauthorized: false, // Set to true if you want to verify the server's certificate
+      }
   });
 
-  fastify.decorate("redis", redis);
+  fastify.decorate("redisUpstash", redis);
 
   fastify.addHook("onClose", async (fastifyInstance) => {
     await fastifyInstance.redis.quit();
@@ -30,4 +26,4 @@ const redisPlugin: FastifyPluginAsync<{
   return redis;
 };
 
-export default redisPlugin;
+export default upstashPlugin;

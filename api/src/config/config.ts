@@ -26,6 +26,7 @@ export const config = {
       otpExpiration: 10,
       domain_cookie: process.env.DOMAIN_COOKIE,
       conversion_api_url: process.env.CONVERSION_API_URL,
+      ip_token: process.env.IP_INFO_TOKEN || "",
     },
     database: {
       port: process.env.DATABASE_PORT,
@@ -53,6 +54,12 @@ export const config = {
       port: process.env.REDIS_PORT,
       host: process.env.REDIS_HOST || "",
       password: process.env.REDIS_PASSWORD || "",
+    },
+    upstash: {
+      url: process.env.REDIS_UPSTASH_URL,
+      port: process.env.REDIS_UPSTASH_PORT,
+      host: process.env.REDIS_UPSTASH_HOST || "",
+      password: process.env.REDIS_UPSTASH_PASSWORD || "",
     },
     admin: {
       url: process.env.ADMIN_URL,

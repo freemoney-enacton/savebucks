@@ -28,6 +28,7 @@ import * as authModel from "./modules/auth/auth.model";
 import polyglotPlugin from "./plugins/polyglot";
 import { isAuthenticated } from "./middleware/authMiddleware";
 import multer from "fastify-multer";
+import upstashPlugin from "./service/upstash";
 
 declare module "fastify" {
   interface FastifyReply {
@@ -156,6 +157,14 @@ export const createApp = (): FastifyInstance => {
     },
   } as any);
 
+  upstashPlugin(app, {
+    // url: config.env.redis.url ? config.env.redis.url.toString() : "",
+    port: Number(config.env.upstash.port), // Redis port
+    host: config.env.upstash.host, // Redis host
+    password: config.env.upstash.password,
+    tls: {
+    },
+  }as any);
   // Register autoload for modules
   app.register(autoload, {
     dir: join(__dirname, "modules"),

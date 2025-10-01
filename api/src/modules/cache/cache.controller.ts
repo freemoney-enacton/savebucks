@@ -14,6 +14,7 @@ export const clearSettingsCache = async (
   app.redis.del("email_settings");
   app.redis.del("default_currency");
   app.redis.del("settings");
+  app.redis.del("blocked_countries")
 
   await getSetCachedData(
     "settings",
