@@ -7,17 +7,8 @@ type RobotsConfig = {
 
 const disallowedPaths = [
   '/api/',
-  '/_next/',
   '/out/',
-  '/tasks/',
-  '/callback/',
-  '/profile',
-  '/user',
-  '/overview',
-  '/notification',
   '/chat',
-  '/login',
-  '/register',
 ];
 
 export function getRobotsConfig(): RobotsConfig {
