@@ -1,8 +1,9 @@
 import type { MetadataRoute } from 'next';
 
-const rawBaseUrl = process.env.NEXT_PUBLIC_WEB_URL 
-
-const baseUrl = rawBaseUrl ? rawBaseUrl.replace(/\/$/, '') : 'https://savebucks.com';
+type RobotsConfig = {
+  baseUrl: string;
+  disallowedPaths: string[];
+};
 
 const disallowedPaths = [
   '/api/',
@@ -19,13 +20,25 @@ const disallowedPaths = [
   '/register',
 ];
 
+export function getRobotsConfig(): RobotsConfig {
+  const rawBaseUrl = process.env.NEXT_PUBLIC_WEB_URL;
+  const baseUrl = rawBaseUrl ? rawBaseUrl.replace(/\/$/, '') : 'https://savebucks.com';
+
+  return {
+    baseUrl,
+    disallowedPaths: [...disallowedPaths],
+  };
+}
+
 export default function robots(): MetadataRoute.Robots {
+  const { baseUrl, disallowedPaths: disallow } = getRobotsConfig();
+
   return {
     rules: [
       {
         userAgent: '*',
         allow: '/',
-        disallow: disallowedPaths,
+        disallow,
       },
     ],
     sitemap: `${baseUrl}/sitemap.xml`,
