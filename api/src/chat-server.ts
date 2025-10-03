@@ -31,7 +31,7 @@ const validateToken = (token: string) => {
 
   let decoded: any = null;
   try {
-    let decoded = jwt.verify(token, secret);
+    decoded = jwt.verify(token, secret);
     if(!decoded) return null;
   } catch (err) {
     console.log(err);
@@ -42,7 +42,7 @@ const validateToken = (token: string) => {
 
   if(decoded.exp <= Date.now() / 1000) return null;
 
-  return decoded; 
+  return decoded;
 }
 
 const getUserFromToken = async (token: string) => {
@@ -109,22 +109,31 @@ io.on("connection", async (socket: any) => {
   const socketCount = userSockets.get(userId).size;
   console.log(`🔌 User ${userId} connected. Total sockets: ${socketCount}`);
 
-  let idleTimeout = setTimeout(() => {
-    socket.disconnect(true);
+  let idleTimeout: NodeJS.Timeout | null = null;
 
-    if(roomCounts[socket?.room?.code] && roomCounts[socket?.room?.code] > 0)
-      roomCounts[socket?.room?.code] -= 1;
+  const clearIdleTimeout = () => {
+    if (idleTimeout) {
+      clearTimeout(idleTimeout);
+      idleTimeout = null;
+    }
+  };
 
-  }, SOCKET_IDLE_TIMEOUT);
-
-  const resetIdleTimeout = () => {
-    clearTimeout(idleTimeout);
+  const scheduleIdleTimeout = () => {
+    clearIdleTimeout();
     idleTimeout = setTimeout(() => {
-      socket.disconnect(true);  
+      socket.disconnect(true);
+
+      if(roomCounts[socket?.room?.code] && roomCounts[socket?.room?.code] > 0)
+        roomCounts[socket?.room?.code] -= 1;
+
     }, SOCKET_IDLE_TIMEOUT);
   };
 
-  resetIdleTimeout();
+  const resetIdleTimeout = () => {
+    scheduleIdleTimeout();
+  };
+
+  scheduleIdleTimeout();
   if (!socket.mentionCount) {
         socket.mentionCount = 0;
       }
@@ -140,6 +149,11 @@ io.on("connection", async (socket: any) => {
   
   
       // --- Periodic Unread Notifications Update ---
+      if (socket.notificationInterval) {
+        clearInterval(socket.notificationInterval);
+        socket.notificationInterval = null;
+      }
+
       socket.notificationInterval = setInterval(async () => {
         try {
           const unreadCount = await userModel.getUnreadNotificationsCount(socket.user.id);
@@ -286,10 +300,21 @@ io.on("connection", async (socket: any) => {
 
   // Debug: Log connection and disconnection events
   socket.on('disconnect', async () => {
+    clearIdleTimeout();
+
+    if (socket.notificationInterval) {
+      clearInterval(socket.notificationInterval);
+      socket.notificationInterval = null;
+    }
+
     const userSocketSet = userSockets.get(userId);
     userSocketSet?.delete(socket.id);
-    
-    const remainingSockets = userSocketSet ? userSocketSet.size : 0;
+
+    if (userSocketSet && userSocketSet.size === 0) {
+      userSockets.delete(userId);
+    }
+
+    const remainingSockets = userSockets.get(userId)?.size ?? 0;
     console.log(`🔌 User ${userId} disconnected. Remaining sockets: ${remainingSockets}`);
     
     // Room cleanup (your existing code)
