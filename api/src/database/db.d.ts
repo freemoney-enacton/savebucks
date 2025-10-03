@@ -1770,6 +1770,7 @@ export interface Users {
   timezone: string | null;
   total_tokens: number | null;
   updated_at: Generated<Date | null>;
+  utm_source: string | null;
 }
 
 export interface UsersAdmin {

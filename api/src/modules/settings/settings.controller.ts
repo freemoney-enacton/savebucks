@@ -199,7 +199,8 @@ export const fetch = async (req: FastifyRequest, reply: FastifyReply) => {
           "userdashboard_referearn_title",
           "userdashboard_profile_title",
           "all_store_meta_title",
-          "all_store_meta_desc"
+          "all_store_meta_desc",
+          "robots_disallow_paths"
         ].includes(name)) {
           if(!acc["seo"]) acc["seo"] = {};
           
