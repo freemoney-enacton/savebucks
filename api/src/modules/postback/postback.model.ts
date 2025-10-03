@@ -2,7 +2,7 @@ import { sql } from "kysely";
 import app from "../../app";
 import { db } from "../../database/database";
 import { OfferwallPostbackLogs, UserOfferwallSales } from "../../database/db";
-import { sendConversionRequest } from "../../utils/sendAffiliatePostback";
+import { sendConversionRequest, sendDaisyconPostback } from "../../utils/sendAffiliatePostback";
 
 export const processLevelCheck = async (saleData: any) => {
   const tokensPerLevel = await db
@@ -50,7 +50,7 @@ export const getNetworkDetails = async (
 export const updateOrCreateUserSale = async (saledata: any) => {
   const userData = await db
     .selectFrom("users")
-    .select(["affiliate_click_code"])
+    .select(["affiliate_click_code", "utm_source", "country_code"])
     .where("id", "=", saledata.user_id)
     .executeTakeFirst();
 
@@ -123,6 +123,29 @@ export const updateOrCreateUserSale = async (saledata: any) => {
           transaction_id: saledata.user_id,
           user_earning: saledata?.amount,
         });
+      }
+
+      if (
+        userData?.utm_source &&
+        userData.affiliate_click_code &&
+        userData.utm_source.toLowerCase().startsWith("daisycon") &&
+        Number(saledata.amount) > 0
+      ) {
+        const totalUserEarnings = await db
+          .selectFrom("user_offerwall_sales")
+          .select(sql`COUNT(*)`.as("count"))
+          .where("user_id", "=", parseInt(saledata.user_id))
+          .where("status", "!=", "declined")
+          .where("is_chargeback", "=", 0)
+          .executeTakeFirst();
+
+        if (Number(totalUserEarnings?.count) === 1) {
+          await sendDaisyconPostback({
+            transactionId: userData.affiliate_click_code,
+            userId: Number(saledata.user_id),
+            countryCode: userData.country_code,
+          });
+        }
       }
     }
   }

@@ -15,7 +15,8 @@ export const register = async (
   timezone: string | null,
   provider_type: string,
   click_code: string | null,
-  platform?: string | string[]
+  platform?: string | string[],
+  utm_source?: string | null
 ) => {
   const result = db
     .insertInto("users")
@@ -32,6 +33,7 @@ export const register = async (
       country_code: country_code ? country_code : null,
       timezone: timezone ? timezone : null,
       affiliate_click_code: click_code ? click_code : null,
+      utm_source: utm_source ? utm_source : null,
       // lang:lang as string
     })
     .executeTakeFirst();
@@ -69,7 +71,8 @@ export const registerSocial = async (
   lang: string,
   click_code: string | null,
   referrerCode: string | null ,
-  platform?: any
+  platform?: any,
+  utm_source?: string | null
 ) => {
   if (email == null) {
     const result = db
@@ -85,6 +88,7 @@ export const registerSocial = async (
         affiliate_click_code: click_code ? click_code : null,
         referrer_code: referrerCode ? referrerCode : null,
         platform: platform ? platform : null,
+        utm_source: utm_source ? utm_source : null,
       })
       .executeTakeFirst();
     return result;
@@ -102,6 +106,7 @@ export const registerSocial = async (
         affiliate_click_code: click_code ? click_code : null,
         referrer_code: referrerCode ? referrerCode : null,
         platform: platform ? platform : null,
+        utm_source: utm_source ? utm_source : null,
       })
       .executeTakeFirst();
 
