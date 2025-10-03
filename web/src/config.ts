@@ -48,4 +48,7 @@ export const config = {
   SHOW_STORES: 'stores',
   CLICK_CODE_COOKIE: 'click_code',
   SOURCE_COOKIE: 'source',
+  UTM_SOURCE_COOKIE: 'utm_source',
+  PUBLISHER_ID_COOKIE: 'publisher_id',
+  TRANSACTION_ID_COOKIE: 'transaction_id',
 };

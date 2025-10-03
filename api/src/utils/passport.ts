@@ -15,6 +15,7 @@ import { downloadImage } from "./downloadImage";
 import { moveUploadedFile } from "./ImageUpload";
 import { db } from "../database/database";
 import { sendConversionRequest } from "./sendAffiliatePostback";
+import { extractDaisyconAttribution } from "./affiliateAttribution";
 fastifyPassport.use(
   new GoogleStrategy(
     {
@@ -40,7 +41,10 @@ fastifyPassport.use(
       console.log(googleProfilePicUrl);
       const referralCode = (Math.random() + 1).toString(36).substring(7);
       const referrerCode = req.cookies.referral || req.cookies.referrer_code;
-      const click_code = req.cookies.click_code;
+      const defaultClickCode = req.cookies.click_code;
+      const { utmSource: daisyconUtmSource, affiliateClickCode } =
+        extractDaisyconAttribution(req.cookies || {});
+      const click_code = affiliateClickCode ?? defaultClickCode;
       // const userExist = await auth.userExist("google", googleId);
       const userExist = await auth.login(email);
       if (userExist) {
@@ -84,7 +88,8 @@ fastifyPassport.use(
         lang,
         click_code || null,
         referrerCode,
-        req.cookies.is_app
+        req.cookies.is_app,
+        daisyconUtmSource
       );
 
       let referredBy = null;
@@ -169,7 +174,10 @@ fastifyPassport.use(
       const lang = req.headers["x-language"]
         ? req.headers["x-language"][0]
         : "en";
-      const click_code = req.cookies.click_code;
+      const defaultClickCode = req.cookies.click_code;
+      const { utmSource: daisyconUtmSource, affiliateClickCode } =
+        extractDaisyconAttribution(req.cookies || {});
+      const click_code = affiliateClickCode ?? defaultClickCode;
       console.log("Facebook profile", profile);
       // const userExist = await auth.userExist("facebook", facebookId);
       //Join No Refer bonus_code
@@ -212,7 +220,8 @@ fastifyPassport.use(
           lang,
           click_code || null,
           referrerCode,
-          req.cookies.is_app
+          req.cookies.is_app,
+          daisyconUtmSource
         );
 
         let referredBy = null;
@@ -297,7 +306,8 @@ fastifyPassport.use(
           lang,
           click_code || null,
           referrerCode,
-          req.cookies.is_app
+          req.cookies.is_app,
+          daisyconUtmSource
         );
 
         let referredBy = null;
@@ -372,7 +382,10 @@ fastifyPassport.use(
       const name = match ? match[0] : "";
       const referralCode = (Math.random() + 1).toString(36).substring(7);
       const referrerCode = req.cookies.referral || req.cookies.referrer_code;
-      const click_code = req.cookies.click_code;
+      const defaultClickCode = req.cookies.click_code;
+      const { utmSource: daisyconUtmSource, affiliateClickCode } =
+        extractDaisyconAttribution(req.cookies || {});
+      const click_code = affiliateClickCode ?? defaultClickCode;
       const userExist = await auth.login(email);
       const lang = req.headers["x-language"]
         ? req.headers["x-language"][0]
@@ -399,7 +412,8 @@ fastifyPassport.use(
           lang,
           click_code || null,
           referrerCode,
-          req.cookies.is_app
+          req.cookies.is_app,
+          daisyconUtmSource
         );
         let referredBy = null;
         if (result && result.insertId) {
@@ -446,7 +460,8 @@ fastifyPassport.use(
           lang,
           click_code || null,
           referrerCode,
-          req.cookies.is_app
+          req.cookies.is_app,
+          daisyconUtmSource
         );
         let referredBy = null;
         if (result && result.insertId) {

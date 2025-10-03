@@ -1,6 +1,8 @@
 import { config } from "../config/config";
 
 const baseUrl = config.env.app.conversion_api_url;
+const daisyconPostbackBaseUrl = "https://0.0.4.87/d/";
+const DAISYCON_CAMPAIGN_ID = "19067";
 
 interface ConversionApiParams {
   tracking_code?: string;
@@ -13,6 +15,12 @@ interface ConversionApiResponse {
   data: any;
   status: "success" | "error";
   message: string;
+}
+
+interface DaisyconPostbackParams {
+  transactionId: string;
+  userId: number;
+  countryCode?: string | null;
 }
 
 export async function sendConversionRequest(
@@ -62,5 +70,37 @@ export async function sendConversionRequest(
   } catch (error) {
     console.error("Error sending conversion request:", error);
     throw error;
+  }
+}
+
+export async function sendDaisyconPostback({
+  transactionId,
+  userId,
+  countryCode,
+}: DaisyconPostbackParams): Promise<boolean> {
+  try {
+    const queryParams = new URLSearchParams({
+      ci: DAISYCON_CAMPAIGN_ID,
+      ti: transactionId,
+      dci: userId.toString(),
+      pn: countryCode ? countryCode.toString().toUpperCase() : "unknown",
+    });
+
+    const url = `${daisyconPostbackBaseUrl}?${queryParams.toString()}`;
+    console.log("Firing Daisycon Postback", url);
+
+    const response = await fetch(url, {
+      method: "GET",
+    });
+
+    if (!response.ok) {
+      console.log("Error sending Daisycon postback:", response.status);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error("Error sending Daisycon postback:", error);
+    return false;
   }
 }

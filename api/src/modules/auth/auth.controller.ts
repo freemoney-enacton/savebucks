@@ -21,13 +21,14 @@ import { handleBonusAndNotifications } from "../../utils/bonusHandle";
 import app from "../../app";
 import { db } from "../../database/database";
 import { sendConversionRequest } from "../../utils/sendAffiliatePostback";
+import { extractDaisyconAttribution } from "../../utils/affiliateAttribution";
 import { getSetCachedData } from "../../utils/getCached";
 import { getBlockedCountries } from "../settings/settings.model";
 const generateOtp = () => {
   return Math.floor(100000 + Math.random() * 900000);
 };
 export const register = async (req: FastifyRequest, reply: FastifyReply) => {
-  let { name, email, password, referral, click_code,device } =
+  let { name, email, password, referral, click_code, device } =
   req.body as registerUserSchemas;
   // @ts-ignore
   const response_key: any = req.body["recaptcha"];
@@ -107,6 +108,13 @@ export const register = async (req: FastifyRequest, reply: FastifyReply) => {
     route: req.routeOptions.url,
   };
 
+  const { utmSource: daisyconUtmSource, affiliateClickCode } =
+    extractDaisyconAttribution(req.cookies as Record<string, any>);
+
+  if (affiliateClickCode) {
+    click_code = affiliateClickCode;
+  }
+
   if (click_code === undefined) {
     click_code = null;
   }
@@ -123,7 +131,8 @@ export const register = async (req: FastifyRequest, reply: FastifyReply) => {
     clientInfo.timezone ?? "unknown",
     "email",
     click_code,
-    is_app
+    is_app,
+    daisyconUtmSource
   );
 
   if (!register) {

@@ -21,6 +21,9 @@ export default auth(async (req: NextRequest): Promise<any> => {
   const offer_default_filter = settings?.default?.offer_default_filter || 'popular';
   const isClickCode = req.nextUrl.searchParams.get(Config.CLICK_CODE_COOKIE) || '';
   const isSource = req.nextUrl.searchParams.get(Config.SOURCE_COOKIE) || '';
+  const utmSourceParam = req.nextUrl.searchParams.get(Config.UTM_SOURCE_COOKIE) || '';
+  const publisherIdParam = req.nextUrl.searchParams.get(Config.PUBLISHER_ID_COOKIE) || '';
+  const transactionIdParam = req.nextUrl.searchParams.get(Config.TRANSACTION_ID_COOKIE) || '';
 
   // Detect locale from IP using headers
   // const ip = req.headers.get('cf-connecting-ip') || req.headers.get('x-forwarded-for')?.split(',')[0] || req.ip || '::1';
@@ -67,6 +70,32 @@ export default auth(async (req: NextRequest): Promise<any> => {
       path: '/',
       domain: `.${Config.ROOT_DOMAIN}`,
     });
+
+    return redirectResponse;
+  }
+
+  const shouldStoreDaisyconAttribution =
+    utmSourceParam &&
+    publisherIdParam &&
+    transactionIdParam &&
+    utmSourceParam.toLowerCase() === 'daisycon';
+
+  if (shouldStoreDaisyconAttribution) {
+    const updatedUrl = new URL(req.url);
+    updatedUrl.searchParams.delete(Config.UTM_SOURCE_COOKIE);
+    updatedUrl.searchParams.delete(Config.PUBLISHER_ID_COOKIE);
+    updatedUrl.searchParams.delete(Config.TRANSACTION_ID_COOKIE);
+
+    const redirectResponse = NextResponse.redirect(updatedUrl.toString());
+    const cookieOptions = {
+      path: '/',
+      maxAge: 60 * 60 * 24 * 7,
+      domain: `.${Config.ROOT_DOMAIN}`,
+    } as const;
+
+    redirectResponse.cookies.set(Config.UTM_SOURCE_COOKIE, utmSourceParam, cookieOptions);
+    redirectResponse.cookies.set(Config.PUBLISHER_ID_COOKIE, publisherIdParam, cookieOptions);
+    redirectResponse.cookies.set(Config.TRANSACTION_ID_COOKIE, transactionIdParam, cookieOptions);
 
     return redirectResponse;
   }
